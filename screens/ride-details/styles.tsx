@@ -17,10 +17,22 @@ const styles = StyleSheet.create({
     backgroundColor: CARD_BG, // Use a light background for the whole page
   },
 
+  centered: {
+    flex: 1,
+    justifyContent: "center",  // centers vertically
+    alignItems: "center",       // centers horizontally
+  },
+  loadingText: {
+    color: 'grey',
+    fontSize: 18,
+    fontFamily: 'TT-Octosquares-Medium',  // 👈 custom font
+    textAlign: "center",
+    letterSpacing: 1,                     // makes it more clean
+  },
   // --- Map Section ---
   mapContainer: {
     // Make map slightly taller for better driving context
-    height: windowHeight(450), 
+    height: windowHeight(450),
     overflow: 'visible', // Remove overflow to allow the card to overlap cleanly
     // Removed border radius here, let the card overlay handle the curve
   },
@@ -37,18 +49,18 @@ const styles = StyleSheet.create({
     marginTop: -50, // More aggressive overlap for a modern look
     paddingHorizontal: windowWidth(24), // Increased horizontal padding
     paddingTop: 16,
-    
+
     // Elevated shadow for a floating card effect
     ...Platform.select({
-        ios: {
-            shadowColor: '#000',
-            shadowOffset: { width: 0, height: -4 },
-            shadowOpacity: 0.1,
-            shadowRadius: 10,
-        },
-        android: {
-            elevation: 15,
-        }
+      ios: {
+        shadowColor: '#000',
+        shadowOffset: { width: 0, height: -4 },
+        shadowOpacity: 0.1,
+        shadowRadius: 10,
+      },
+      android: {
+        elevation: 15,
+      }
     })
   },
   scrollContainer: {
@@ -101,15 +113,15 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     paddingVertical: 8,
   },
-  avatar: {
-    width: 50, // Slightly larger avatar
-    height: 50,
-    borderRadius: 25,
-    backgroundColor: PRIMARY_COLOR,
-    justifyContent: 'center',
-    alignItems: 'center',
-    marginRight: 16,
-  },
+  // avatar: {
+  //   width: 50, // Slightly larger avatar
+  //   height: 50,
+  //   borderRadius: 25,
+  //   // backgroundColor: PRIMARY_COLOR,
+  //   justifyContent: 'center',
+  //   alignItems: 'center',
+  //   marginRight: 16,
+  // },
   passengerDetails: {
     flex: 1,
     flexDirection: 'row',
@@ -141,6 +153,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     marginBottom: 8,
     marginTop: 4,
+    justifyContent: 'space-around'
   },
   navButton: {
     flex: 1,
@@ -225,7 +238,7 @@ const styles = StyleSheet.create({
   // --- Modal Styles ---
   modalContainer: {
     flex: 1,
-    backgroundColor: "rgba(0,0,0,0.7)", 
+    backgroundColor: "rgba(0,0,0,0.7)",
     justifyContent: "center",
     alignItems: "center",
   },
@@ -236,8 +249,8 @@ const styles = StyleSheet.create({
     paddingVertical: 35, // More vertical padding
     paddingHorizontal: 25,
     alignItems: "center",
-    elevation: 12, 
-    shadowColor: PRIMARY_COLOR, 
+    elevation: 12,
+    shadowColor: PRIMARY_COLOR,
     shadowOffset: { width: 0, height: 6 },
     shadowOpacity: 0.3,
     shadowRadius: 10,
@@ -259,7 +272,7 @@ const styles = StyleSheet.create({
     marginBottom: 25,
     textAlign: "center",
     fontSize: fontSizes.FONT20, // Larger font for OTP
-    letterSpacing: 10, 
+    letterSpacing: 10,
     fontWeight: "700",
     color: PRIMARY_COLOR, // OTP text color
   },

@@ -19,6 +19,7 @@ import { Linking } from "react-native";
 import axios from "axios";
 import axiosInstance from "@/api/axiosInstance";
 import { handleAddMoney, logout } from "@/api/apis";
+import { getAvatar } from "@/utils/avatar/getAvatar";
 
 export default function Profile() {
   const { driver, loading } = useGetDriverData();
@@ -33,17 +34,6 @@ export default function Profile() {
   if (loading || walletLoading) return null;
 
   // Avatar selection based on gender
-  const getAvatar = (gender) => {
-    if (gender?.toLowerCase() === "male") {
-      return "https://i.pravatar.cc/150?img=12";
-    } else if (gender?.toLowerCase() === "female") {
-      return "https://i.pravatar.cc/150?img=47";
-    } else {
-      return "https://i.pravatar.cc/150";
-    }
-  };
-
-
   const SectionLink = ({
     title,
     path,

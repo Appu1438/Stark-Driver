@@ -35,6 +35,7 @@ import driverSocketService from "@/utils/socket/socketService";
 import { sendPushNotification } from "@/utils/notifications/sendPushNotifications";
 import axiosInstance from "@/api/axiosInstance";
 import { getDistrict } from "@/utils/location/getDistrict";
+import RideModal from "@/components/ride/ride.modal";
 export default function HomeScreen() {
     const notificationListener = useRef();
     const { driver, loading: DriverDataLoading } = useGetDriverData();
@@ -286,34 +287,38 @@ export default function HomeScreen() {
         if (!loading) {
             setloading(true);
             try {
-                const response = await axiosInstance.put(
-                    `/driver/update-status`,
-                    {
-                        status: !isOn ? "active" : "inactive",
-                    }
-                );
-                console.log('status update ', response.data)
-                if (response.data?.driver?.status === 'active') {
-                    setIsOn(true);
-                } else {
-                    setIsOn(false)
-                    driverSocketService.sendLocationUpdate(driver?.id, { latitude: null, longitude: null });
-                    setLastLocation('')
-                    setCurrentLocation('')
-                }
+                const response = await axiosInstance.put(`/driver/update-status`, {
+                    status: !isOn ? "active" : "inactive",
+                });
 
+                console.log("status update ", response.data);
+
+                if (response.data?.driver?.status === "active") {
+                    setIsOn(true);
+                    Toast.show("You are now active and available for rides!", { type: "success" });
+                } else {
+                    setIsOn(false);
+                    driverSocketService.sendLocationUpdate(driver?.id, { latitude: null, longitude: null });
+                    setLastLocation("");
+                    setCurrentLocation("");
+                    Toast.show("You are now inactive and not available for rides!", { type: "info" });
+                }
             } catch (err) {
-                console.error("Failed to update driver status:", err);
+                console.log("Failed to update driver status:", err);
+                const message = err.response?.data?.message || "Failed to update status!";
+                Toast.show(message, { type: "danger" });
             } finally {
                 setloading(false);
             }
         }
     };
 
+
     // ---------- socket listener + auto-reject ----------
     useEffect(() => {
         // message handler
         const handleMessage = (message) => {
+            console.log(message)
             if (message.type === "rideRequest") {
                 const orderData = message.rideRequest;
 
@@ -393,12 +398,14 @@ export default function HomeScreen() {
         };
 
         // register handler (replace existing onMessage)
-        driverSocketService.onMessage(handleMessage);
+        // driverSocketService.onMessage(handleMessage);
+        const unsubscribe = driverSocketService.onMessage(handleMessage);
+
 
         // cleanup on unmount: remove handler, clear timers
         return () => {
             // remove handler by setting empty callback (your service sets a single callback)
-            driverSocketService.onMessage(() => { });
+            unsubscribe(); // removes only this listener
             if (countdownIntervalRef.current) {
                 clearInterval(countdownIntervalRef.current);
                 countdownIntervalRef.current = null;
@@ -435,7 +442,7 @@ export default function HomeScreen() {
 
 
             const response = await axiosInstance.post(
-                `/driver/new-ride`,
+                `/ride/new-ride`,
                 {
                     userId: rideRequest.user.id,
                     totalFare: rideRequest.fare.totalFare,
@@ -545,7 +552,7 @@ export default function HomeScreen() {
     const driverRideStats = [
         { id: "1", value: driver?.totalEarning, title: "Total Earnings" },
         { id: "2", value: driver?.totalShare, title: "Total Shares" },
-        { id: "3", value: driver?.totalRides, title: "Total Rides" },
+        { id: "3", value: driver?.totalRides, title: "Completed Rides" },
         { id: "4", value: wallet?.balance, title: "Wallet Balance" },
         { id: "5", value: driver?.pendingRides, title: "Pending Rides" },
         { id: "6", value: driver?.cancelRides, title: "Cancelled Rides" },
@@ -569,9 +576,9 @@ export default function HomeScreen() {
                         <Text style={[styles.rideTitle, { color: colors.text }]}>
                             Recent Rides
                         </Text>
-                        <View style={{ flex: 1, marginBottom: 0 }}>
+                        <View style={{ flex: 1, marginBottom: 120 }}>
                             <FlatList
-                                data={recentRides} // slice if you want to skip the first item
+                                data={recentRides.slice(0, 3)} // slice if you want to skip the first item
                                 keyExtractor={(item, index) => item.id || index.toString()}
                                 renderItem={({ item }) => <RideCard item={item} />}
                                 ListEmptyComponent={
@@ -592,184 +599,23 @@ export default function HomeScreen() {
                     </View>
                 </ScrollView>
             </View>
-            <Modal transparent visible={isModalVisible} onRequestClose={() => clearTimerAndCloseModal()}>
-                <TouchableOpacity
-                    style={{
-                        flex: 1,
-                        backgroundColor: "rgba(0,0,0,0.5)",
-                        justifyContent: "center",
-                        alignItems: "center",
-                        paddingHorizontal: 16,
-                    }}
-                    activeOpacity={1}
-                >
-                    <View
-                        style={{
-                            backgroundColor: "#fff",
-                            borderRadius: 16,
-                            width: "100%",
-                            padding: 16,
-                            elevation: 5,
-                            shadowColor: "#000",
-                            shadowOffset: { width: 0, height: 2 },
-                            shadowOpacity: 0.2,
-                            shadowRadius: 4,
-                        }}
-                    >
-                        <Text
-                            style={{
-                                fontFamily: "TT-Octosquares-Medium",
-                                fontSize: windowHeight(18),
-                                marginBottom: 12,
-                                textAlign: "center",
-                                color: "#222",
-                            }}
-                        >
-                            🚘 New Ride Request!
-                        </Text>
+            <RideModal
+                visible={isModalVisible}
+                onClose={clearTimerAndCloseModal}
+                title="🚘 New Ride Request!"
+                countdown={countdown}
+                timeoutMessage={timeoutMessage}
+                region={region}
+                firstMarker={firstMarker}
+                secondMarker={secondMarker}
+                currentLocationName={currentLocationName}
+                destinationLocationName={destinationLocationName}
+                distance={distance}
+                fare={fare}
+                onAccept={() => acceptRideHandler(rideDetails)}
+                onReject={() => rejectRideHandler(rideDetails)}
+            />
 
-                        {timeoutMessage ? (
-                            <Text
-                                style={{
-                                    textAlign: "center",
-                                    color: timeoutMessage.includes("expired") ? "red" : "#f59e0b",
-                                    marginBottom: 4,
-                                    fontFamily: "TT-Octosquares-Medium",
-                                }}
-                            >
-                                {timeoutMessage}
-                            </Text>
-                        ) : null}
-
-                        {countdown > 0 && (
-                            <Text
-                                style={{
-                                    textAlign: "center",
-                                    color: "#f59e0b",
-                                    marginBottom: 10,
-                                    fontFamily: "TT-Octosquares-Medium",
-                                }}
-                            >
-                                ⏱ Time left: {countdown}s
-                            </Text>
-                        )}
-
-
-
-                        {/* Map */}
-                        <MapView
-                            style={{ height: windowHeight(180), borderRadius: 12, overflow: "hidden" }}
-                            region={region}
-                            onRegionChangeComplete={(region) => setRegion(region)}
-                        >
-                            {firstMarker && <Marker coordinate={firstMarker} />}
-                            {secondMarker && <Marker coordinate={secondMarker} />}
-                            {firstMarker && secondMarker && (
-                                <MapViewDirections
-                                    origin={firstMarker}
-                                    destination={secondMarker}
-                                    apikey={process.env.EXPO_PUBLIC_GOOGLE_CLOUD_API_KEY}
-                                    strokeWidth={4}
-                                    strokeColor="#3b82f6"
-                                />
-                            )}
-                        </MapView>
-
-                        {/* Pickup & Drop Info */}
-                        <View style={{ flexDirection: "row", marginTop: 16 }}>
-                            <View style={{ alignItems: "center", marginRight: 12 }}>
-                                <Location color={"#000"} />
-                                <View
-                                    style={{
-                                        height: 30,
-                                        borderLeftWidth: 2,
-                                        borderColor: color.buttonBg,
-                                        marginVertical: 4,
-                                    }}
-                                />
-                                <Gps colors={"#000"} />
-                            </View>
-                            <View style={{ flex: 1 }}>
-                                <Text
-                                    style={{
-                                        fontFamily: "TT-Octosquares-Medium",
-                                        fontSize: 14,
-                                        marginBottom: 4,
-                                        color: "#444",
-                                    }}
-                                >
-                                    {currentLocationName}
-                                </Text>
-                                <Text
-                                    style={{
-                                        height: 1,
-                                        backgroundColor: "#ccc",
-                                        marginVertical: 4,
-                                    }}
-                                />
-                                <Text
-                                    style={{
-                                        fontFamily: "TT-Octosquares-Medium",
-                                        fontSize: 14,
-                                        color: "#444",
-                                    }}
-                                >
-                                    {destinationLocationName}
-                                </Text>
-                            </View>
-                        </View>
-
-                        {/* Ride Details */}
-                        <View style={{ marginTop: 12 }}>
-                            <Text
-                                style={{
-                                    fontSize: 14,
-                                    fontFamily: "TT-Octosquares-Medium",
-                                    color: "#333",
-                                    marginBottom: 4,
-                                }}
-                            >
-                                Distance: {distance} km
-                            </Text>
-                            {/* Add amount if needed */}
-                            <View style={{ marginTop: 8 }}>
-                                <Text style={{ fontSize: 14, fontFamily: "TT-Octosquares-Medium", color: "#333" }}>
-                                    Total Fare: ₹{fare?.totalFare}
-                                </Text>
-                                <Text style={{ fontSize: 14, fontFamily: "TT-Octosquares-Medium", color: "#16a34a" }}>
-                                    Driver Earnings (85%): ₹{fare?.driverEarnings}
-                                </Text>
-                                <Text style={{ fontSize: 14, fontFamily: "TT-Octosquares-Medium", color: "#eab308" }}>
-                                    Platform Share (15%): ₹{fare?.platformShare}
-                                </Text>
-                            </View>
-                        </View>
-
-                        {/* Buttons */}
-                        <View
-                            style={{
-                                flexDirection: "row",
-                                justifyContent: "space-between",
-                                marginTop: 20,
-                            }}
-                        >
-                            <Button
-                                title="Decline"
-                                onPress={() => rejectRideHandler(rideDetails)}
-                                width={windowWidth(120)}
-                                height={windowHeight(36)}
-                                backgroundColor="crimson"
-                            />
-                            <Button
-                                title="Accept"
-                                onPress={() => acceptRideHandler(rideDetails)}
-                                width={windowWidth(120)}
-                                height={windowHeight(36)}
-                            />
-                        </View>
-                    </View>
-                </TouchableOpacity>
-            </Modal>
 
 
         </View>

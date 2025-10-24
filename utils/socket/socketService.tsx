@@ -8,12 +8,13 @@ type DriverLocationPayload = {
 
 class DriverSocketService {
   private socket: WebSocket | null = null;
-  private isConnected: boolean = false;
+  private isConnected = false;
   private queue: any[] = [];
 
-  private onConnectCallback: (() => void) | null = null;
-  private onMessageCallback: ((data: any) => void) | null = null;
-  private onErrorCallback: ((e: any) => void) | null = null;
+  // allow multiple listeners
+  private connectListeners = new Set<() => void>();
+  private messageListeners = new Set<(data: any) => void>();
+  private errorListeners = new Set<(e: any) => void>();
 
   connect() {
     if (this.socket && this.isConnected) return;
@@ -25,17 +26,18 @@ class DriverSocketService {
       console.log("✅ Driver Socket connected");
       this.isConnected = true;
 
-      // Send queued messages if any
+      // Send queued messages
       this.queue.forEach((msg) => this.socket?.send(msg));
       this.queue = [];
 
-      if (this.onConnectCallback) this.onConnectCallback();
+      // notify all listeners
+      this.connectListeners.forEach((cb) => cb());
     };
 
     this.socket.onmessage = (e) => {
       try {
         const message = JSON.parse(e.data);
-        this.onMessageCallback?.(message);
+        this.messageListeners.forEach((cb) => cb(message));
       } catch (err) {
         console.error("❌ Invalid message format", err);
       }
@@ -43,7 +45,7 @@ class DriverSocketService {
 
     this.socket.onerror = (e) => {
       console.error("❌ Socket error:", e);
-      this.onErrorCallback?.(e);
+      this.errorListeners.forEach((cb) => cb(e));
     };
 
     this.socket.onclose = (e) => {
@@ -53,41 +55,40 @@ class DriverSocketService {
       setTimeout(() => this.connect(), 3000); // Auto reconnect
     };
   }
-  // ✅ Generic send method for any message type
+
   send(data: any) {
     if (this.isConnected && this.socket?.readyState === WebSocket.OPEN) {
       this.socket.send(JSON.stringify(data));
     } else {
-      console.warn("Socket not connected. Message not sent:", data);
+      console.warn("Socket not connected. Queuing message:", data);
+      this.queue.push(JSON.stringify(data));
     }
   }
 
   sendLocationUpdate(driverId: string, location: DriverLocationPayload) {
-    const message = JSON.stringify({
+    const message = {
       type: "locationUpdate",
       role: "driver",
       driver: driverId,
       data: location,
-    });
-
-    if (this.isConnected && this.socket?.readyState === WebSocket.OPEN) {
-      this.socket.send(message);
-    } else {
-      console.warn("📪 Socket not ready. Queuing location update.");
-      this.queue.push(message);
-    }
+    };
+    this.send(message);
   }
 
+  // multi-listener safe subscription
   onConnected(cb: () => void) {
-    this.onConnectCallback = cb;
+    this.connectListeners.add(cb);
+    return () => this.connectListeners.delete(cb);
   }
 
   onMessage(cb: (data: any) => void) {
-    this.onMessageCallback = cb;
+    this.messageListeners.add(cb);
+    return () => this.messageListeners.delete(cb);
   }
 
   onError(cb: (e: any) => void) {
-    this.onErrorCallback = cb;
+    this.errorListeners.add(cb);
+    return () => this.errorListeners.delete(cb);
   }
 
   disconnect() {
@@ -97,9 +98,9 @@ class DriverSocketService {
   }
 
   clearListeners() {
-    this.onConnectCallback = null;
-    this.onMessageCallback = null;
-    this.onErrorCallback = null;
+    this.connectListeners.clear();
+    this.messageListeners.clear();
+    this.errorListeners.clear();
   }
 
   isSocketConnected() {

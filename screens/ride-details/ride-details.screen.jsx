@@ -1,4 +1,4 @@
-import { View, Text, Linking, StyleSheet, ScrollView, TouchableOpacity, Modal, TextInput } from "react-native";
+import { View, Text, Linking, StyleSheet, ScrollView, TouchableOpacity, Modal, TextInput, Image } from "react-native";
 import React, { useEffect, useState } from "react";
 import { router, useLocalSearchParams } from "expo-router";
 import { fontSizes, windowHeight, windowWidth } from "@/themes/app.constant";
@@ -38,9 +38,10 @@ export default function RideDetailsScreen() {
         setLoading(true);
         const id = JSON.parse(rideId); // assuming rideId is passed as stringified JSON
 
-        const { data } = await axiosInstance.get(`/ride/${id}`);
+        const { data } = await axiosInstance.get(`/driver/ride/${id}`);
         if (data.success) {
           setRide(data.ride);
+          console.log(ride)
           setOrderStatus(data.ride.status);
 
           if (data.ride.currentLocation && data.ride.destinationLocation) {
@@ -70,7 +71,31 @@ export default function RideDetailsScreen() {
     };
 
     fetchRide();
-  }, [rideId]);
+  }, [rideId, orderStatus]);
+
+  useEffect(() => {
+    const handleMessage = (rawMessage) => {
+      let message = rawMessage;
+
+      console.log("Received message:", message);
+
+      if (message.type === "rideStatusUpdate") {
+        // safely access ride.id
+        if (!ride) {
+          console.warn("Ride not loaded yet, cannot update status");
+          return;
+        }
+
+        if (ride.id === message.rideId) {
+          setOrderStatus(message.status);
+        }
+      }
+    };
+
+    const unsubscribe = driverSocketService.onMessage(handleMessage);
+    return () => unsubscribe();
+  }, [ride]); // add ride as dependency to always have latest ride
+
 
   const handleSubmit = async () => {
     if (!ride) return;
@@ -94,7 +119,7 @@ export default function RideDetailsScreen() {
       const { coords } = await Location.getCurrentPositionAsync({});
       const { latitude, longitude } = coords;
 
-      const response = await axiosInstance.put(`/driver/update-ride-status`, {
+      const response = await axiosInstance.put(`/ride/update-ride-status`, {
         rideStatus: newStatus,
         rideId: ride.id,
         driverLocation: { latitude, longitude },
@@ -161,6 +186,16 @@ export default function RideDetailsScreen() {
       }
     } catch (error) {
       console.error("Ride status update failed:", error);
+      sendPushNotification(
+        ride.userId.notificationToken,
+        `Ride Status Update: ${ride.destinationLocationName}`,
+        'Your driver is trying to manupulate the ride status . Please be safe . In case of any emergency use emergency contact'
+      );
+      sendPushNotification(
+        ride.driverId.notificationToken,
+        `Ride Status Update: ${ride.destinationLocationName}`,
+        error.response.data.message
+      );
       Toast.show(error.response.data.message, { type: "danger" });
     }
   };
@@ -168,7 +203,7 @@ export default function RideDetailsScreen() {
   const handleOtpVerify = async (enteredOtp) => {
     try {
       console.log(enteredOtp)
-      const response = await axiosInstance.post(`/driver/verify-ride-otp`, {
+      const response = await axiosInstance.post(`/ride/verify-ride-otp`, {
         rideId: ride.id,
         otp: enteredOtp,
       });
@@ -199,6 +234,11 @@ export default function RideDetailsScreen() {
           `Ride Status Update: ${ride.destinationLocationName}`,
           message
         );
+        sendPushNotification(
+          ride.driverId.notificationToken,
+          `Ride Status Update: ${ride.destinationLocationName}`,
+          message
+        );
       }
 
       // Notify via socket
@@ -212,7 +252,17 @@ export default function RideDetailsScreen() {
       Toast.show("Ride started successfully!", { type: "success" });
     } catch (error) {
       setShowOtpModal(false);
-      Toast.show("Invalid OTP, please try again", { type: "danger" });
+      sendPushNotification(
+        ride.userId.notificationToken,
+        `Ride Status Update: ${ride.destinationLocationName}`,
+        'Invalid OTP , Please Share Correct Otp to driver to proceed.'
+      );
+      sendPushNotification(
+        ride.driverId.notificationToken,
+        `Ride Status Update: ${ride.destinationLocationName}`,
+        'Invalid OTP , Please Collect Correct Otp from customer to proceed.'
+      );
+      Toast.show("Invalid OTP, Please try again", { type: "danger" });
     }
   };
 
@@ -227,91 +277,190 @@ export default function RideDetailsScreen() {
     Linking.openURL(`tel:${ride.userId.phone_number}`).catch(err => console.error("Failed to call:", err));
   };
 
-  if (loading) return <Text>Loading...</Text>;
-  if (error) return <Text>{error}</Text>;
-  if (!ride) return null;
+  const getStatusColor = (status) => {
+    switch (status) {
+      case "Booked": return "#4285F4";
+      case "Processing": return "#FBBC05";
+      case "Arrived": return "#FF9800";
+      case "Ongoing": return color.buttonBg;
+      case "Reached": return "#9C27B0";
+      case "Cancelled": return "#FBBC05";
+      default: return "#34A853";
+    }
+  };
 
+  const getStatusText = (status) => {
+    switch (status) {
+      case "Booked": return "Ride Confirmed";
+      case "Processing": return "Heading to Pickup";
+      case "Arrived": return "You Arrived";
+      case "Ongoing": return "Trip in Progress";
+      case "Reached": return "Destination Reached";
+      case "Cancelled": return "Trip Cancelled";
+      default: return "Trip Completed";
+    }
+  };
+
+  const getActionButtonTitle = (status) => {
+    switch (status) {
+      case "Booked": return "Go to Pickup";
+      case "Processing": return "I've Arrived";
+      case "Arrived": return "Verify OTP & Start Ride";
+      case "Ongoing": return "Mark as Reached";
+      case "Reached": return "Complete Ride";
+      default: return "Ride Completed";
+    }
+  };
+
+  const renderTripDetail = (label, iconName, value) => (
+    <View style={styles.detailItem}>
+      <MaterialIcons name={iconName} size={20} color="#5F6368" />
+      <View style={styles.detailTextContainer}>
+        <Text style={styles.detailLabel}>{label}</Text>
+        <Text style={styles.detailText} numberOfLines={2}>{value}</Text>
+      </View>
+    </View>
+  );
+
+  const renderFareRow = (label, value, highlight = false) => (
+    <View style={styles.fareRow}>
+      <Text style={[styles.fareLabel, highlight && { color: color.buttonBg, fontSize: fontSizes.FONT16 }]}>{label}</Text>
+      <Text style={[styles.fareValue, highlight && { color: color.buttonBg, fontSize: fontSizes.FONT16 }]}>{value}</Text>
+    </View>
+  );
+  if (loading) {
+    return (
+      <View style={styles.centered}>
+        <Text style={styles.loadingText}>Loading ride details...</Text>
+      </View>
+    );
+  }
+
+  if (error) {
+    return (
+      <View style={styles.centered}>
+        <Text style={styles.loadingText}>{error}</Text>
+      </View>
+    );
+  }
+
+  if (!ride) {
+    return (
+      <View style={styles.centered}>
+        <Text style={styles.loadingText}>Ride not found</Text>
+      </View>
+    );
+  }
   return (
     <View style={styles.container}>
+      {/* Map Section */}
       <View style={styles.mapContainer}>
         <MapView
           style={styles.map}
           region={region}
           onRegionChangeComplete={setRegion}
         >
-          {ride.currentLocation && <Marker coordinate={ride.currentLocation} />}
-          {ride.destinationLocation && <Marker coordinate={ride.destinationLocation} />}
-          {ride.currentLocation && ride.destinationLocation && (
-            <MapViewDirections
-              origin={ride.currentLocation}
-              destination={ride.destinationLocation}
-              apikey={process.env.EXPO_PUBLIC_GOOGLE_CLOUD_API_KEY}
-              strokeWidth={3}
-              strokeColor={color.buttonBg}
+          {/* Pickup marker */}
+          {ride.currentLocation && (
+            <Marker
+              coordinate={ride.currentLocation}
+              title="Pickup"
+              strokeColor="red"
             />
+          )}
+
+          {/* Destination marker */}
+          {ride.destinationLocation && (
+            <Marker
+              coordinate={ride.destinationLocation}
+              title="Destination"
+              strokeColor="red"
+            />
+          )}
+
+          {/* If cancelled midway, show cancelled marker and split routes */}
+          {ride.status === "Cancelled" && ride.cancelDetails ? (
+            <>
+              {/* Cancelled point marker */}
+              <Marker
+                coordinate={ride.cancelDetails.cancelledLocation}
+                title="Cancelled Here"
+                pinColor="red"
+              />
+
+              {/* Travelled Path (Pickup -> Cancelled Point) */}
+              <MapViewDirections
+                origin={ride.currentLocation}
+                destination={ride.cancelDetails.cancelledLocation}
+                apikey={process.env.EXPO_PUBLIC_GOOGLE_CLOUD_API_KEY}
+                strokeWidth={4}
+                strokeColor="red"
+              />
+
+              {/* Remaining Path (Cancelled Point -> Destination) */}
+              <MapViewDirections
+                origin={ride.cancelDetails.cancelledLocation}
+                destination={ride.destinationLocation}
+                apikey={process.env.EXPO_PUBLIC_GOOGLE_CLOUD_API_KEY}
+                strokeWidth={3}
+                strokeColor="red"
+                lineDashPattern={[10, 10]} // dashed line to show remaining
+              />
+            </>
+          ) : (
+            /* Normal Full Route if not cancelled */
+            ride.currentLocation &&
+            ride.destinationLocation && (
+              <MapViewDirections
+                origin={ride.currentLocation}
+                destination={ride.destinationLocation}
+                apikey={process.env.EXPO_PUBLIC_GOOGLE_CLOUD_API_KEY}
+                strokeWidth={3}
+                strokeColor="red"
+              />
+            )
           )}
         </MapView>
       </View>
 
+
+      {/* Ride Details Card */}
       <View style={styles.cardContainer}>
-        <ScrollView style={styles.scrollContainer} showsVerticalScrollIndicator={false}>
+        <ScrollView
+          style={styles.scrollContainer}
+          showsVerticalScrollIndicator={false}
+        >
           {/* Status Indicator */}
           <View style={styles.statusIndicator}>
             <View
               style={[
                 styles.statusDot,
-                {
-                  backgroundColor:
-                    orderStatus === "Booked"
-                      ? "#4285F4" // Blue - Confirmed
-                      : orderStatus === "Processing"
-                        ? "#FBBC05" // Yellow - Heading to pickup
-                        : orderStatus === "Arrived"
-                          ? "#FF9800" // Orange - Arrived, waiting for OTP
-                          : orderStatus === "Ongoing"
-                            ? color.buttonBg // Primary color - Trip started
-                            : orderStatus === "Reached"
-                              ? "#9C27B0" // Purple - Reached destination
-                              : "#34A853", // Green - Completed
-                },
+                { backgroundColor: getStatusColor(orderStatus) },
               ]}
             />
-            <Text style={styles.statusText}>
-              {orderStatus === "Booked"
-                ? "Ride Confirmed"
-                : orderStatus === "Processing"
-                  ? "Heading to Pickup"
-                  : orderStatus === "Arrived"
-                    ? "You Arrived"
-                    : orderStatus === "Ongoing"
-                      ? "Trip in Progress"
-                      : orderStatus === "Reached"
-                        ? "Destination Reached"
-                        : "Trip Completed"}
-            </Text>
+            <Text style={styles.statusText}>{getStatusText(orderStatus)}</Text>
           </View>
-
-
 
           {/* Passenger Info */}
           <View style={styles.section}>
             <Text style={styles.sectionTitle}>Passenger</Text>
             <View style={styles.passengerInfo}>
-              <View style={styles.avatar}>
-                <MaterialIcons name="person" size={24} color="white" />
-              </View>
               <View style={styles.passengerDetails}>
                 <Text style={styles.passengerName}>{ride.userId.name}</Text>
-                <TouchableOpacity style={styles.callButton} onPress={callPassenger}>
-                  <FontAwesome name="phone" size={14} color="white" />
-                  <Text style={styles.callButtonText}> Call Passenger</Text>
-                </TouchableOpacity>
+                {orderStatus !== "Completed" && orderStatus !== "Cancelled" && (
+                  <TouchableOpacity
+                    style={styles.callButton}
+                    onPress={callPassenger}
+                  >
+                    <FontAwesome name="phone" size={14} color="white" />
+                    <Text style={styles.callButtonText}> Call Passenger</Text>
+                  </TouchableOpacity>
+                )}
               </View>
             </View>
           </View>
 
-          {/* Navigation & Trip Details remain similar, just replace `orderData` with `ride` */}
-          {/* Navigation Buttons */}
+          {/* Navigation */}
           <View style={styles.section}>
             <Text style={styles.sectionTitle}>Navigation</Text>
             <View style={styles.buttonRow}>
@@ -322,7 +471,6 @@ export default function RideDetailsScreen() {
                 <MaterialIcons name="directions" size={20} color="white" />
                 <Text style={styles.navButtonText}>Pickup</Text>
               </TouchableOpacity>
-
               <TouchableOpacity
                 style={styles.navButton}
                 onPress={() => openNavigation(ride?.destinationLocation)}
@@ -336,102 +484,81 @@ export default function RideDetailsScreen() {
           {/* Trip Details */}
           <View style={styles.section}>
             <Text style={styles.sectionTitle}>Trip Details</Text>
-
-            <View style={styles.detailItem}>
-              <MaterialIcons name="location-pin" size={20} color="#5F6368" />
-              <View style={styles.detailTextContainer}>
-                <Text style={styles.detailLabel}>Pickup</Text>
-                <Text style={styles.detailText} numberOfLines={2}>
-                  {ride?.currentLocationName || "Current location"}
-                </Text>
-              </View>
-            </View>
-
-            <View style={styles.detailItem}>
-              <MaterialIcons name="flag" size={20} color="#5F6368" />
-              <View style={styles.detailTextContainer}>
-                <Text style={styles.detailLabel}>Destination</Text>
-                <Text style={styles.detailText} numberOfLines={2}>
-                  {ride?.destinationLocationName || "Destination"}
-                </Text>
-              </View>
-            </View>
-
-            <View style={styles.detailItem}>
-              <MaterialIcons name="directions-car" size={20} color="#5F6368" />
-              <View style={styles.detailTextContainer}>
-                <Text style={styles.detailLabel}>Vehicle</Text>
-                <Text style={styles.detailText}>
-                  {ride?.driverId?.vehicle_type} • {ride?.driverId?.vehicle_color}
-                </Text>
-              </View>
-            </View>
+            {renderTripDetail("Pickup", "location-pin", ride?.currentLocationName || "Current location")}
+            {renderTripDetail("Destination", "flag", ride?.destinationLocationName || "Destination")}
+            {renderTripDetail(
+              "Vehicle",
+              "directions-car",
+              `${ride?.driverId?.vehicle_type} • ${ride?.driverId?.vehicle_color}`
+            )}
           </View>
 
-          {/* Fare Details */}
+          {/* Fare Breakdown */}
+          {/* Fare Breakdown */}
+          <View style={styles.fareContainer}>
+            <Text style={styles.sectionTitle}>
+              {ride.status === "Cancelled" ? "FARE DETAILS (BEFORE CANCELLATION)" : "FARE BREAKDOWN"}
+            </Text>
 
-          <View style={styles.fareContainer}> {/* Use the new dedicated container style */}
-            <Text style={styles.sectionTitle}>FARE BREAKDOWN</Text>
+            {renderFareRow("Planned Distance", `${ride?.distance} km`)}
+            {renderFareRow("Total Fare", `₹${ride?.totalFare}`)}
+            <View style={{ height: 1, backgroundColor: "#EAEAEA", marginVertical: 8 }} />
+            {renderFareRow("Driver Earnings (Planned)", `₹${ride?.driverEarnings}`)}
+            {renderFareRow("Platform Share", `₹${ride?.platformShare}`)}
 
-            <View style={styles.fareRow}>
-              <Text style={styles.fareLabel}>Distance Traveled</Text>
-              <Text style={styles.fareValue}>{ride?.distance} km</Text>
-            </View>
+            {/* If ride was cancelled, show cancellation details */}
+            {ride.status === "Cancelled" && ride.cancelDetails && (
+              <>
+                <View style={{ height: 1, backgroundColor: "#CFCFCF", marginVertical: 12 }} />
+                <Text style={[styles.sectionTitle, { color: "red" }]}>CANCELLATION DETAILS</Text>
 
-            <View style={styles.fareRow}>
-              <Text style={styles.fareLabel}>Trip Fare</Text>
-              <Text style={styles.fareValue}>₹{ride?.totalFare}</Text>
-            </View>
+                {renderTripDetail(
+                  "Cancelled At",
+                  "cancel",
+                  new Date(ride.cancelDetails.cancelledAt).toLocaleString()
+                )}
 
-            {/* Separator line for total earnings */}
-            <View style={{ height: 1, backgroundColor: '#EAEAEA', marginVertical: 8 }} />
+                {renderTripDetail(
+                  "Cancelled Location",
+                  "location-off",
+                  ride.cancelDetails.cancelledLocationName ||
+                  `${ride.cancelDetails.cancelledLocationName}`
+                )}
 
-            <View style={[styles.fareRow, { marginTop: 8 }]}>
-              <Text style={[styles.fareLabel, { color: color.buttonBg, fontWeight: "700", fontSize: fontSizes.FONT16 }]}>
-                YOUR NET EARNINGS
-              </Text>
-              <Text style={[styles.fareValue, { color: color.buttonBg, fontWeight: "700", fontSize: fontSizes.FONT16 }]}>
-                ₹{ride?.driverEarnings}
-              </Text>
-            </View>
-            <View style={[styles.fareRow, { marginTop: 8 }]}>
-              <Text style={[styles.fareLabel, { color: color.buttonBg, fontWeight: "700", fontSize: fontSizes.FONT16 }]}>
-                PLATFORM FEE
-              </Text>
-              <Text style={[styles.fareValue, { color: color.buttonBg, fontWeight: "700", fontSize: fontSizes.FONT16 }]}>
-                ₹{ride?.platformShare}
-              </Text>
-            </View>
+                {renderFareRow("Travelled Distance", `${ride.cancelDetails.travelledDistance} km`)}
+                {renderFareRow("Fare for Travelled Distance", `₹${ride.cancelDetails.totalFare}`)}
+                {renderFareRow("Driver Earnings", `₹${ride.cancelDetails.driverEarnings}`)}
+                {renderFareRow("Platform Share", `₹${ride.cancelDetails.platformShare}`)}
+                {renderFareRow("Refunded to Wallet", `₹${ride.cancelDetails.refundedAmount}`)}
+
+                {ride.cancelDetails.cancelledBy && (
+                  renderFareRow(
+                    "Cancelled By",
+                    ride.cancelDetails.cancelledBy === "user" ? "Passenger" : "Driver"
+                  )
+                )}
+              </>
+            )}
           </View>
+
         </ScrollView>
-        {ride.status !== "Completed" && (
+
+        {/* Action Button */}
+        {ride.status !== "Completed" && ride.status !== "Cancelled" && (
           <View style={styles.actionButtonContainer}>
             <Button
-              title={
-                orderStatus === "Booked"
-                  ? "Go to Pickup"
-                  : orderStatus === "Processing"
-                    ? "I've Arrived"
-                    : orderStatus === "Arrived"
-                      ? "Verify OTP & Start Ride"
-                      : orderStatus === "Ongoing"
-                        ? "Mark as Reached"
-                        : orderStatus === "Reached"
-                          ? "Complete Ride"
-                          : "Ride Completed"
-              }
+              title={getActionButtonTitle(orderStatus)}
               height={48}
               backgroundColor={color.buttonBg}
               textColor="white"
               onPress={handleSubmit}
               disabled={ride.status === "Completed"}
             />
-
           </View>
         )}
-
       </View>
 
+      {/* OTP Modal */}
       {showOtpModal && (
         <Modal transparent visible animationType="slide">
           <View style={styles.modalContainer}>
@@ -444,229 +571,15 @@ export default function RideDetailsScreen() {
                 keyboardType="numeric"
                 maxLength={4}
               />
-
-              {/* Buttons */}
               <View style={styles.buttonRow}>
                 <Button title="Verify OTP" onPress={() => handleOtpVerify(otpInput)} width={"45%"} />
-                <Button
-                  title="Cancel"
-                  onPress={() => setShowOtpModal(false)}
-                  color="red"
-                  width={"45%"}
-                />
+                <Button title="Cancel" onPress={() => setShowOtpModal(false)} color="red" width={"45%"} />
               </View>
             </View>
           </View>
         </Modal>
       )}
-
-
     </View>
   );
+
 }
-
-
-// const styles = StyleSheet.create({
-//   container: {
-//     flex: 1,
-//     backgroundColor: "#ffffff",
-//   },
-//   mapContainer: {
-//     height: '40%',
-//     borderBottomLeftRadius: 16,
-//     borderBottomRightRadius: 16,
-//     overflow: 'hidden',
-//   },
-//   map: {
-//     flex: 1,
-//   },
-//   cardContainer: {
-//     flex: 1,
-//     backgroundColor: "#ffffff",
-//     borderTopLeftRadius: 16,
-//     borderTopRightRadius: 16,
-//     marginTop: -24,
-//     paddingHorizontal: 16,
-//   },
-//   scrollContainer: {
-//     flex: 1,
-//     paddingBottom: 16,
-//   },
-//   statusIndicator: {
-//     flexDirection: 'row',
-//     alignItems: 'center',
-//     marginTop: 24,
-//     marginBottom: 16,
-//   },
-//   statusDot: {
-//     width: 10,
-//     height: 10,
-//     borderRadius: 5,
-//     marginRight: 8,
-//   },
-//   statusText: {
-//     fontSize: 16,
-//     fontWeight: '500',
-//     color: '#202124',
-//     fontFamily: 'TT-Octosquares-Medium',
-//   },
-//   section: {
-//     marginBottom: 24,
-//   },
-//   sectionTitle: {
-//     fontSize: 14,
-//     fontWeight: '500',
-//     color: '#5F6368',
-//     marginBottom: 12,
-//     textTransform: 'uppercase',
-//     letterSpacing: 0.5,
-//     fontFamily: 'TT-Octosquares-Medium',
-//   },
-//   passengerInfo: {
-//     flexDirection: 'row',
-//     alignItems: 'center',
-//   },
-//   avatar: {
-//     width: 48,
-//     height: 48,
-//     borderRadius: 24,
-//     backgroundColor: color.buttonBg,
-//     justifyContent: 'center',
-//     alignItems: 'center',
-//     marginRight: 16,
-//   },
-//   passengerDetails: {
-//     flex: 1,
-//   },
-//   passengerName: {
-//     fontSize: 18,
-//     fontWeight: '500',
-//     color: '#202124',
-//     marginBottom: 4,
-//     fontFamily: 'TT-Octosquares-Medium',
-//   },
-//   callButton: {
-//     flexDirection: 'row',
-//     backgroundColor: color.buttonBg,
-//     paddingVertical: 6,
-//     paddingHorizontal: 12,
-//     borderRadius: 16,
-//     alignItems: 'center',
-//     alignSelf: 'flex-start',
-//   },
-//   callButtonText: {
-//     color: 'white',
-//     fontSize: 14,
-//     fontWeight: '500',
-//     fontFamily: 'TT-Octosquares-Medium',
-//   },
-//   buttonRow: {
-//     flexDirection: 'row',
-//     marginBottom: 16,
-//   },
-//   navButton: {
-//     flex: 1,
-//     flexDirection: 'row',
-//     alignItems: 'center',
-//     justifyContent: 'center',
-//     paddingVertical: 12,
-//     borderRadius: 8,
-//     backgroundColor: color.buttonBg,
-//   },
-//   navButtonText: {
-//     color: 'white',
-//     fontSize: 14,
-//     fontWeight: '500',
-//     marginLeft: 8,
-//     fontFamily: 'TT-Octosquares-Medium',
-//   },
-//   detailItem: {
-//     flexDirection: 'row',
-//     alignItems: 'flex-start',
-//     marginBottom: 16,
-//   },
-//   detailTextContainer: {
-//     flex: 1,
-//     marginLeft: 16,
-//   },
-//   detailLabel: {
-//     fontSize: 12,
-//     color: '#5F6368',
-//     marginBottom: 2,
-//     fontFamily: 'TT-Octosquares-Medium',
-//   },
-//   detailText: {
-//     fontSize: 16,
-//     color: '#202124',
-//     fontFamily: 'TT-Octosquares-Medium',
-//   },
-//   fareRow: {
-//     flexDirection: 'row',
-//     justifyContent: 'space-between',
-//     marginBottom: 8,
-//   },
-//   fareLabel: {
-//     fontSize: 14,
-//     color: '#5F6368',
-//     fontFamily: 'TT-Octosquares-Medium',
-//   },
-//   fareValue: {
-//     fontSize: 14,
-//     color: '#202124',
-//     fontFamily: 'TT-Octosquares-Medium',
-//   },
-//   actionButtonContainer: {
-//     paddingBottom: 24,
-//     paddingTop: 8,
-//   },
-//   modalContainer: {
-//     flex: 1,
-//     backgroundColor: "rgba(0,0,0,0.6)", // dim background
-//     justifyContent: "center",
-//     alignItems: "center",
-//   },
-
-//   modalBox: {
-//     width: "80%",
-//     backgroundColor: "#fff",
-//     borderRadius: 20,
-//     paddingVertical: 30,
-//     paddingHorizontal: 25,
-//     alignItems: "center",
-//     elevation: 10, // Android shadow
-//     shadowColor: "#000", // iOS shadow
-//     shadowOffset: { width: 0, height: 4 },
-//     shadowOpacity: 0.3,
-//     shadowRadius: 6,
-//   },
-//   modalTitle: {
-//     fontFamily: 'TT-Octosquares-Medium',
-//     fontSize: fontSizes.FONT15
-//   },
-//   input: {
-//     fontFamily: 'TT-Octosquares-Medium',
-//     width: "70%",
-//     height: 48,
-//     borderWidth: 1.5,
-//     borderColor: "#ccc",
-//     borderRadius: 10,
-//     marginTop: 15,
-//     marginBottom: 20,
-//     textAlign: "center",
-//     fontSize: fontSizes.font18,
-//     letterSpacing: 8, // spacing for OTP look
-//     fontWeight: "600",
-//     color: "#333",
-//   },
-
-//   buttonRow: {
-//     flexDirection: "row",
-//     justifyContent: "space-evenly",
-//     width: "100%",
-//   },
-//   buttonText: {
-//     color: "#fff",
-//     fontSize: 16,
-//     fontWeight: "600",
-//   },
-// });
