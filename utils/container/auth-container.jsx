@@ -11,6 +11,7 @@ import { external } from "@/styles/external.style";
 import Images from "../images";
 import { windowHeight, windowWidth } from "@/themes/app.constant";
 import { styles } from "./styles";
+import color from "@/themes/app.colors";
 
 
 const AuthContainer = ({ container, topSpace, imageShow }) => {
@@ -28,6 +29,7 @@ const AuthContainer = ({ container, topSpace, imageShow }) => {
                         fontSize: windowWidth(30),
                         textAlign: "center",
                         paddingTop: windowHeight(50),
+                        color: color.primaryText,
                     }}
                 >
                     Stark Driver

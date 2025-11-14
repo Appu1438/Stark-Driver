@@ -31,7 +31,7 @@ const styles = StyleSheet.create({
     marginVertical: windowHeight(5),
   },
   filledBar: {
-    backgroundColor: color.primary,
+    backgroundColor: color.lightGray,
     flex: 1,
     height: windowHeight(1),
     borderRadius: 8,

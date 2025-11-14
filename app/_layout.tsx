@@ -3,12 +3,24 @@ import { useEffect, useState } from "react";
 import "react-native-reanimated";
 import { router, Stack } from "expo-router";
 import { ToastProvider } from "react-native-toast-notifications";
-import { LogBox } from "react-native";
+import { LogBox, StyleSheet, View } from "react-native";
 import { useFonts } from "expo-font";
 import React from "react";
 import * as Linking from "expo-linking";
 import * as Notifications from "expo-notifications";
+import { ThemeProvider, DefaultTheme } from '@react-navigation/native';
+import color from "@/themes/app.colors";
 
+const MyDarkTheme = {
+  ...DefaultTheme,
+  colors: {
+    ...DefaultTheme.colors,
+    background: color.subPrimary, // Global background
+    card:  color.subPrimary,
+    text:  color.primaryText,
+    border:  color.border,
+  },
+};
 export {
   // Catch any errors thrown by the Layout component.
   ErrorBoundary,
@@ -21,7 +33,7 @@ export default function RootLayout() {
   const [loaded, error] = useFonts({
     "TT-Octosquares-Medium": require("../assets/fonts/TT-Octosquares-Medium.ttf"),
   });
-  
+
   Notifications.setNotificationHandler({
     handleNotification: async () => ({
       shouldShowBanner: true,   // 👈 replaces shouldShowAlert
@@ -65,12 +77,24 @@ function RootLayoutNav() {
   }, []);
 
   return (
+    <ThemeProvider value={MyDarkTheme}>
+      <View style={styles.container}>
+        <ToastProvider>
+          <Stack screenOptions={{ headerShown: false }}>
+            <Stack.Screen name="index" />
+          </Stack>
+        </ToastProvider>
+      </View>
+    </ThemeProvider>
 
-    <ToastProvider>
-      <Stack screenOptions={{ headerShown: false }}>
-        <Stack.Screen name="index" />
-      </Stack>
-    </ToastProvider>
 
   );
+
+
 }
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+    backgroundColor: '#000000', // Makes entire app black
+  },
+});

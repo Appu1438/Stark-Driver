@@ -1,108 +1,79 @@
-import { View, Text, StyleSheet } from "react-native";
 import React from "react";
+import { View, Text, StyleSheet } from "react-native";
 import { rideIcons } from "@/configs/constants";
 import { fontSizes, windowHeight, windowWidth } from "@/themes/app.constant";
 import color from "@/themes/app.colors";
-import { useGetDriverData } from "@/hooks/useGetDriverData";
+import { LinearGradient } from "expo-linear-gradient";
 
-export default function RenderRideItem({ item, colors }) {
-  const { driver } = useGetDriverData();
+export default function RenderRideItem({ item }) {
   const iconIndex = parseInt(item.id) - 1;
   const icon = rideIcons[iconIndex];
 
   return (
-    <View style={styles.main}>
-      <View
-        style={[
-          styles.card,
-          { borderColor: colors.border, backgroundColor: colors.card },
-        ]}
-      >
-        <View style={styles.cardTop}>
-          <View>
-            <Text style={styles.data}>
-              {item.value}
-            </Text>
-          </View>
-          <View
-            style={[
-              styles.iconContain,
-              {
-                backgroundColor: colors.background,
-                borderColor: colors.border,
-              },
-            ]}
-          >
-            {icon}
-          </View>
+    <LinearGradient
+      colors={[color.subPrimary, "rgba(255,255,255,0.04)"]}
+      start={{ x: 0, y: 0 }}
+      end={{ x: 1, y: 1 }}
+      style={styles.card}
+    >
+      {/* ---------- Top Row ---------- */}
+      <View style={styles.cardTop}>
+        <View>
+          <Text style={styles.valueText}>{item.value ?? 0}</Text>
         </View>
-        <View style={styles.cardBottom}>
-          <View>
-            <Text style={[styles.title, { color: colors.text }]}>
-              {item.title}
-            </Text>
-          </View>
-        </View>
+
+        <View style={styles.iconWrapper}>{icon}</View>
       </View>
-      <View style={styles.bottomBorder} />
-    </View>
+
+      {/* ---------- Bottom Text ---------- */}
+      <Text style={styles.labelText}>{item.title}</Text>
+    </LinearGradient>
   );
 }
 
 const styles = StyleSheet.create({
-  main: {
-    flex: 1,
-    marginVertical: windowHeight(10),
-    marginHorizontal: windowWidth(15),
-  },
   card: {
-    minHeight: windowHeight(90),
-    height: "auto",
-    width: windowWidth(205),
-    padding: windowWidth(5),
+    flex: 1,
+    borderRadius: 16,
+    paddingVertical: windowHeight(15),
+    paddingHorizontal: windowWidth(15),
+    margin: windowWidth(8),
+    minHeight: windowHeight(100),
+    justifyContent: "space-between",
     borderWidth: 1,
-    borderRadius: 5,
-    overflow: "hidden",
-    position: "relative",
+    borderColor: "rgba(255,255,255,0.08)",
+    // marginHorizontal:5
   },
+
+  /* ---------- Layout ---------- */
   cardTop: {
     flexDirection: "row",
     justifyContent: "space-between",
-    marginHorizontal: windowWidth(10),
-    marginVertical: windowHeight(5),
-  },
-  cardBottom: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    marginHorizontal: windowWidth(5),
-  },
-  data: {
-    color: color.primary,
-    fontWeight: "600",
-    fontSize: fontSizes.FONT20,
-    fontFamily: 'TT-Octosquares-Medium'
-
-  },
-  iconContain: {
-    height: windowHeight(30),
-    width: windowWidth(40),
-    borderRadius: 100,
-    justifyContent: "center",
     alignItems: "center",
+  },
+
+  /* ---------- Icon ---------- */
+  iconWrapper: {
+    height: windowHeight(35),
+    width: windowHeight(35),
+    borderRadius: 50,
+    backgroundColor: "rgba(255,255,255,0.1)",
+    alignItems: "center",
+    justifyContent: "center",
     borderWidth: 1,
+    borderColor: "rgba(255,255,255,0.1)",
   },
-  title: {
-    width: windowWidth(100),
-    fontSize: fontSizes.FONT15,
-    fontWeight: "500",
-    fontFamily: 'TT-Octosquares-Medium'
+
+  /* ---------- Text ---------- */
+  valueText: {
+    fontSize: fontSizes.FONT26,
+    fontFamily: "TT-Octosquares-Medium",
+    color: color.primaryText,
   },
-  bottomBorder: {
-    position: "absolute",
-    bottom: 0,
-    left: 0,
-    right: 5,
-    height: windowHeight(4),
-    backgroundColor: color.primary,
+  labelText: {
+    marginTop: windowHeight(10),
+    fontSize: fontSizes.FONT14,
+    color: color.lightGray,
+    fontFamily: "TT-Octosquares-Medium",
   },
 });

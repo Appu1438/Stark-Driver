@@ -4,43 +4,47 @@
     "slug": "Stark-Driver",
     "version": "1.0.0",
     "orientation": "portrait",
-    "icon": "./assets/icon.png",
+    "icon": "./assets/images/logo/FullLogo.png",
     "scheme": "stark-driver",
     "userInterfaceStyle": "light",
-    "splash": {
-      "image": "./assets/splash.png",
-      "resizeMode": "contain",
-      "backgroundColor": "#ffffff"
-    },
-    "ios": {
-      "supportsTablet": true
-    },
-    "android": {
-      "adaptiveIcon": {
-        "foregroundImage": "./assets/adaptive-icon.png",
-        "backgroundColor": "#ffffff"
-      },
-      "config": {
-        "googleMaps": {
-          "apiKey": ""
-        }
-      },
-      "package": "com.adithyanskumar.StarkDriver"
-    },
-    "web": {
-      "favicon": "./assets/favicon.png"
-    },
     "plugins": [
-      "expo-router",
+      [
+        "expo-splash-screen",
+        {
+          "backgroundColor": "#000000",
+          "image": "./assets/images/logo/FullLogo.png",
+          "dark": {
+            "image": "./assets/images/logo/FullLogo.png",
+            "backgroundColor": "#000000"
+          },
+          "imageWidth": 250
+        }
+      ],
       [
         "expo-font",
         {
-          "fonts": [
-            "./assets/fonts/TT-Octosquares-Medium.ttf"
-          ]
+          "fonts": ["./assets/fonts/TT-Octosquares-Medium.ttf"]
         }
       ]
     ],
+    "android": {
+      "adaptiveIcon": {
+        "foregroundImage": "./assets/images/logo/FullLogo.png",
+        "backgroundColor": "#000000"
+      },
+      "package": "com.adithyanskumar.stark"
+    },
+    "ios": {
+      "supportsTablet": true,
+      "icon": "./assets/images/logo/FullLogo.png",
+      "bundleIdentifier": "com.adithyanskumar.stark",
+      "config": {
+        "googleMapsApiKey":"AIzaSyDZ3-iM9suiGVssgSjEdApgQXpXmDgvVAc"
+      },
+      "infoPlist": {
+        "ITSAppUsesNonExemptEncryption": false
+      }
+    },
     "experiments": {
       "typedRoutes": true
     },

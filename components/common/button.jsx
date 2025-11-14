@@ -29,7 +29,7 @@ const Button = ({
       <Text
         style={[
           commonStyles.extraBold,
-          { color: textColor || color.whiteColor, fontFamily: 'TT-Octosquares-Medium' },
+          { color: textColor || color.primary, fontFamily: 'TT-Octosquares-Medium' },
         ]}
       >
         {title}

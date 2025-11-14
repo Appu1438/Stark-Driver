@@ -27,13 +27,13 @@ export const logout = async (driverId, message) => {
         await AsyncStorage.removeItem("accessToken");
         await AsyncStorage.removeItem("driverData");
 
-        Toast.show(message, { type: "success" });
+        // Toast.show(message, { type: "success" });
         // 4️⃣ Navigate to login and replace stack
         router.replace("/(routes)/login");
 
     } catch (error) {
         console.log("Logout failed:", error.message);
-        Toast.show(message, { type: "success" });
+        // Toast.show(message, { type: "success" });
 
         // // Force clear token and navigate even if request fails
         await AsyncStorage.removeItem("accessToken");
@@ -58,7 +58,7 @@ export const refreshAccessToken = async () => {
         }
         throw new Error("No access token returned");
     } catch (error) {
-        console.log("Refresh token failed:", error.message);
+        console.log("Refresh token failed:", error);
         // If refresh fails, force logout
         const driverStr = await AsyncStorage.getItem("driverData");
         const driver = driverStr ? JSON.parse(driverStr) : null;

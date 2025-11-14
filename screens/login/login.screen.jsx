@@ -13,6 +13,7 @@ import { Toast } from "react-native-toast-notifications";
 import axios from 'axios'
 import axiosInstance from "@/api/axiosInstance";
 import { useFocusEffect } from "@react-navigation/native";
+import color from "@/themes/app.colors";
 
 export default function LoginScreen() {
   const [phone_number, setphone_number] = useState("");
@@ -113,7 +114,9 @@ export default function LoginScreen() {
                   }}
                 >
                   <Text style={{
-                    fontSize: windowHeight(10), fontFamily: 'TT-Octosquares-Medium',
+                    fontSize: windowHeight(10),
+                    fontFamily: 'TT-Octosquares-Medium',
+                    color: color.primaryText,
                   }}>
                     Don't have any rider account?
                   </Text>
@@ -121,7 +124,9 @@ export default function LoginScreen() {
                     onPress={() => router.push("/(routes)/signup")}
                   >
                     <Text style={{
-                      color: "blue", fontSize: windowHeight(10), fontFamily: 'TT-Octosquares-Medium',
+                      fontSize: windowHeight(10), fontFamily: 'TT-Octosquares-Medium',
+                      color: color.primaryText,
+
                     }}>
                       Sign Up
                     </Text>

@@ -14,7 +14,8 @@ const FONT_REGULAR = 'TT-Octosquares-Medium'; // Assuming you have a regular wei
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: CARD_BG, // Use a light background for the whole page
+    backgroundColor: color.bgDark, // Use a light background for the whole page
+    marginBottom:25
   },
 
   centered: {
@@ -23,7 +24,7 @@ const styles = StyleSheet.create({
     alignItems: "center",       // centers horizontally
   },
   loadingText: {
-    color: 'grey',
+    color: color.lightGray,
     fontSize: 18,
     fontFamily: 'TT-Octosquares-Medium',  // 👈 custom font
     textAlign: "center",
@@ -35,6 +36,8 @@ const styles = StyleSheet.create({
     height: windowHeight(450),
     overflow: 'visible', // Remove overflow to allow the card to overlap cleanly
     // Removed border radius here, let the card overlay handle the curve
+    backgroundColor: color.bgDark // Use a light background for the whole page
+
   },
   map: {
     flex: 1,
@@ -43,7 +46,7 @@ const styles = StyleSheet.create({
   // --- Details Card (The Bottom Sheet) ---
   cardContainer: {
     flex: 1,
-    backgroundColor: "#ffffff",
+    backgroundColor: color.subPrimary,
     borderTopLeftRadius: 30, // Larger, smoother curve
     borderTopRightRadius: 30,
     marginTop: -50, // More aggressive overlap for a modern look
@@ -53,7 +56,7 @@ const styles = StyleSheet.create({
     // Elevated shadow for a floating card effect
     ...Platform.select({
       ios: {
-        shadowColor: '#000',
+        shadowColor: color.subPrimary,
         shadowOffset: { width: 0, height: -4 },
         shadowOpacity: 0.1,
         shadowRadius: 10,
@@ -75,8 +78,10 @@ const styles = StyleSheet.create({
     justifyContent: 'center', // Center the status for better prominence
     paddingVertical: 12,
     marginBottom: 20,
-    backgroundColor: CARD_BG, // Use a contrasting background for the status bar
+    // backgroundColor: color.primary, // Use a contrasting background for the status bar
     borderRadius: 12,
+    borderWidth: 2,
+    borderColor: color.border
   },
   statusDot: {
     width: 12, // Slightly larger dot
@@ -87,7 +92,7 @@ const styles = StyleSheet.create({
   statusText: {
     fontSize: fontSizes.FONT16,
     fontFamily: FONT_MEDIUM,
-    color: HEADING_TEXT,
+    color: color.primaryText,
     fontWeight: '600', // Ensure status text is strong
   },
 
@@ -101,7 +106,7 @@ const styles = StyleSheet.create({
   sectionTitle: {
     fontSize: fontSizes.FONT12,
     fontFamily: FONT_MEDIUM,
-    color: SECONDARY_TEXT,
+    color: color.primaryText,
     marginBottom: 10, // Reduced space after title
     textTransform: 'uppercase',
     letterSpacing: 1, // Increased letter spacing for labels
@@ -131,18 +136,18 @@ const styles = StyleSheet.create({
   passengerName: {
     fontSize: fontSizes.FONT17,
     fontFamily: FONT_MEDIUM,
-    color: HEADING_TEXT,
+    color: color.lightGray,
   },
   callButton: {
     flexDirection: 'row',
-    backgroundColor: PRIMARY_COLOR,
+    backgroundColor: color.buttonBg,
     paddingVertical: 8,
     paddingHorizontal: 16,
     borderRadius: 20, // Pill shape
     alignItems: 'center',
   },
   callButtonText: {
-    color: 'white',
+    color: color.primary,
     fontSize: fontSizes.FONT13,
     fontFamily: FONT_MEDIUM,
     marginLeft: 6,
@@ -153,7 +158,8 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     marginBottom: 8,
     marginTop: 4,
-    justifyContent: 'space-around'
+    justifyContent: 'space-around',
+    gap: 10
   },
   navButton: {
     flex: 1,
@@ -162,16 +168,16 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     paddingVertical: 14, // Increased vertical padding
     borderRadius: 12,
-    backgroundColor: PRIMARY_COLOR,
+    backgroundColor: color.buttonBg,
     // Small lift for primary actions
-    shadowColor: PRIMARY_COLOR,
+    shadowColor: color.subPrimary,
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.2,
     shadowRadius: 5,
     elevation: 3,
   },
   navButtonText: {
-    color: 'white',
+    color: color.primary,
     fontSize: fontSizes.FONT15,
     fontFamily: FONT_MEDIUM,
     marginLeft: 8,
@@ -191,23 +197,25 @@ const styles = StyleSheet.create({
   },
   detailLabel: {
     fontSize: fontSizes.FONT12,
-    color: SECONDARY_TEXT,
+    color: color.primaryText,
     marginBottom: 2,
     fontFamily: FONT_REGULAR, // Regular weight for labels
   },
   detailText: {
     fontSize: fontSizes.FONT15,
-    color: HEADING_TEXT,
+    color: color.primaryText,
     fontFamily: FONT_MEDIUM, // Medium weight for content
   },
 
   // --- Fare Breakdown (Use a separate card background) ---
   fareContainer: {
     padding: 16,
-    backgroundColor: CARD_BG,
+    // backgroundColor: color.primary,
     borderRadius: 12,
     marginTop: 12, // Space it out from the previous section
     marginBottom: 24, // Consistent spacing at the end of the scrollable area
+    borderWidth: 2,
+    borderColor: color.border
   },
   fareRow: {
     flexDirection: 'row',
@@ -216,12 +224,12 @@ const styles = StyleSheet.create({
   },
   fareLabel: {
     fontSize: fontSizes.FONT14,
-    color: SECONDARY_TEXT,
+    color: color.primaryText,
     fontFamily: FONT_REGULAR,
   },
   fareValue: {
     fontSize: fontSizes.FONT15,
-    color: HEADING_TEXT,
+    color: color.primaryText,
     fontFamily: FONT_MEDIUM,
   },
 
@@ -230,7 +238,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: windowWidth(24),
     paddingBottom: 30, // Increased bottom padding for safety area
     paddingTop: 16,
-    backgroundColor: 'white', // Ensure it stands out on white background
+    backgroundColor: color.subPrimary, // Ensure it stands out on white background
     borderTopWidth: 1,
     borderTopColor: SEPARATOR_COLOR,
   },
@@ -244,13 +252,13 @@ const styles = StyleSheet.create({
   },
   modalBox: {
     width: "85%", // Slightly wider box
-    backgroundColor: "#fff",
+    backgroundColor: color.subPrimary,
     borderRadius: 20,
     paddingVertical: 35, // More vertical padding
     paddingHorizontal: 25,
     alignItems: "center",
     elevation: 12,
-    shadowColor: PRIMARY_COLOR,
+    shadowColor: color.primary,
     shadowOffset: { width: 0, height: 6 },
     shadowOpacity: 0.3,
     shadowRadius: 10,
@@ -258,7 +266,7 @@ const styles = StyleSheet.create({
   modalTitle: {
     fontFamily: FONT_MEDIUM,
     fontSize: fontSizes.FONT17,
-    color: HEADING_TEXT,
+    color: color.primaryText,
     marginBottom: 8,
   },
   input: {
@@ -266,7 +274,7 @@ const styles = StyleSheet.create({
     width: "70%",
     height: 52, // Taller input field
     borderWidth: 2,
-    borderColor: PRIMARY_COLOR, // Primary color border
+    borderColor: color.border, // Primary color border
     borderRadius: 12,
     marginTop: 18,
     marginBottom: 25,
@@ -274,14 +282,64 @@ const styles = StyleSheet.create({
     fontSize: fontSizes.FONT20, // Larger font for OTP
     letterSpacing: 10,
     fontWeight: "700",
-    color: PRIMARY_COLOR, // OTP text color
+    color: color.primaryText, // OTP text color
   },
   modalButtonRow: {
     flexDirection: "row",
     justifyContent: "space-between",
     width: "100%",
   },
-  // Ensure your Button component respects these styles for proper alignment
+  ratingContainer: {
+    borderRadius: 16,
+    padding: 20,
+    marginBottom: 24,
+    borderWidth: 2,
+    borderColor: color.border,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginTop:10
+  },
+  ratingTitle: {
+    fontSize: fontSizes.FONT16,
+    marginBottom: 8,
+    color: color.primaryText,
+    fontFamily: 'TT-Octosquares-Medium'
+  },
+  starContainer: {
+    flexDirection: "row",
+    justifyContent: "center",
+    marginVertical: 8,
+  },
+  submitButton: {
+    marginTop: 12,
+    backgroundColor: "#f73939",
+    paddingVertical: 10,
+    paddingHorizontal: 24,
+    borderRadius: 8,
+  },
+  submitButtonText: {
+    color: "#fff",
+    fontWeight: "600",
+    fontSize: 16,
+  },
+  thankYouText: {
+    fontSize: fontSizes.FONT16,
+    marginBottom: 8,
+    color: color.primaryGray,
+    fontFamily: 'TT-Octosquares-Medium'
+  },
+  ratingSummary: {
+    flexDirection: "row",
+    justifyContent: "space-around",
+    alignItems: "center",
+    marginTop: 12,
+    paddingVertical: 12,
+    borderRadius: 15,
+    backgroundColor: color.subPrimary,
+    borderWidth: 1,
+    borderColor: color.border,
+  },
+
 });
 
 export { styles };

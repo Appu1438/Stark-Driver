@@ -74,7 +74,8 @@ axiosInstance.interceptors.response.use(
 
       try {
         const newAccessToken = await refreshAccessToken();
-        await AsyncStorage.setItem("accessToken", newAccessToken);
+
+        // await AsyncStorage.setItem("accessToken", newAccessToken);
 
         processQueue(null, newAccessToken); // retry all queued requests
 

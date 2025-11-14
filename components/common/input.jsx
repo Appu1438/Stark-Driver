@@ -34,12 +34,12 @@ export default function Input({
         style={[
           styles.input,
           {
-            backgroundColor: color.lightGray,
-            borderColor: colors.border,
+            backgroundColor: color.subPrimary,
+            borderColor: color.border,
           },
         ]}
         placeholder={placeholder}
-        placeholderTextColor={color.secondaryFont}
+        placeholderTextColor={color.lightGray}
         keyboardType={keyboardType}
         value={value}
         editable={disabled}
@@ -62,15 +62,16 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     marginBottom: 10,
     height: Platform.OS === "ios" ? windowHeight(40) : windowHeight(40),
-    color: color.secondaryFont,
+    color: color.primaryText,
     paddingHorizontal: 10,
     fontFamily: 'TT-Octosquares-Medium',
 
   },
   warning: {
     color: color.red,
-    marginTop: 3,
+    marginTop: 0,
     fontFamily: 'TT-Octosquares-Medium',
+    marginBottom:10
 
   },
 });

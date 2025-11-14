@@ -6,8 +6,8 @@ import fonts from "@/themes/app.fonts";
 
 const styles = StyleSheet.create({
   otpTextInput: {
-    backgroundColor: color.lightGray,
-    borderColor: color.lightGray,
+    backgroundColor: color.subPrimary,
+    borderColor: color.border,
     borderWidth: 0.5,
     borderRadius: 6,
     width: windowWidth(60),

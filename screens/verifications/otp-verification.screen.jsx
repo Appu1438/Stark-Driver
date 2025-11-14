@@ -110,7 +110,7 @@ export default function OtpVerificationScreen() {
                         handleTextChange={(code) => setOtp(code)}
                         inputCount={4}
                         textInputStyle={styles.otpTextInput}
-                        tintColor={color.subtitle}
+                        tintColor={color.lightGray}
                         autoFocus={false}
                     />
                     <View style={[external.mt_30]}>
@@ -137,7 +137,8 @@ export default function OtpVerificationScreen() {
                             }]}>Not Received yet?</Text>
                             <TouchableOpacity>
                                 <Text style={[styles.signUpText, {
-                                    color: "#000", fontFamily: 'TT-Octosquares-Medium',
+                                    color: color.lightGray,
+                                    fontFamily: 'TT-Octosquares-Medium',
                                 }]}>
                                     Resend it
                                 </Text>

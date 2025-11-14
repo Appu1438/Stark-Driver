@@ -1,145 +1,164 @@
-import { View, Text, StyleSheet, TouchableOpacity } from "react-native";
 import React from "react";
+import {
+  View,
+  Text,
+  StyleSheet,
+  TouchableOpacity,
+  Image,
+} from "react-native";
 import { fontSizes, windowHeight, windowWidth } from "@/themes/app.constant";
 import color from "@/themes/app.colors";
-import fonts from "@/themes/app.fonts";
 import SwitchToggle from "react-native-switch-toggle";
 import { Notification } from "@/utils/icons";
+import { LinearGradient } from "expo-linear-gradient";
 
-
-export default function Header({ isOn, toggleSwitch }) {
-    return (
-        <View style={styles.headerMain}>
-            <View style={styles.headerMargin}>
-                <View
-                    style={[
-                        styles.headerAlign,
-                        {
-                            alignItems: "center",
-                            paddingTop: windowHeight(3),
-                            flexDirection: "row",
-                        },
-                    ]}
-                >
-                    <View style={[styles.headerTitle]}>
-                        <Text
-                            style={{
-                                fontFamily: "TT-Octosquares-Medium",
-                                fontSize: windowHeight(22),
-                                color: "#fff",
-                                textAlign: "left",
-                            }}
-                        >
-                            Stark Driver
-                        </Text>
-                    </View>
-                    <TouchableOpacity style={styles.notificationIcon} activeOpacity={0.5}>
-                        <Notification colors={color.whiteColor} />
-                    </TouchableOpacity>
-                </View>
-                <View
-                    style={[
-                        styles.switchContainer,
-                        { backgroundColor: color.whiteColor, flexDirection: "row" },
-                    ]}
-                >
-                    <View
-                        style={{
-                            flexDirection: "row",
-                            alignItems: "center",
-                            gap: windowWidth(2),
-                        }}
-                    >
-                        <Text
-                            style={[styles.valueTitle, { color: isOn ? "green" : "#000" }]}
-                        >
-                            {isOn ? "On " : "Off "}
-                        </Text>
-                        <Text style={{ fontFamily: 'TT-Octosquares-Medium', fontSize: windowWidth(13) }}>
-                            *You are {isOn ? "available" : "not available"} for ride now!
-                        </Text>
-                    </View>
-                    <View style={styles.switchBorder}>
-                        <SwitchToggle
-                            switchOn={isOn}
-                            onPress={toggleSwitch}
-                            containerStyle={styles.switchView}
-                            circleStyle={styles.switchCircle}
-                            backgroundColorOff={color.lightGray}
-                            backgroundColorOn={color.lightGray}
-                            circleColorOn={color.primary}
-                            circleColorOff={color.blackColor}
-                        />
-                    </View>
-                </View>
-            </View>
+export default function Header({ isOn, toggleSwitch, driver }) {
+  return (
+    <LinearGradient
+      colors={[color.darkPrimary, color.bgDark]}
+      start={{ x: 0, y: 0 }}
+      end={{ x: 1, y: 1 }}
+      style={styles.headerMain}
+    >
+      {/* ---------- TOP ROW ---------- */}
+      <View style={styles.topRow}>
+        <View style={styles.profileContainer}>
+          <Image
+            source={{
+              uri:
+                driver?.profilePic ||
+                "https://cdn-icons-png.flaticon.com/512/1946/1946429.png",
+            }}
+            style={styles.profileImage}
+          />
+          <View>
+            <Text style={styles.welcomeText}>Welcome back,</Text>
+            <Text style={styles.driverName}>{driver?.name || "Driver"}</Text>
+          </View>
         </View>
-    );
+
+        <TouchableOpacity style={styles.notificationButton} activeOpacity={0.8}>
+          <Notification colors="#fff" />
+        </TouchableOpacity>
+      </View>
+
+      {/* ---------- SWITCH SECTION ---------- */}
+      <View style={styles.switchContainer}>
+        <View style={styles.switchTextSection}>
+          <View
+            style={[
+              styles.statusDot,
+              {
+                backgroundColor: isOn
+                  ? "rgba(0, 255, 200, 0.6)" // soft cyan glow
+                  : "rgba(255, 255, 255, 0.4)", // muted gray tone
+              },
+            ]}
+          />
+          <Text style={styles.statusLabel}>
+            {isOn ? "You’re online and visible to riders" : "You’re currently offline"}
+          </Text>
+        </View>
+
+        <SwitchToggle
+          switchOn={isOn}
+          onPress={toggleSwitch}
+          containerStyle={styles.switchView}
+          circleStyle={styles.switchCircle}
+          backgroundColorOff="rgba(255,255,255,0.1)"
+          backgroundColorOn="rgba(0,255,200,0.1)"
+          circleColorOn="rgba(0,255,200,0.9)"
+          circleColorOff="rgba(255,255,255,0.5)"
+        />
+      </View>
+    </LinearGradient>
+  );
 }
 
 const styles = StyleSheet.create({
-    headerMain: {
-        backgroundColor: color.primary,
-        paddingHorizontal: windowWidth(10),
-        paddingTop: windowHeight(25),
-        width: "100%",
-        height: windowHeight(115),
-    },
-    logoTitle: {
-        fontSize: fontSizes.FONT18,
-        fontFamily: fonts.bold,
-        color: color.whiteColor,
-    },
-    headerMargin: {
-        marginHorizontal: windowWidth(10),
-        marginTop: windowHeight(10),
-    },
-    headerAlign: {
-        justifyContent: "space-between",
-        alignItems: "center",
-    },
-    headerTitle: {
-        alignItems: "center",
-    },
-    notificationIcon: {
-        height: windowHeight(15),
-        width: windowWidth(40),
-        borderWidth: 1,
-        alignItems: "center",
-        justifyContent: "center",
-        borderRadius: 4,
-        backgroundColor: "#675fd800",
-        borderColor: color.buttonBg,
-    },
-    switchContainer: {
-        height: windowHeight(28),
-        width: "100%",
-        marginVertical: windowHeight(5),
-        borderRadius: 25,
-        justifyContent: "space-between",
-        alignItems: "center",
-        paddingHorizontal: windowWidth(10),
-    },
-    valueTitle: {
-        fontFamily: "TT-Octosquares-Medium",
-    },
-    switchBorder: {
-        height: windowHeight(20),
-        width: windowHeight(45),
-        borderWidth: 2,
-        borderRadius: 25,
-        borderColor: color.linearBorder,
-    },
-    switchView: {
-        height: windowHeight(20),
-        width: windowWidth(55),
-        borderRadius: 25,
-        padding: windowWidth(8),
-        borderColor: color.buttonBg,
-    },
-    switchCircle: {
-        height: windowHeight(15),
-        width: windowWidth(25),
-        borderRadius: 20,
-    },
+  headerMain: {
+    paddingTop: windowHeight(40),
+    paddingBottom: windowHeight(25),
+    paddingHorizontal: windowWidth(25),
+    borderBottomLeftRadius: 25,
+    borderBottomRightRadius: 25,
+    elevation: 8,
+    shadowColor: "#000",
+  },
+
+  /* ---------- TOP ROW ---------- */
+  topRow: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    marginBottom: windowHeight(15),
+  },
+  profileContainer: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 12,
+  },
+  profileImage: {
+    width: 55,
+    height: 55,
+    borderRadius: 30,
+    backgroundColor: "#fff",
+    borderWidth: 2,
+    borderColor: "rgba(255,255,255,0.4)",
+  },
+  welcomeText: {
+    color: "rgba(255,255,255,0.7)",
+    fontSize: fontSizes.FONT14,
+    fontFamily: "TT-Octosquares-Medium",
+  },
+  driverName: {
+    color: "#fff",
+    fontSize: fontSizes.FONT22,
+    fontFamily: "TT-Octosquares-Medium",
+  },
+  notificationButton: {
+    height: 40,
+    width: 40,
+    borderRadius: 20,
+    backgroundColor: "rgba(255,255,255,0.1)",
+    alignItems: "center",
+    justifyContent: "center",
+  },
+
+  /* ---------- SWITCH SECTION ---------- */
+  switchContainer: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    backgroundColor: "rgba(255,255,255,0.08)",
+    borderRadius: 20,
+    paddingHorizontal: 15,
+    paddingVertical: 10,
+  },
+  switchTextSection: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 8,
+  },
+  statusDot: {
+    width: 10,
+    height: 10,
+    borderRadius: 5,
+  },
+  statusLabel: {
+    color: "#fff",
+    fontFamily: "TT-Octosquares-Medium",
+    fontSize: fontSizes.FONT14,
+  },
+  switchView: {
+    width: 60,
+    height: 28,
+    borderRadius: 20,
+    padding: 5,
+  },
+  switchCircle: {
+    width: 22,
+    height: 22,
+    borderRadius: 20,
+  },
 });

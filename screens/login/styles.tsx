@@ -13,21 +13,24 @@ const styles = StyleSheet.create({
         position: "absolute",
         left: windowWidth(-50),
         top: windowHeight(-20),
+        color: color.lightGray,
     },
     countryCodeContainer: {
         width: windowWidth(89),
         height: windowHeight(39),
+        backgroundColor: color.subPrimary
+
     },
     phoneNumberInput: {
-        width: windowWidth(326),
+        width: windowWidth(315),
         height: windowHeight(39),
-        backgroundColor: color.lightGray,
+        backgroundColor: color.subPrimary,
         borderRadius: 4,
         marginHorizontal: windowHeight(9),
         justifyContent: "center",
         paddingHorizontal: windowHeight(9),
         borderWidth: 1,
-        borderColor: color.border,
+        borderColor: color.lightGray,
     },
     rememberMeText: {
         fontWeight: "400",

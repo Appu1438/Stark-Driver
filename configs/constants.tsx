@@ -33,8 +33,7 @@ export const rideIcons = [
   <SmallCard color={color.primary} />,
   <Wallet colors={color.primary} />,
   <SmallCard color={color.primary} />,
-
-  <Driving />,
+  <SmallCard color={color.primary} />,
 
 ];
 

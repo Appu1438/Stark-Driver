@@ -62,16 +62,17 @@ export default function PhoneNumberInput({
           style={[
             styles.phoneNumberInput,
             {
-              width: width || windowWidth(326),
               borderColor: color.border,
             },
           ]}
         >
           <TextInput
-            style={[commonStyles.regularText, {
-              color: '#000', fontFamily: 'TT-Octosquares-Medium',
+            style={[commonStyles.regularText,
+            {
+              color: color.lightGray,
+              fontFamily: 'TT-Octosquares-Medium',
             }]}
-            placeholderTextColor={color.subtitle}
+            placeholderTextColor={color.lightGray}
             placeholder={"Enter your number"}
             keyboardType="numeric"
             onChangeText={setphone_number}

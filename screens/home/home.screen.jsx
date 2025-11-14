@@ -8,6 +8,7 @@ import {
     ScrollView,
     Alert,
     BackHandler,
+    RefreshControl,
 } from "react-native";
 import React, { useCallback, useEffect, useRef, useState } from "react";
 import Header from "@/components/common/header";
@@ -36,11 +37,12 @@ import { sendPushNotification } from "@/utils/notifications/sendPushNotification
 import axiosInstance from "@/api/axiosInstance";
 import { getDistrict } from "@/utils/location/getDistrict";
 import RideModal from "@/components/ride/ride.modal";
+import DriverHomeSkeleton from "./home-skelton.screen";
 export default function HomeScreen() {
     const notificationListener = useRef();
-    const { driver, loading: DriverDataLoading } = useGetDriverData();
-    const { wallet, loading: walletLoading } = useGetDriverWallet();
-    const { recentRides, loading: rideHistoryLoading } = useGetDriverRideHistories();
+    const { driver, loading: DriverDataLoading, refetchData } = useGetDriverData();
+    const { wallet, loading: walletLoading, refetchWallet } = useGetDriverWallet();
+    const { recentRides, loading: rideHistoryLoading, refetchRides } = useGetDriverRideHistories();
 
     const [district, setDistrict] = useState()
 
@@ -547,6 +549,18 @@ export default function HomeScreen() {
     };
 
 
+    const [refreshing, setRefreshing] = useState(false);
+
+    const onRefresh = async () => {
+        try {
+            setRefreshing(true);
+            await refetchData();
+            await refetchRides();
+            await refetchWallet();
+        } finally {
+            setRefreshing(false);
+        }
+    };
 
 
     const driverRideStats = [
@@ -559,20 +573,36 @@ export default function HomeScreen() {
     ];
 
 
+    if (DriverDataLoading || walletLoading || rideHistoryLoading) {
+
+        return <DriverHomeSkeleton />
+    }
     return (
         <View style={[external.fx_1]}>
             <View style={styles.spaceBelow}>
-                <Header isOn={isOn} toggleSwitch={() => handleStatusChange()} />
-                <ScrollView>
+                <Header isOn={isOn} toggleSwitch={() => handleStatusChange()} driver={driver} />
+                <ScrollView
+                    refreshControl={
+                        <RefreshControl
+                            tintColor={color.primary}
+                            refreshing={refreshing}
+                            onRefresh={onRefresh}
+                        />
+                    }
+                    style={{ marginTop: 10 }}
+                >
 
                     <FlatList
                         data={driverRideStats}
                         numColumns={2}
                         renderItem={({ item }) => (
-                            <RenderRideItem item={item} colors={colors} />
+                            <RenderRideItem item={item} />
                         )}
                     />
-                    <View style={[styles.rideContainer, { backgroundColor: colors.card }]}>
+                    <View style={
+                        [styles.rideContainer,
+                        ]}
+                    >
                         <Text style={[styles.rideTitle, { color: colors.text }]}>
                             Recent Rides
                         </Text>
@@ -585,7 +615,7 @@ export default function HomeScreen() {
                                     <Text style={{
                                         fontFamily: "TT-Octosquares-Medium",
                                         marginBottom: 12,
-                                        color: "#222",
+                                        color: color.lightGray,
                                     }}>
                                         You didn't take any ride yet!
                                     </Text>

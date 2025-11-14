@@ -218,7 +218,7 @@ export default function DocumentVerificationScreen() {
                                     onPress={() => handleSubmit()}
                                     title={"Submit"}
                                     backgroundColor={color.buttonBg}
-                                    textColor={color.whiteColor}
+                                    textColor={color.primary}
                                 />
                             </View>
                         </View>

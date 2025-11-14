@@ -18,7 +18,7 @@ import axiosInstance from "@/api/axiosInstance";
 export default function EmailVerificationScreen() {
   const [otp, setOtp] = useState("");
   const [loader, setLoader] = useState(false);
-  const driver = useLocalSearchParams() ;
+  const driver = useLocalSearchParams();
 
   const handleSubmit = async () => {
     setLoader(true);
@@ -72,7 +72,7 @@ export default function EmailVerificationScreen() {
             handleTextChange={(code) => setOtp(code)}
             inputCount={4}
             textInputStyle={styles.otpTextInput}
-            tintColor={color.subtitle}
+            tintColor={color.lightGray}
             autoFocus={false}
           />
           <View style={[external.mt_30]}>
@@ -94,8 +94,10 @@ export default function EmailVerificationScreen() {
                 fontFamily: 'TT-Octosquares-Medium',
               }]}>Not Received yet?</Text>
               <TouchableOpacity>
-                <Text style={[styles.signUpText, {
-                  color: "#000", fontFamily: 'TT-Octosquares-Medium',
+                <Text style={[styles.signUpText,
+                {
+                  color: color.lightGray,
+                  fontFamily: 'TT-Octosquares-Medium',
                 }]}>
                   Resend it
                 </Text>

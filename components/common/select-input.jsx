@@ -40,10 +40,10 @@ export default function SelectInput({
           style={{
             inputAndroid: {
               ...styles.input,
-              backgroundColor: color.lightGray,
+              backgroundColor: color.subPrimary,
               borderColor: colors.border,
               borderWidth: 1,
-              color: "#000",
+              // color: "#000",
               height: windowHeight(39),
               paddingHorizontal: 10,
               borderRadius: 5,
@@ -52,11 +52,11 @@ export default function SelectInput({
             itemStyle: {
               fontFamily: "TT-Octosquares-Medium",
               fontSize: 16,
-              color: "#000",
+              color: color.lightGray,
             },
             placeholder: {
               fontFamily: "TT-Octosquares-Medium",
-              color: "#999",
+              color: color.lightGray,
             },
           }}
         />
@@ -74,22 +74,22 @@ export default function SelectInput({
           items={items}
           placeholder={placeholder}
           style={{
-            backgroundColor: color.lightGray,
-            borderColor: colors.border,
+            backgroundColor: color.subPrimary,
+            borderColor: color.border,
             borderWidth: 1,
             minHeight: windowHeight(40),
             paddingHorizontal: 10,
 
           }}
           textStyle={{
-            color: "#000",
+            color: color.lightGray,
             fontSize: 14,
             fontFamily: 'TT-Octosquares-Medium'
 
           }}
           dropDownContainerStyle={{
             borderColor: colors.border,
-            backgroundColor: "#fff",
+            backgroundColor: color.subPrimary,
             // width: windowWidth(90), // ✅ this controls the dropdown list width
             alignSelf: 'center',     // optional: to center the dropdown under the button
             marginTop: 5,            // optional spacing between button and dropdown
@@ -119,7 +119,9 @@ const styles = StyleSheet.create({
     borderRadius: 5,
     borderWidth: 1,
     height: windowHeight(39),
-    color: color.secondaryFont,
+    color: color.primaryText,
+    // backgroundColor: color.subPrimary
+
   },
   warning: {
     color: color.red,

@@ -86,7 +86,8 @@ export default function SignupScreen() {
         style={{ flex: 1 }}
         contentContainerStyle={{ flexGrow: 1 }}
         keyboardShouldPersistTaps="handled"
-      >      <View>
+      >
+        <View>
           {/* logo */}
           <Text
             style={{
@@ -94,9 +95,10 @@ export default function SignupScreen() {
               fontSize: windowHeight(22),
               paddingTop: windowHeight(50),
               textAlign: "center",
+              color:color.lightGray
             }}
           >
-            Stark
+            Stark Driver
           </Text>
           <View style={{ padding: windowWidth(20) }}>
             <ProgressBar fill={1} />
@@ -218,7 +220,7 @@ export default function SignupScreen() {
                   height={windowHeight(30)}
                   title={"Next"}
                   backgroundColor={color.buttonBg}
-                  textColor={color.whiteColor}
+                  textColor={color.primary}
                 />
               </View>
             </View>
