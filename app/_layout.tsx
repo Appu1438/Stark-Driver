@@ -1,6 +1,7 @@
 import * as SplashScreen from "expo-splash-screen";
 import { useEffect, useState } from "react";
-import "react-native-reanimated";
+import 'react-native-gesture-handler';
+import 'react-native-reanimated';
 import { router, Stack } from "expo-router";
 import { ToastProvider } from "react-native-toast-notifications";
 import { LogBox, StyleSheet, View } from "react-native";
@@ -10,15 +11,16 @@ import * as Linking from "expo-linking";
 import * as Notifications from "expo-notifications";
 import { ThemeProvider, DefaultTheme } from '@react-navigation/native';
 import color from "@/themes/app.colors";
-
+import { GestureHandlerRootView } from "react-native-gesture-handler";
+import Animated from "react-native-reanimated";
 const MyDarkTheme = {
   ...DefaultTheme,
   colors: {
     ...DefaultTheme.colors,
     background: color.subPrimary, // Global background
-    card:  color.subPrimary,
-    text:  color.primaryText,
-    border:  color.border,
+    card: color.subPrimary,
+    text: color.primaryText,
+    border: color.border,
   },
 };
 export {
@@ -79,11 +81,18 @@ function RootLayoutNav() {
   return (
     <ThemeProvider value={MyDarkTheme}>
       <View style={styles.container}>
-        <ToastProvider>
-          <Stack screenOptions={{ headerShown: false }}>
-            <Stack.Screen name="index" />
-          </Stack>
-        </ToastProvider>
+        <GestureHandlerRootView style={{ flex: 1 }}>
+          <Animated.View style={{ flex: 1 }}>
+
+            <ToastProvider>
+              <Stack screenOptions={{ headerShown: false }}>
+                <Stack.Screen name="index" />
+              </Stack>
+            </ToastProvider>
+          </Animated.View>
+
+        </GestureHandlerRootView>
+
       </View>
     </ThemeProvider>
 

@@ -106,5 +106,5 @@ export const useDriverEarnings = (period = "daily") => {
     fetchEarnings();
   }, [period]);
 
-  return { earnings, loading, refetch: fetchEarnings };
+  return { earnings, loading, refetchEarnings: fetchEarnings };
 };

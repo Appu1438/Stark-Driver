@@ -132,12 +132,12 @@ const EarningsSkeleton = () => {
 // ---------- MAIN COMPONENT ----------
 export default function EarningsDetails() {
   const [period, setPeriod] = useState<"daily" | "weekly" | "monthly">("daily");
-  const { earnings, loading, refetch } = useDriverEarnings(period);
+  const { earnings, loading, refetchEarnings } = useDriverEarnings(period);
   const [refreshing, setRefreshing] = useState(false);
 
   const onRefresh = async () => {
     setRefreshing(true);
-    await refetch();
+    await refetchEarnings();
     setRefreshing(false);
   };
 

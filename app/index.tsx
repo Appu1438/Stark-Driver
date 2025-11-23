@@ -2,6 +2,8 @@ import AsyncStorage from "@react-native-async-storage/async-storage";
 import { Redirect, router } from "expo-router";
 import { useEffect, useState } from "react";
 import { Linking } from "react-native";
+import 'react-native-gesture-handler';
+import 'react-native-reanimated';
 
 export default function Index() {
   const [isLoggedIn, setisLoggedIn] = useState(false);

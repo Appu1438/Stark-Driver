@@ -40,7 +40,7 @@ export default function RideHistory() {
                 Ride History
             </Text>
             <FlatList
-                data={recentRides.slice(0, 3)} // slice if you want to skip the first item
+                data={recentRides} // slice if you want to skip the first item
                 keyExtractor={(item, index) => item.id || index.toString()}
                 renderItem={({ item }) => <RideCard item={item} />}
                 ListEmptyComponent={

@@ -38,9 +38,17 @@ import axiosInstance from "@/api/axiosInstance";
 import { getDistrict } from "@/utils/location/getDistrict";
 import RideModal from "@/components/ride/ride.modal";
 import DriverHomeSkeleton from "./home-skelton.screen";
+import { useTripRadar } from "@/store/useTripRadar";
 export default function HomeScreen() {
     const notificationListener = useRef();
     const { driver, loading: DriverDataLoading, refetchData } = useGetDriverData();
+    const setDriver = useTripRadar(state => state.setDriver);
+
+    useEffect(() => {
+        if (driver) {
+            setDriver(driver); // store driver in zustand
+        }
+    }, [driver]);
     const { wallet, loading: walletLoading, refetchWallet } = useGetDriverWallet();
     const { recentRides, loading: rideHistoryLoading, refetchRides } = useGetDriverRideHistories();
 
@@ -75,6 +83,13 @@ export default function HomeScreen() {
     const [currentLocation, setCurrentLocation] = useState(null);
     const [lastLocation, setLastLocation] = useState(null);
     const lastUpdateTimeRef = useRef(0);
+
+    const [driverLocation, setDriverLocation] = useState(null);
+    const driverLocationRef = useRef(null);
+
+    useEffect(() => {
+        driverLocationRef.current = driverLocation;
+    }, [driverLocation]);
 
     const { colors } = useTheme();
 
@@ -195,6 +210,7 @@ export default function HomeScreen() {
         driverSocketService.clearListeners();
 
         return () => {
+            console.log('unmount works')
             driverSocketService.clearListeners();
 
             driverSocketService.disconnect();
@@ -276,6 +292,7 @@ export default function HomeScreen() {
                         getDistrict(latitude, longitude, setDistrict)
                         setCurrentLocation(newLocation);
                         setLastLocation(newLocation);
+                        setDriverLocation(newLocation)
                         await sendLocationUpdate(newLocation);
 
                     }
@@ -315,110 +332,121 @@ export default function HomeScreen() {
         }
     };
 
+    const { requests, addRequest, rejectRequest, acceptRequest } = useTripRadar();
+
+    // ——————————————— SOCKET LISTENER ———————————————
+    useEffect(() => {
+        const unsubscribe = driverSocketService.onMessage((msg) => {
+            if (msg.type === "rideRequest") {
+                addRequest(msg.rideRequest, driverLocationRef.current);
+            }
+        });
+        return () => unsubscribe();
+    }, []);
 
     // ---------- socket listener + auto-reject ----------
-    useEffect(() => {
-        // message handler
-        const handleMessage = (message) => {
-            console.log(message)
-            if (message.type === "rideRequest") {
-                const orderData = message.rideRequest;
+    // useEffect(() => {
+    //     // message handler
+    //     const handleMessage = (message) => {
+    //         console.log(message)
+    //         if (message.type === "rideRequest") {
+    //             const orderData = message.rideRequest;
 
-                // save current request (so accept/reject can reference it)
-                currentRequestRef.current = orderData;
+    //             // save current request (so accept/reject can reference it)
+    //             currentRequestRef.current = orderData;
 
-                // populate UI states (your existing setters)
-                setRideDetails(orderData);
-                setFirstMarker({
-                    latitude: orderData.currentLocation.latitude,
-                    longitude: orderData.currentLocation.longitude,
-                });
-                setSecondMarker({
-                    latitude: orderData.marker.latitude,
-                    longitude: orderData.marker.longitude,
-                });
-                setRegion({
-                    latitude: (orderData.currentLocation.latitude + orderData.marker.latitude) / 2,
-                    longitude: (orderData.currentLocation.longitude + orderData.marker.longitude) / 2,
-                    latitudeDelta:
-                        Math.abs(orderData.currentLocation.latitude - orderData.marker.latitude) * 2,
-                    longitudeDelta:
-                        Math.abs(orderData.currentLocation.longitude - orderData.marker.longitude) * 2,
-                });
-                setdistance(orderData.distance);
-                setcurrentLocationName(orderData.currentLocationName);
-                setdestinationLocationName(orderData.destinationLocation);
-                setUserData(orderData.user);
-                setFare(orderData.fare);
+    //             // populate UI states (your existing setters)
+    //             setRideDetails(orderData);
+    //             setFirstMarker({
+    //                 latitude: orderData.currentLocation.latitude,
+    //                 longitude: orderData.currentLocation.longitude,
+    //             });
+    //             setSecondMarker({
+    //                 latitude: orderData.marker.latitude,
+    //                 longitude: orderData.marker.longitude,
+    //             });
+    //             setRegion({
+    //                 latitude: (orderData.currentLocation.latitude + orderData.marker.latitude) / 2,
+    //                 longitude: (orderData.currentLocation.longitude + orderData.marker.longitude) / 2,
+    //                 latitudeDelta:
+    //                     Math.abs(orderData.currentLocation.latitude - orderData.marker.latitude) * 2,
+    //                 longitudeDelta:
+    //                     Math.abs(orderData.currentLocation.longitude - orderData.marker.longitude) * 2,
+    //             });
+    //             setdistance(orderData.distance);
+    //             setcurrentLocationName(orderData.currentLocationName);
+    //             setdestinationLocationName(orderData.destinationLocation);
+    //             setUserData(orderData.user);
+    //             setFare(orderData.fare);
 
-                // show modal
-                setIsModalVisible(true);
+    //             // show modal
+    //             setIsModalVisible(true);
 
-                // reset any old timers / messages
-                setTimeoutMessage("");
-                if (countdownIntervalRef.current) {
-                    clearInterval(countdownIntervalRef.current);
-                    countdownIntervalRef.current = null;
-                }
-                if (autoRejectTimeoutRef.current) {
-                    clearTimeout(autoRejectTimeoutRef.current);
-                    autoRejectTimeoutRef.current = null;
-                }
+    //             // reset any old timers / messages
+    //             setTimeoutMessage("");
+    //             if (countdownIntervalRef.current) {
+    //                 clearInterval(countdownIntervalRef.current);
+    //                 countdownIntervalRef.current = null;
+    //             }
+    //             if (autoRejectTimeoutRef.current) {
+    //                 clearTimeout(autoRejectTimeoutRef.current);
+    //                 autoRejectTimeoutRef.current = null;
+    //             }
 
-                // start countdown (15 seconds)
-                setTimeoutMessage("⏱ This request will auto-reject in 30 seconds...");
-                setCountdown(30);
-                countdownIntervalRef.current = setInterval(() => {
-                    setCountdown((prev) => {
-                        if (prev === null) return null;
-                        if (prev <= 1) {
-                            // stop the interval (we'll trigger auto-reject below via timeout too)
-                            if (countdownIntervalRef.current) {
-                                clearInterval(countdownIntervalRef.current);
-                                countdownIntervalRef.current = null;
-                            }
-                            return 0;
-                        }
-                        return prev - 1;
-                    });
-                }, 1000);
+    //             // start countdown (15 seconds)
+    //             setTimeoutMessage("⏱ This request will auto-reject in 30 seconds...");
+    //             setCountdown(30);
+    //             countdownIntervalRef.current = setInterval(() => {
+    //                 setCountdown((prev) => {
+    //                     if (prev === null) return null;
+    //                     if (prev <= 1) {
+    //                         // stop the interval (we'll trigger auto-reject below via timeout too)
+    //                         if (countdownIntervalRef.current) {
+    //                             clearInterval(countdownIntervalRef.current);
+    //                             countdownIntervalRef.current = null;
+    //                         }
+    //                         return 0;
+    //                     }
+    //                     return prev - 1;
+    //                 });
+    //             }, 1000);
 
-                // auto reject fallback at 15s
-                autoRejectTimeoutRef.current = setTimeout(() => {
-                    // ensure the modal is still open and request matches
-                    if (!currentRequestRef.current) return;
+    //             // auto reject fallback at 15s
+    //             autoRejectTimeoutRef.current = setTimeout(() => {
+    //                 // ensure the modal is still open and request matches
+    //                 if (!currentRequestRef.current) return;
 
-                    setTimeoutMessage("⚠️ Ride request expired. Auto-rejected.");
-                    // call same reject handler used for manual reject
-                    rejectRideHandler({
-                        ...(currentRequestRef.current || {}), // fallback empty object
-                        ...(driverRef.current?.id ? { driverId: driverRef.current.id } : {}), // only add if defined
-                    });
+    //                 setTimeoutMessage("⚠️ Ride request expired. Auto-rejected.");
+    //                 // call same reject handler used for manual reject
+    //                 rejectRideHandler({
+    //                     ...(currentRequestRef.current || {}), // fallback empty object
+    //                     ...(driverRef.current?.id ? { driverId: driverRef.current.id } : {}), // only add if defined
+    //                 });
 
-                }, 30000);
-            }
-        };
+    //             }, 30000);
+    //         }
+    //     };
 
-        // register handler (replace existing onMessage)
-        // driverSocketService.onMessage(handleMessage);
-        const unsubscribe = driverSocketService.onMessage(handleMessage);
+    //     // register handler (replace existing onMessage)
+    //     // driverSocketService.onMessage(handleMessage);
+    //     const unsubscribe = driverSocketService.onMessage(handleMessage);
 
 
-        // cleanup on unmount: remove handler, clear timers
-        return () => {
-            // remove handler by setting empty callback (your service sets a single callback)
-            unsubscribe(); // removes only this listener
-            if (countdownIntervalRef.current) {
-                clearInterval(countdownIntervalRef.current);
-                countdownIntervalRef.current = null;
-            }
-            if (autoRejectTimeoutRef.current) {
-                clearTimeout(autoRejectTimeoutRef.current);
-                autoRejectTimeoutRef.current = null;
-            }
-            currentRequestRef.current = null;
-        };
-    }, []); // run once
+    //     // cleanup on unmount: remove handler, clear timers
+    //     return () => {
+    //         // remove handler by setting empty callback (your service sets a single callback)
+    //         unsubscribe(); // removes only this listener
+    //         if (countdownIntervalRef.current) {
+    //             clearInterval(countdownIntervalRef.current);
+    //             countdownIntervalRef.current = null;
+    //         }
+    //         if (autoRejectTimeoutRef.current) {
+    //             clearTimeout(autoRejectTimeoutRef.current);
+    //             autoRejectTimeoutRef.current = null;
+    //         }
+    //         currentRequestRef.current = null;
+    //     };
+    // }, []); // run once
 
 
     const clearTimerAndCloseModal = () => {

@@ -441,7 +441,7 @@ export default function RideDetailsScreen() {
               zIndex={1000}
             >
               <Image
-                source={markerIcon}
+                source={Images.mapPickupMarker}
                 style={{ width: windowWidth(35), height: windowHeight(35), tintColor: color.primaryGray }}
                 resizeMode="contain"
               />
@@ -457,7 +457,7 @@ export default function RideDetailsScreen() {
 
             >
               <Image
-                source={markerIcon}
+                source={Images.mapDropMarker}
                 style={{ width: windowWidth(35), height: windowHeight(35), tintColor: color.primaryGray }}
                 resizeMode="contain"
               />
@@ -474,8 +474,12 @@ export default function RideDetailsScreen() {
 
                 zIndex={1000}>
                 <Image
-                  source={markerIcon}
-                  style={{ width: windowWidth(35), height: windowHeight(35), tintColor: color.primaryGray }}
+                  source={Images.mapCancelMarker}
+                  style={{
+                     width: windowWidth(35),
+                      height: windowHeight(35), 
+                    tintColor: color.primaryGray
+                   }}
                   resizeMode="contain"
                 />
               </Marker>

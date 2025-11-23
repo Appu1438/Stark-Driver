@@ -22,7 +22,7 @@ import { handleAddMoney, logout } from "@/api/apis";
 import DriverProfileSkeleton from "./profile-skelton.screen";
 
 export default function Profile() {
-  const { driver, loading, refetchData } = useGetDriverData();
+  const { driver, loading: dataLoading, refetchData } = useGetDriverData();
   const { wallet, loading: walletLoading, refetchWallet } = useGetDriverWallet();
 
   const [refreshing, setRefreshing] = useState(false);
@@ -34,7 +34,7 @@ export default function Profile() {
     setRefreshing(false);
   };
 
-  if (loading || walletLoading) {
+  if (dataLoading || walletLoading) {
     return <DriverProfileSkeleton />;
   }
 

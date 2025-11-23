@@ -17,6 +17,10 @@ export type images = {
   bgDarkOnboard: ImageSourcePropType;
   authBgDark: ImageSourcePropType;
   mapMarker: ImageSourcePropType;
+  mapCancelMarker: ImageSourcePropType;
+  mapPickupMarker: ImageSourcePropType;
+  mapDropMarker: ImageSourcePropType;
+  mapSelfMarker: ImageSourcePropType;
 };
 
 const Images: images = {
@@ -35,6 +39,10 @@ const Images: images = {
   destinationDark: require("../../assets/images/onBoarding/destinationDark.png"),
   bgDarkOnboard: require("../../assets/images/onBoarding/bgDarkOnboard.png"),
   authBgDark: require("../../assets/images/authImage/authBgDark.png"),
-  mapMarker: require("../../assets/images/rideScreen/marker.png"),
+  mapMarker: require("../../assets/images/markers/marker.png"),
+  mapCancelMarker: require("../../assets/images/markers/cancelledMarker.png"),
+  mapPickupMarker: require("../../assets/images/markers/pickupMarker.png"),
+  mapDropMarker: require("../../assets/images/markers/dropMarker.png"),
+  mapSelfMarker: require("../../assets/images/markers/selfMarker.png"),
 };
 export default Images;

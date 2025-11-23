@@ -5,8 +5,14 @@ import { History } from "@/assets/icons/history";
 import color from "@/themes/app.colors";
 import { Tabs } from "expo-router";
 import React from "react";
+import { Map } from "@/assets/icons/map";
+import { MapLight } from "@/assets/icons/mapLight";
+import { useTripRadar } from "@/store/useTripRadar";
+import { View, Text } from "react-native";
 
 export default function _layout() {
+  const { requests } = useTripRadar();   // <-- you already have this
+
   return (
     <Tabs
       screenOptions={({ route }) => {
@@ -14,41 +20,87 @@ export default function _layout() {
           headerShown: false,
           tabBarShowLabel: false,
           tabBarIcon: ({ focused }) => {
+
+            // ⭐ JSX that will be returned
             let iconName;
+
+            // HOME
             if (route.name === "home") {
-              if (focused) {
-                iconName = (
-                  <Home colors={color.buttonBg} width={24} height={24} />
-                );
-              } else {
-                iconName = <HomeLight />;
-              }
-            } else if (route.name === "rides/index") {
-              if (focused) {
-                iconName = (
-                  <History color={color.buttonBg} />
-
-                );
-              } else {
-                iconName = (
-                  <History color={"#8F8F8F"} />
-
-                );
-              }
-
-            } else if (route.name === "profile/index") {
-              if (focused) {
-                iconName = <Person fill={color.buttonBg} />;
-              } else {
-                iconName = <Person fill={"#8F8F8F"} />;
-              }
+              iconName = focused ? (
+                <Home colors={color.buttonBg} width={24} height={24} />
+              ) : (
+                <HomeLight />
+              );
             }
+
+            // ⭐ TRIP RADAR WITH BADGE
+            else if (route.name === "trip-radar/index") {
+              const Icon = focused ? (
+                <Map fill={color.buttonBg} />
+              ) : (
+                <MapLight fill={"#8F8F8F"} />
+              );
+
+              return (
+                <View style={{ position: "relative" }}>
+                  {Icon}
+
+                  {/* 🔥 Badge */}
+                  {requests.length > 0 && (
+                    <View
+                      style={{
+                        position: "absolute",
+                        top: -6,
+                        right: -10,
+                        backgroundColor: "red",
+                        borderRadius: 10,
+                        paddingHorizontal: 5,
+                        minWidth: 18,
+                        height: 18,
+                        justifyContent: "center",
+                        alignItems: "center",
+                      }}
+                    >
+                      <Text
+                        style={{
+                          color: "white",
+                          fontSize: 11,
+                          fontWeight: "bold",
+                        }}
+                      >
+                        {requests.length}
+                      </Text>
+                    </View>
+                  )}
+                </View>
+              );
+            }
+
+            // RIDES
+            else if (route.name === "rides/index") {
+              iconName = focused ? (
+                <History color={color.buttonBg} />
+              ) : (
+                <History color={"#8F8F8F"} />
+              );
+            }
+
+            // PROFILE
+            else if (route.name === "profile/index") {
+              iconName = focused ? (
+                <Person fill={color.buttonBg} />
+              ) : (
+                <Person fill={"#8F8F8F"} />
+              );
+            }
+
             return iconName;
           },
         };
       }}
     >
       <Tabs.Screen name="home" />
+      <Tabs.Screen name="trip-radar/index" />
       <Tabs.Screen name="rides/index" />
       <Tabs.Screen name="profile/index" />
     </Tabs>
