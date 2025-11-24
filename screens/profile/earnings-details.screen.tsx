@@ -15,6 +15,7 @@ import { BarChart } from "react-native-gifted-charts";
 import { useDriverEarnings } from "@/hooks/useGetDriverData";
 import color from "@/themes/app.colors";
 import { fontSizes, windowHeight, windowWidth } from "@/themes/app.constant";
+import { EarningsModal } from "@/components/earnings/earningsModal";
 
 const TABS = ["daily", "weekly", "monthly"];
 const screenWidth = Dimensions.get("window").width;
@@ -141,9 +142,13 @@ export default function EarningsDetails() {
     setRefreshing(false);
   };
 
-  const totalEarnings = earnings?.totalEarnings || 0;
+  const totalEarnings = earnings?.driverEarnings || 0;
   const rideCount = earnings?.rideCount || 0;
   const avgEarning = rideCount ? (totalEarnings / rideCount).toFixed(0) : 0;
+
+  const [selectedItem, setSelectedItem] = useState(null);
+  const [modalVisible, setModalVisible] = useState(false);
+
 
   return (
     <ScrollView
@@ -231,7 +236,7 @@ export default function EarningsDetails() {
                 marginBottom: 5,
               }}
             >
-              Total Earnings 
+              Total Earnings
             </Text>
             <Text
               style={{
@@ -289,7 +294,7 @@ export default function EarningsDetails() {
                 data={[...earnings.chartData]
                   .reverse()
                   .map((d: any) => ({
-                    value: d.totalEarnings,
+                    value: d.driverEarnings,
                     label:
                       period === "monthly"
                         ? formatMonthLabel(d.label)
@@ -333,7 +338,7 @@ export default function EarningsDetails() {
                     : 20
                 }
                 maxValue={
-                  Math.max(...earnings.chartData.map((d: any) => d.totalEarnings)) * 1.2
+                  Math.max(...earnings.chartData.map((d: any) => d.totalFare)) * 1.2
                 }
                 renderTooltip={(item) => (
                   <View
@@ -393,37 +398,44 @@ export default function EarningsDetails() {
               keyExtractor={(item, index) => index.toString()}
               scrollEnabled={false}
               renderItem={({ item }) => (
-                <View
-                  style={{
-                    flexDirection: "row",
-                    justifyContent: "space-between",
-                    alignItems: "center",
-                    backgroundColor: color.bgDark,
-                    borderRadius: 12,
-                    paddingVertical: 14,
-                    paddingHorizontal: 18,
-                    marginVertical: 6,
+                <TouchableOpacity
+                  onPress={() => {
+                    setSelectedItem(item);
+                    setModalVisible(true);
                   }}
                 >
-                  <Text
+                  <View
                     style={{
-                      fontFamily: "TT-Octosquares-Medium",
-                      color: color.primaryText,
-                      fontSize: fontSizes.FONT15,
+                      flexDirection: "row",
+                      justifyContent: "space-between",
+                      alignItems: "center",
+                      backgroundColor: color.bgDark,
+                      borderRadius: 12,
+                      paddingVertical: 14,
+                      paddingHorizontal: 18,
+                      marginVertical: 6,
                     }}
                   >
-                    {formatListLabel(item.label, period)}
-                  </Text>
-                  <Text
-                    style={{
-                      fontFamily: "TT-Octosquares-Medium",
-                      color: color.buttonBg,
-                      fontSize: fontSizes.FONT16,
-                    }}
-                  >
-                    ₹ {item.totalEarnings.toLocaleString("en-IN")}
-                  </Text>
-                </View>
+                    <Text
+                      style={{
+                        fontFamily: "TT-Octosquares-Medium",
+                        color: color.primaryText,
+                        fontSize: fontSizes.FONT15,
+                      }}
+                    >
+                      {formatListLabel(item.label, period)}
+                    </Text>
+                    <Text
+                      style={{
+                        fontFamily: "TT-Octosquares-Medium",
+                        color: color.buttonBg,
+                        fontSize: fontSizes.FONT16,
+                      }}
+                    >
+                      ₹ {item.driverEarnings.toLocaleString("en-IN")}
+                    </Text>
+                  </View>
+                </TouchableOpacity>
               )}
               ListEmptyComponent={
                 <Text
@@ -441,7 +453,15 @@ export default function EarningsDetails() {
           </View>
         </>
       )}
+      <EarningsModal
+        visible={modalVisible}
+        item={selectedItem}
+        onClose={() => setModalVisible(false)}
+      />
+
     </ScrollView>
+
+
   );
 }
 

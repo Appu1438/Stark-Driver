@@ -58,7 +58,7 @@ export default function DocumentVerificationScreen() {
         console.log(driver);
 
         try {
-            const res = await axiosInstance.post("driver//send-otp", {
+            const res = await axiosInstance.post("driver/send-otp", {
                 phone_number: `${driverData.phone_number}`,
             });
 

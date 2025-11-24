@@ -54,7 +54,7 @@ export default function TripRadarScreen() {
     const todayData = earnings?.chartData?.find(item => item.label === today);
 
     // Fallback if not found
-    setTodaysEarnings(todayData?.totalEarnings ?? 0);
+    setTodaysEarnings(todayData?.driverEarnings ?? 0);
     setTodaysRideCount(todayData?.rideCount ?? 0);
 
   }, [earnings])
@@ -166,35 +166,39 @@ export default function TripRadarScreen() {
   return (
     <View style={styles.container}
     >
-      {/* ONLINE BADGE (same as yours) */}
-      <TouchableOpacity style={styles.headerOverlay} onPress={() => onRefresh()}>
-        <View style={styles.statusPill}>
-          <View
-            style={[
-              styles.statusDot,
-              { backgroundColor: driver?.status === "active" ? color.primaryText : color.primaryText },
-            ]}
-          />
-          <Text style={styles.statusText}>
-            {driver?.status === "active" ? "Online & Searching" : "You are Offline"}
-          </Text>
-        </View>
-      </TouchableOpacity>
+      {requests.length == 0 && (
+        <>
 
-      {/* FLOATING TODAY'S EARNINGS CARD */}
-      {requests.length==0&&(
+          {/* ONLINE BADGE (same as yours) */}
+          <TouchableOpacity style={styles.headerOverlay} onPress={() => onRefresh()}>
+            <View style={styles.statusPill}>
+              <View
+                style={[
+                  styles.statusDot,
+                  { backgroundColor: driver?.status === "active" ? color.primaryText : color.primaryText },
+                ]}
+              />
+              <Text style={styles.statusText}>
+                {driver?.status === "active" ? "Online & Searching" : "You are Offline"}
+              </Text>
+            </View>
+          </TouchableOpacity>
 
-        <View style={styles.earningsCard}>
-        <View style={styles.earnRow}>
-          <Text style={styles.earnTitle}>Today's Earnings</Text>
-          <Text style={styles.earnAmount}>₹ {todaysEarnings}</Text>
-        </View>
+          {/* FLOATING TODAY'S EARNINGS CARD */}
 
-        <View style={styles.earnRowBottom}>
-          <Text style={styles.earnSubtitle}>Completed Rides</Text>
-          <Text style={styles.earnCount}>{todaysRideCount}</Text>
-        </View>
-      </View>
+          <View style={styles.earningsCard}>
+            <View style={styles.earnRow}>
+              <Text style={styles.earnTitle}>Today's Earnings</Text>
+              <Text style={styles.earnAmount}>₹ {todaysEarnings}</Text>
+            </View>
+
+            <View style={styles.earnRowBottom}>
+              <Text style={styles.earnSubtitle}>Completed Rides</Text>
+              <Text style={styles.earnCount}>{todaysRideCount}</Text>
+            </View>
+          </View>
+        </>
+
       )}
 
 
@@ -278,7 +282,7 @@ export default function TripRadarScreen() {
 
       {/* NEW: Uber-Style Bottom Sheet */}
       <BottomSheet ref={sheetRef} index={0} snapPoints={snapPoints} backgroundStyle={{ backgroundColor: color.subPrimary, zIndex: 0 }}>
-        <View style={{ paddingHorizontal: 16,zIndex: 0  }}>
+        <View style={{ paddingHorizontal: 16, zIndex: 0 }}>
 
           <View style={styles.listHeader}>
             <Text style={styles.listTitle}>Trip Radar</Text>

@@ -1,4 +1,4 @@
-import { View, Text, ScrollView, KeyboardAvoidingView, Platform } from "react-native";
+import { View, Text, ScrollView, KeyboardAvoidingView, Platform, Pressable, Image } from "react-native";
 import React, { useState } from "react";
 import { windowHeight, windowWidth } from "@/themes/app.constant";
 import ProgressBar from "@/components/common/progress.bar";
@@ -11,6 +11,8 @@ import { countryNameItems } from "@/configs/country--name-list";
 import Button from "@/components/common/button";
 import color from "@/themes/app.colors";
 import { router } from "expo-router";
+import * as ImagePicker from 'expo-image-picker';
+import { uploadToCloudinary } from "@/utils/uploads/uploadToCloudinary";
 
 export default function SignupScreen() {
   const { colors } = useTheme();
@@ -27,13 +29,44 @@ export default function SignupScreen() {
     address: "",
     city: "",
     aadhar: "",
+    profilePicture: null,   // <-- ADD THIS
   });
+
 
   const handleChange = (key, value) => {
     setFormData((prevData) => ({
       ...prevData,
       [key]: value,
     }));
+  };
+
+  const pickProfileImage = async () => {
+    const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
+    if (status !== "granted") {
+      alert("Permission required to upload profile picture.");
+      return;
+    }
+
+    let result = await ImagePicker.launchImageLibraryAsync({
+      mediaTypes: ImagePicker.MediaType,
+      allowsEditing: true,
+      aspect: [1, 1],
+      quality: 0.7,
+      base64: true, // <-- IMPORTANT
+
+    });
+
+    if (result.canceled) return;
+
+    const file = result.assets[0];
+
+    // Upload to Cloudinary
+    const cloudUrl = await uploadToCloudinary(file);
+
+    if (cloudUrl) {
+      console.log(cloudUrl)
+      handleChange("profilePicture", cloudUrl);
+    }
   };
 
   const gotoDocument = () => {
@@ -68,6 +101,7 @@ export default function SignupScreen() {
         address: formData.address,
         city: formData.city,
         aadhar: formData.aadhar,
+        profilePic: formData.profilePicture,
       };
 
       router.push({
@@ -95,7 +129,7 @@ export default function SignupScreen() {
               fontSize: windowHeight(22),
               paddingTop: windowHeight(50),
               textAlign: "center",
-              color:color.lightGray
+              color: color.lightGray
             }}
           >
             Stark Driver
@@ -123,6 +157,7 @@ export default function SignupScreen() {
                   showWarning={false}
                   warning="Please choose your country code!"
                 />
+
                 <Input
                   title="Name"
                   placeholder="Enter your name"
@@ -131,6 +166,37 @@ export default function SignupScreen() {
                   showWarning={showWarning && formData.name === ""}
                   warning={"Please enter your name!"}
                 />
+
+                <View style={{ alignItems: "center", marginVertical: 20 }}>
+                  <Pressable
+                    onPress={pickProfileImage}
+                    style={{
+                      width: 120,
+                      height: 120,
+                      borderRadius: 60,
+                      backgroundColor: color.border,
+                      justifyContent: "center",
+                      alignItems: "center",
+                      overflow: "hidden",
+                    }}
+                  >
+                    {formData.profilePicture ? (
+                      <Image
+                        source={{ uri: formData.profilePicture }}
+                        style={{ width: "100%", height: "100%" }}
+                      />
+                    ) : (
+                      <Text style={{ color: color.lightGray }}>Upload Photo</Text>
+                    )}
+                  </Pressable>
+
+                  {showWarning && !formData.profilePicture && (
+                    <Text style={{ color: "red", marginTop: 8, fontSize: 12 }}>
+                      Profile picture is required!
+                    </Text>
+                  )}
+                </View>
+
 
                 {/* <SelectInput
                 title="Country"
