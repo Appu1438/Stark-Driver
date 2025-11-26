@@ -394,7 +394,7 @@ export default function EarningsDetails() {
             </Text>
 
             <FlatList
-              data={earnings?.chartData || []}
+              data={earnings?.chartData.reverse() || []}
               keyExtractor={(item, index) => index.toString()}
               scrollEnabled={false}
               renderItem={({ item }) => (

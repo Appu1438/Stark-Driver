@@ -11,61 +11,83 @@ import { Alert, Linking } from "react-native";
  * Logout Function
  */
 export const logout = async (driverId, message) => {
-    console.log(driverId, message)
     try {
+        const res = await axiosInstance.post("/driver/logout", { driverId }, { withCredentials: true });
 
-        driverSocketService.sendLocationUpdate(driverId, {
-            latitude: null,
-            longitude: null,
-        });
+        if (res.data?.blockLogout) {
+            // DO NOT LOGOUT
+            alert(res.data.message);
+            return;
+        }
 
+        // continue normal logout
+        driverSocketService.sendLocationUpdate(driverId, { latitude: null, longitude: null });
 
-        // 2️⃣ Logout from backend
-        await axiosInstance.post("/driver/logout", { driverId }, { withCredentials: true });
-
-        // 3️⃣ Clear stored token
         await AsyncStorage.removeItem("accessToken");
         await AsyncStorage.removeItem("driverData");
 
-        // Toast.show(message, { type: "success" });
-        // 4️⃣ Navigate to login and replace stack
         router.replace("/(routes)/login");
 
     } catch (error) {
-        console.log("Logout failed:", error.message);
-        // Toast.show(message, { type: "success" });
 
-        // // Force clear token and navigate even if request fails
+        // ❗ If backend returns blockLogout
+        if (error.response?.data?.blockLogout) {
+            alert(error.response.data.message);
+            return;
+        }
+
+        // fallback: force logout only when not on ride
         await AsyncStorage.removeItem("accessToken");
         await AsyncStorage.removeItem("driverData");
-
         router.replace("/(routes)/login");
-
     }
 };
+
 
 /**
  * Refresh Token Function
  */
 export const refreshAccessToken = async () => {
     try {
-        const res = await axios.post(`${process.env.EXPO_PUBLIC_API_URI}/driver/refresh-token`, {}, { withCredentials: true });
+        const res = await axios.post(
+            `${process.env.EXPO_PUBLIC_API_URI}/driver/refresh-token`,
+            {},
+            { withCredentials: true }
+        );
 
         if (res.data?.accessToken) {
+            // Store token normally
             await AsyncStorage.setItem("accessToken", res.data.accessToken);
+
+            // 🔔 If token is temporary (ride active + refresh expired)
+            if (res.data.temp) {
+                alert("Your session is about to expire. Please login again after this ride.");
+            }
 
             return res.data.accessToken;
         }
-        throw new Error("No access token returned");
-    } catch (error) {
-        console.log("Refresh token failed:", error);
-        // If refresh fails, force logout
+
+        throw new Error("No access token");
+    } catch (err) {
+        console.log("Refresh token failed:", err);
+
+        // // ❗ DO NOT LOGOUT IF DRIVER HAS ACTIVE RIDE
+        // const hasActiveRide = await checkIfDriverInRide(); // create this function
+
+        // if (hasActiveRide) {
+        //     alert("Session expired, but ride still active. Continue the trip.");
+        //     return null; // DO NOT LOGOUT
+        // }
+
+        // Normal behaviour after ride ends:
         const driverStr = await AsyncStorage.getItem("driverData");
         const driver = driverStr ? JSON.parse(driverStr) : null;
-        await logout(driver.id, "Please login again. Thank You!");
+        await logout(driver?.id, "Session expired. Please login again.");
+
         return null;
     }
 };
+
 
 
 export const handleAddMoney = async (params) => {

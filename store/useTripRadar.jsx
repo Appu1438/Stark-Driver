@@ -6,6 +6,7 @@ import { router } from "expo-router";
 import axiosInstance from "@/api/axiosInstance";
 import driverSocketService from "@/utils/socket/socketService";
 import { sendPushNotification } from "@/utils/notifications/sendPushNotifications";
+import { Toast } from "react-native-toast-notifications";
 
 export const useTripRadar = create((set, get) => ({
   requests: [],
@@ -122,10 +123,6 @@ export const useTripRadar = create((set, get) => ({
 
     if (!req || !driver) return;
 
-    // Clear ALL timers
-    Object.values(get().timers).forEach(clearInterval);
-    set({ timers: {} });
-
     try {
       // Backend Ride Creation
       const response = await axiosInstance.post(`/ride/new-ride`, {
@@ -142,9 +139,9 @@ export const useTripRadar = create((set, get) => ({
       });
 
       const createdRide = response.data.newRide;
-       sendPushNotification(req.data.user.notificationToken,
-                      "Ride Request Accepted!",
-                      `Your driver will pick you on the location!`)
+      sendPushNotification(req.data.user.notificationToken,
+        "Ride Request Accepted!",
+        `Your driver will pick you on the location!`)
 
       // Notify user
       driverSocketService.send({
@@ -161,11 +158,14 @@ export const useTripRadar = create((set, get) => ({
 
       // Clear list
       set({ requests: [] });
+      // Clear ALL timers
+      Object.values(get().timers).forEach(clearInterval);
+      set({ timers: {} });
 
       // Navigate
       router.push({
         pathname: "/(routes)/ride-details",
-                params: { rideId: JSON.stringify(createdRide.id) },
+        params: { rideId: JSON.stringify(createdRide.id) },
       });
 
       console.log("✅ Ride Accepted:", createdRide.id);
@@ -176,7 +176,9 @@ export const useTripRadar = create((set, get) => ({
       };
     } catch (err) {
       console.log("❌ Accept Error:", err);
-      get().rejectRequest(id);
+      const msg = err?.response?.data?.message || "Unable to accept the ride. Please try again.";
+      Toast.show(msg, { type: "danger" });
+      // get().rejectRequest(id);
       return null;
     }
   },
