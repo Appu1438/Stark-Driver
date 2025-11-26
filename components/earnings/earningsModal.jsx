@@ -61,15 +61,15 @@ export const EarningsModal = ({ visible, onClose, item }) => {
             </Text>
           </View>
 
-          <View style={styles.row}>
+          {/* <View style={styles.row}>
             <Text style={styles.label}>Charity Fund (2.5%)</Text>
             <Text style={[styles.value, { color: "#ff6f6f" }]}>
               - ₹ {parts.charity.toLocaleString("en-IN")}
             </Text>
-          </View>
+          </View> */}
 
           <View style={styles.row}>
-            <Text style={styles.label}>Platform Fee (7.5%)</Text>
+            <Text style={styles.label}>Platform Fee (10%)</Text>
             <Text style={[styles.value, { color: "#ff6f6f" }]}>
               - ₹ {parts.platform.toLocaleString("en-IN")}
             </Text>
@@ -118,8 +118,8 @@ export const EarningsModal = ({ visible, onClose, item }) => {
 const splitPlatformFee = (platformFee) => {
   return {
     govtTax: Number((platformFee * 0.05 / 0.15).toFixed(2)),       // 5% of total fare
-    charity: Number((platformFee * 0.025 / 0.15).toFixed(2)),      // 2.5% of total fare
-    platform: Number((platformFee * 0.075 / 0.15).toFixed(2)),     // 7.5% of total fare
+    // charity: Number((platformFee * 0.025 / 0.15).toFixed(2)),      // 2.5% of total fare
+    platform: Number((platformFee * 0.10 / 0.15).toFixed(2)),     // 7.5% of total fare
   };
 };
 
