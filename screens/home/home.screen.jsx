@@ -39,6 +39,8 @@ import { getDistrict } from "@/utils/location/getDistrict";
 import RideModal from "@/components/ride/ride.modal";
 import DriverHomeSkeleton from "./home-skelton.screen";
 import { useTripRadar } from "@/store/useTripRadar";
+import { useDriverLocationStore } from "@/store/driverLocationStore";
+
 export default function HomeScreen() {
     const notificationListener = useRef();
     const { driver, loading: DriverDataLoading, refetchData } = useGetDriverData();
@@ -51,8 +53,6 @@ export default function HomeScreen() {
     }, [driver]);
     const { wallet, loading: walletLoading, refetchWallet } = useGetDriverWallet();
     const { recentRides, loading: rideHistoryLoading, refetchRides } = useGetDriverRideHistories();
-
-    const [district, setDistrict] = useState()
 
     const driverRef = useRef(driver);
     const [userData, setUserData] = useState(null);
@@ -268,11 +268,15 @@ export default function HomeScreen() {
         }
     };
 
+
+    const updateLocation = useDriverLocationStore(state => state.updateLocation);
+    const setDistrict = useDriverLocationStore(state => state.setDistrict);
+
     useEffect(() => {
         (async () => {
             let { status } = await GeoLocation.requestForegroundPermissionsAsync();
             if (status !== "granted") {
-                Toast.show("Please give us to access your location to use this app!");
+                Toast.show("Please allow location access!");
                 return;
             }
 
@@ -285,21 +289,21 @@ export default function HomeScreen() {
                 async (position) => {
                     const { latitude, longitude } = position.coords;
                     const newLocation = { latitude, longitude };
+
                     if (
                         !lastLocation ||
                         haversineDistance(lastLocation, newLocation) >= 200
                     ) {
-                        getDistrict(latitude, longitude, setDistrict)
-                        setCurrentLocation(newLocation);
-                        setLastLocation(newLocation);
+                        getDistrict(latitude, longitude, setDistrict);
+                        updateLocation(newLocation);       // 🔥 write to Zustand
                         setDriverLocation(newLocation)
-                        await sendLocationUpdate(newLocation);
-
+                        await sendLocationUpdate(newLocation);  // socket update
                     }
                 }
             );
         })();
     }, [isOn]);
+
 
 
     const handleStatusChange = async () => {
@@ -343,6 +347,7 @@ export default function HomeScreen() {
         });
         return () => unsubscribe();
     }, []);
+
 
     // ---------- socket listener + auto-reject ----------
     // useEffect(() => {

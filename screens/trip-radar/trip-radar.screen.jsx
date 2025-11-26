@@ -29,6 +29,7 @@ import { useDriverEarnings, useGetDriverData } from "@/hooks/useGetDriverData";
 import BottomSheet, { BottomSheetView } from "@gorhom/bottom-sheet";
 import { BottomSheetFlatList } from "@gorhom/bottom-sheet";
 import fonts from "@/themes/app.fonts";
+import { useDriverLocationStore } from "@/store/driverLocationStore";
 
 // Enable LayoutAnimation for Android
 // if (Platform.OS === 'android') {
@@ -41,6 +42,11 @@ export default function TripRadarScreen() {
   const { requests, rejectRequest, acceptRequest } = useTripRadar();
   const { driver, loading: driverDataLoading, refetchData } = useGetDriverData();
   const { earnings, loading: driverEarningsLoading, refetchEarnings } = useDriverEarnings();
+
+  const { currentLocation, animatedLocation, heading } = useDriverLocationStore();
+
+  console.log(currentLocation, animatedLocation, heading)
+
 
   const [refreshing, setRefreshing] = useState(false);
   const [todaysEarnings, setTodaysEarnings] = useState('');
@@ -59,9 +65,6 @@ export default function TripRadarScreen() {
 
   }, [earnings])
 
-
-
-
   const onRefresh = async () => {
     console.log('rfrdh')
     try {
@@ -73,7 +76,6 @@ export default function TripRadarScreen() {
     }
   };
 
-  const [driverLocation, setDriverLocation] = useState(null);
   const driverLocationRef = useRef(null);
   const mapRef = useRef();
 
@@ -86,31 +88,10 @@ export default function TripRadarScreen() {
 
   // Sync ref
   useEffect(() => {
-    driverLocationRef.current = driverLocation;
-  }, [driverLocation]);
+    driverLocationRef.current = currentLocation;
+  }, [currentLocation]);
 
-  // DRIVER LIVE LOCATION (same code)
-  useEffect(() => {
-    let watch;
-    (async () => {
-      watch = await GeoLocation.watchPositionAsync(
-        {
-          accuracy: GeoLocation.Accuracy.Highest,
-          timeInterval: 2000,
-          distanceInterval: 5,
-        },
-        (position) => {
-          const newLocation = {
-            latitude: position.coords.latitude,
-            longitude: position.coords.longitude,
-          };
-          setDriverLocation(newLocation);
-          driverLocationRef.current = newLocation;
-        }
-      );
-    })();
-    return () => watch && watch.remove();
-  }, []);
+
 
   // NEW: Auto-select first request
   useEffect(() => {
@@ -155,7 +136,7 @@ export default function TripRadarScreen() {
     android: undefined,
   });
 
-  if (!driverLocation) {
+  if (!currentLocation) {
     return (
       <View style={styles.loadingContainer}>
         <Text style={styles.loadingText}>Locating GPS...</Text>
@@ -208,7 +189,7 @@ export default function TripRadarScreen() {
         style={styles.map}
         customMapStyle={customMapStyle}
         initialRegion={{
-          ...driverLocation,
+          ...currentLocation,
           latitudeDelta: 0.06,
           longitudeDelta: 0.06,
         }}
@@ -216,18 +197,21 @@ export default function TripRadarScreen() {
         // showsUserLocation
         userInterfaceStyle="dark"
       >
-        {driverLocation && (
-          <Marker coordinate={driverLocation}>
+        {animatedLocation && (
+          <Marker.Animated
+            coordinate={animatedLocation}
+            anchor={{ x: 0.5, y: 0.5 }}
+          >
             <Image
               source={Images.mapSelfMarker}
               style={{
                 width: windowWidth(30),
                 height: windowHeight(30),
-                // tintColor: color.primaryGray,
+                transform: [{ rotate: `${heading + 180}deg` }],
               }}
               resizeMode="contain"
             />
-          </Marker>
+          </Marker.Animated>
         )}
         {selectedRequest && requests.length > 0 && (
           <>
@@ -259,7 +243,7 @@ export default function TripRadarScreen() {
 
             {/* Route to Pickup */}
             <MapViewDirections
-              origin={driverLocation}
+              origin={currentLocation}
               destination={selectedRequest.data.currentLocation}
               apikey={process.env.EXPO_PUBLIC_GOOGLE_CLOUD_API_KEY}
               strokeWidth={4}

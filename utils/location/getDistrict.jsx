@@ -18,7 +18,7 @@ export const getDistrict = async (latitude, longitude, setDistrict) => {
         );
         console.log(districtComp.long_name)
         setDistrict(districtComp.long_name)
-        await AsyncStorage.setItem("currentDistrict", districtComp.long_name);
+        // await AsyncStorage.setItem("currentDistrict", districtComp.long_name);
     }
 
     return null;

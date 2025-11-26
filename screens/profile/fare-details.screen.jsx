@@ -5,20 +5,23 @@ import color from "@/themes/app.colors";
 import { fontSizes, windowHeight } from "@/themes/app.constant";
 import axiosInstance from "@/api/axiosInstance";
 import AsyncStorage from "@react-native-async-storage/async-storage";
+import { useDriverLocationStore } from "@/store/driverLocationStore";
 
 export default function FareDetails() {
   const params = useLocalSearchParams();
   const vehicleType = params.vehicle_type; // Pass vehicle type from previous page
 
-
-
   const [fare, setFare] = useState(null);
   const [loading, setLoading] = useState(true);
+
+  const { district } = useDriverLocationStore();
+
 
   useEffect(() => {
     const fetchFare = async () => {
       try {
-        const district = await AsyncStorage.getItem("currentDistrict");
+        // const district = await AsyncStorage.getItem("currentDistrict");
+        console.log('fare',district)
 
         setLoading(true);
         const res = await axiosInstance.get(`/fare/${vehicleType}/${district}`);
