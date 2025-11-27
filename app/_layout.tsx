@@ -13,6 +13,9 @@ import { ThemeProvider, DefaultTheme } from '@react-navigation/native';
 import color from "@/themes/app.colors";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
 import Animated from "react-native-reanimated";
+export {ErrorBoundary} from "expo-router";
+
+
 const MyDarkTheme = {
   ...DefaultTheme,
   colors: {
@@ -23,13 +26,14 @@ const MyDarkTheme = {
     border: color.border,
   },
 };
-export {
-  // Catch any errors thrown by the Layout component.
-  ErrorBoundary,
-} from "expo-router";
 
 // Prevent the splash screen from auto-hiding before asset loading is complete.
-// SplashScreen.preventAutoHideAsync();
+SplashScreen.setOptions({
+  duration: 2000,
+  fade: true,
+});
+SplashScreen.preventAutoHideAsync();
+
 
 export default function RootLayout() {
   const [loaded, error] = useFonts({

@@ -1,7 +1,7 @@
 {
   "expo": {
     "name": "Stark Driver",
-    "slug": "Stark Driver",
+    "slug": "stark-driver",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/images/logo/FullLogo.png",
@@ -51,16 +51,13 @@
     "ios": {
       "supportsTablet": true,
       "icon": "./assets/images/logo/FullLogo.png",
-      "bundleIdentifier": "com.adithyanskumar.stark",
+      "bundleIdentifier": "com.adithyanskumar.starkdriver",
       "config": {
         "googleMapsApiKey": "AIzaSyDZ3-iM9suiGVssgSjEdApgQXpXmDgvVAc"
       },
       "infoPlist": {
         "ITSAppUsesNonExemptEncryption": false
       }
-    },
-    "experiments": {
-      "typedRoutes": true
     },
     "extra": {
       "eas": {
