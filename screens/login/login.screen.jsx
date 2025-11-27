@@ -100,7 +100,7 @@ export default function LoginScreen() {
                 />
                 <View style={[external.mt_25, external.Pb_15]}>
                   <Button
-                    title="Get Otp"
+                    title={loading?"Sending Otp":"Get Otp"}
                     disabled={loading}
                     onPress={() => handleSubmit()}
                   />

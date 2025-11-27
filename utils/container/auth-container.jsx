@@ -5,8 +5,10 @@ import {
     ScrollView,
     KeyboardAvoidingView,
     Platform,
+    Keyboard,
+    Animated,
 } from "react-native";
-import React, { ReactNode } from "react";
+import React, { ReactNode, useEffect, useRef } from "react";
 import { external } from "@/styles/external.style";
 import Images from "../images";
 import { windowHeight, windowWidth } from "@/themes/app.constant";
@@ -15,8 +17,43 @@ import color from "@/themes/app.colors";
 
 
 const AuthContainer = ({ container, topSpace, imageShow }) => {
+
+    const translateY = useRef(new Animated.Value(0)).current;
+
+    useEffect(() => {
+        const keyboardShow = Keyboard.addListener("keyboardWillShow", keyboardShowHandler);
+        const keyboardHide = Keyboard.addListener("keyboardWillHide", keyboardHideHandler);
+
+        // Android fallback (keyboardDid*)
+        const keyboardShowAndroid = Keyboard.addListener("keyboardDidShow", keyboardShowHandler);
+        const keyboardHideAndroid = Keyboard.addListener("keyboardDidHide", keyboardHideHandler);
+
+        return () => {
+            keyboardShow.remove();
+            keyboardHide.remove();
+            keyboardShowAndroid.remove();
+            keyboardHideAndroid.remove();
+        };
+    }, []);
+
+    const keyboardShowHandler = (e) => {
+        Animated.timing(translateY, {
+            toValue: -e.endCoordinates.height,   // adjust for spacing
+            duration: 500,
+            useNativeDriver: true,
+        }).start();
+    };
+
+    const keyboardHideHandler = () => {
+        Animated.timing(translateY, {
+            toValue: 0,
+            duration: 500,
+            useNativeDriver: true,
+        }).start();
+    };
+
     return (
-        <KeyboardAvoidingView
+        <View
             style={[external.fx_1]}
             behavior={Platform.OS === "ios" ? "padding" : "height"}
             keyboardVerticalOffset={Platform.OS === 'ios' ? 0 : -90}
@@ -40,12 +77,19 @@ const AuthContainer = ({ container, topSpace, imageShow }) => {
                 source={Images.authBg}
             />
 
-            <View style={styles.contentContainer}>
+            <Animated.View
+                style={{
+                    ...styles.contentContainer,
+                    flex: 1,
+                    transform: [{ translateY }]
+                }}
+            >
+
                 <View style={[styles.container]}>
                     <ScrollView>{container}</ScrollView>
                 </View>
-            </View>
-        </KeyboardAvoidingView>
+            </Animated.View>
+        </View>
     );
 };
 

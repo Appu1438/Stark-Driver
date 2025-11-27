@@ -61,7 +61,7 @@ export default function AddressDetails() {
           description={address}
         >
           <Image
-            source={Images.mapMarker}
+            source={Images.mapPickupMarker}
             style={{
               width: windowWidth(35),
               height: windowHeight(35),
