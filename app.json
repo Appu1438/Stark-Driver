@@ -5,7 +5,17 @@
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/images/logo/FullLogo.png",
+    "experiments": {
+      "typedRoutes": true
+    },
     "scheme": "stark-driver",
+    "deepLinks": {
+      "paths": [
+        "wallet-success",
+        "wallet-failed",
+        "wallet-cancelled"
+      ]
+    },
     "userInterfaceStyle": "light",
     "plugins": [
       [

@@ -13,7 +13,7 @@ import { ThemeProvider, DefaultTheme } from '@react-navigation/native';
 import color from "@/themes/app.colors";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
 import Animated from "react-native-reanimated";
-export {ErrorBoundary} from "expo-router";
+export { ErrorBoundary } from "expo-router";
 
 
 const MyDarkTheme = {
@@ -66,21 +66,26 @@ export default function RootLayout() {
 function RootLayoutNav() {
 
   useEffect(() => {
-    const subscription = Linking.addEventListener("url", ({ url }) => {
+    const sub = Linking.addEventListener("url", ({ url }) => {
       console.log("Deep link received:", url);
 
       const parsed = Linking.parse(url);
+      console.log(parsed);
 
-      console.log(parsed)
+      // parsed.path will be: "wallet-success" or "wallet-failed" or "wallet-cancelled"
 
-      if (parsed.path === "wallet-success" || parsed.path === "wallet-failed" || parsed.path === "wallet-cancelled" || parsed.queryParams?.walletUpdated) {
-        // ✅ Refresh wallet or navigate to profile
+      if (
+        parsed?.path === "wallet-success" ||
+        parsed?.path === "wallet-failed" ||
+        parsed?.path === "wallet-cancelled"
+      ) {
         router.replace("/(tabs)/profile");
       }
     });
 
-    return () => subscription.remove();
+    return () => sub.remove();
   }, []);
+
 
   return (
     <ThemeProvider value={MyDarkTheme}>
