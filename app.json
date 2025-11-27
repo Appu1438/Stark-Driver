@@ -1,7 +1,7 @@
 {
   "expo": {
-    "name": "Stark-Driver",
-    "slug": "Stark-Driver",
+    "name": "Stark Driver",
+    "slug": "Stark Driver",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/images/logo/FullLogo.png",
@@ -23,7 +23,9 @@
       [
         "expo-font",
         {
-          "fonts": ["./assets/fonts/TT-Octosquares-Medium.ttf"]
+          "fonts": [
+            "./assets/fonts/TT-Octosquares-Medium.ttf"
+          ]
         }
       ]
     ],
@@ -32,14 +34,26 @@
         "foregroundImage": "./assets/images/logo/FullLogo.png",
         "backgroundColor": "#000000"
       },
-      "package": "com.adithyanskumar.stark"
+      "package": "com.adithyanskumar.starkdriver",
+      "versionCode": 1,
+      "enableSeparateBuildPerArchitecture": true,
+      "enableProguardInReleaseBuilds": true,
+      "permissions": [
+        "ACCESS_FINE_LOCATION",
+        "ACCESS_COARSE_LOCATION"
+      ],
+      "config": {
+        "googleMaps": {
+          "apiKey": "AIzaSyDZ3-iM9suiGVssgSjEdApgQXpXmDgvVAc"
+        }
+      }
     },
     "ios": {
       "supportsTablet": true,
       "icon": "./assets/images/logo/FullLogo.png",
       "bundleIdentifier": "com.adithyanskumar.stark",
       "config": {
-        "googleMapsApiKey":"AIzaSyDZ3-iM9suiGVssgSjEdApgQXpXmDgvVAc"
+        "googleMapsApiKey": "AIzaSyDZ3-iM9suiGVssgSjEdApgQXpXmDgvVAc"
       },
       "infoPlist": {
         "ITSAppUsesNonExemptEncryption": false
