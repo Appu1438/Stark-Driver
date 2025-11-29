@@ -202,7 +202,7 @@ export default function DocumentVerificationScreen() {
                                     onChangeText={(text) =>
                                         handleChange("registration_date", text)
                                     }
-                                    
+
 
                                 />
 
@@ -213,7 +213,7 @@ export default function DocumentVerificationScreen() {
                                     onChangeText={(text) =>
                                         handleChange("driving_license", text)
                                     }
-                                   
+
                                 />
 
                                 <Input
@@ -221,7 +221,7 @@ export default function DocumentVerificationScreen() {
                                     placeholder={"Enter your vehicle color"}
                                     value={formData.color}
                                     onChangeText={(text) => handleChange("color", text)}
-                                   
+
                                 />
 
                                 <Input
@@ -254,6 +254,66 @@ export default function DocumentVerificationScreen() {
                                     backgroundColor={color.buttonBg}
                                     textColor={color.primary}
                                 />
+                            </View>
+
+                            <View style={{ marginTop: 10, marginBottom: 20 }}>
+                                <Text
+                                    style={{
+                                        color: color.primaryText,
+                                        fontSize: windowHeight(10),
+                                        fontFamily: "TT-Octosquares-Medium",
+                                        textAlign: "center",
+                                        opacity: 0.7,
+                                    }}
+                                >
+                                    By continuing, you agree to our
+                                </Text>
+
+                                <View
+                                    style={{
+                                        flexDirection: "row",
+                                        justifyContent: "center",
+                                        flexWrap: "wrap",
+                                        marginTop: 4,
+                                    }}
+                                >
+                                    <Text
+                                        style={{
+                                            color: color.primaryText,
+                                            fontSize: windowHeight(10),
+                                            fontFamily: "TT-Octosquares-Medium",
+                                        }}
+                                        onPress={() =>
+                                            router.push("/(routes)/legal/terms-and-conditions")
+                                        }
+                                    >
+                                        Terms & Conditions
+                                    </Text>
+
+                                    <Text
+                                        style={{
+                                            color: color.primaryText,
+                                            fontSize: windowHeight(10),
+                                            fontFamily: "TT-Octosquares-Medium",
+                                            opacity: 0.7,
+                                        }}
+                                    >
+                                        {"  and  "}
+                                    </Text>
+
+                                    <Text
+                                        style={{
+                                            color: color.primaryText,
+                                            fontSize: windowHeight(10),
+                                            fontFamily: "TT-Octosquares-Medium",
+                                        }}
+                                        onPress={() =>
+                                            router.push("/(routes)/legal/privacy-policy")
+                                        }
+                                    >
+                                        Privacy Policy
+                                    </Text>
+                                </View>
                             </View>
                         </View>
                     </View>

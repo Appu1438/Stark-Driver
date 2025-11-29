@@ -82,7 +82,7 @@ export default function EmailVerificationScreen() {
               disabled={loader}
             />
           </View>
-          {/* <View style={[external.mb_15]}>
+          <View style={[external.mb_15]}>
             <View
               style={[
                 external.pt_10,
@@ -93,17 +93,18 @@ export default function EmailVerificationScreen() {
               <Text style={[commonStyles.regularText, {
                 fontFamily: 'TT-Octosquares-Medium',
               }]}>Not Received yet?</Text>
-              <TouchableOpacity>
-                <Text style={[styles.signUpText,
-                {
-                  color: color.lightGray,
-                  fontFamily: 'TT-Octosquares-Medium',
-                }]}>
+              <TouchableOpacity onPress={() => {
+                router.back()
+              }}>                <Text style={[styles.signUpText,
+              {
+                color: color.lightGray,
+                fontFamily: 'TT-Octosquares-Medium',
+              }]}>
                   Resend it
                 </Text>
               </TouchableOpacity>
             </View>
-          </View> */}
+          </View>
         </View>
       }
     />

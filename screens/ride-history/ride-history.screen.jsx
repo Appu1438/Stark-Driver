@@ -54,12 +54,11 @@ export default function RideHistory() {
                 }
                 contentContainerStyle={{ paddingBottom: 10 }}
                 showsVerticalScrollIndicator={false}
-                 refreshControl={
+                refreshControl={
                     <RefreshControl
                         refreshing={refreshing}
                         onRefresh={onRefresh}
-                        colors={["#f73939"]}
-                        tintColor="#f73939"
+                        tintColor={color.primary}
                     />
                 }
             />

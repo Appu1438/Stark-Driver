@@ -12,7 +12,7 @@ import { Alert, Linking } from "react-native";
  */
 export const logout = async (driverId, message, setLoading) => {
     try {
-        // if a setLoading function is passed → start loading
+        // Start loading if applicable
         if (typeof setLoading === "function") {
             setLoading(true);
         }
@@ -23,20 +23,23 @@ export const logout = async (driverId, message, setLoading) => {
             { withCredentials: true }
         );
 
-        // ❗ BACKEND FORCE-BLOCK LOGOUT
+        // 🚫 BACKEND RESTRICTED LOGOUT
         if (res.data?.blockLogout) {
-            alert(res.data.message);
+            Toast.show(res.data.message, {
+                type: "danger",
+                placement: "bottom",
+                duration: 2500,
+            });
 
-            if (typeof setLoading === "function") {
-                setLoading(false);
-            }
+            if (typeof setLoading === "function") setLoading(false);
             return;
         }
 
-        // -------------------------------------
+        // -----------------------------------------
         // NORMAL LOGOUT FLOW
-        // -------------------------------------
+        // -----------------------------------------
 
+        // Stop sending location updates
         driverSocketService.sendLocationUpdate(driverId, {
             latitude: null,
             longitude: null,
@@ -45,33 +48,40 @@ export const logout = async (driverId, message, setLoading) => {
         await AsyncStorage.removeItem("accessToken");
         await AsyncStorage.removeItem("driverData");
 
-        if (typeof setLoading === "function") {
-            setLoading(false);
-        }
+        if (typeof setLoading === "function") setLoading(false);
+
+        Toast.show(message || "Logged out successfully", {
+            type: "success",
+            placement: "bottom",
+        });
 
         router.replace("/(routes)/login");
 
     } catch (error) {
-
-        // ❗ BACKEND BLOCK LOGOUT
+        // 🚫 BACKEND BLOCKS LOGOUT FROM ERROR RESPONSE
         if (error.response?.data?.blockLogout) {
-            alert(error.response.data.message);
+            Toast.show(error.response.data.message, {
+                type: "danger",
+                placement: "bottom",
+            });
 
-            if (typeof setLoading === "function") {
-                setLoading(false);
-            }
+            if (typeof setLoading === "function") setLoading(false);
             return;
         }
 
-        // -------------------------------------
+        // -----------------------------------------
         // FALLBACK — FORCE LOGOUT
-        // -------------------------------------
+        // -----------------------------------------
+
         await AsyncStorage.removeItem("accessToken");
         await AsyncStorage.removeItem("driverData");
 
-        if (typeof setLoading === "function") {
-            setLoading(false);
-        }
+        if (typeof setLoading === "function") setLoading(false);
+
+        Toast.show("Session expired. Logged out.", {
+            type: "warning",
+            placement: "bottom",
+        });
 
         router.replace("/(routes)/login");
     }

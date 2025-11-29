@@ -90,15 +90,24 @@ export default function LoginScreen() {
         pathname: "/(routes)/otp-verification",
         params: { phone_number: phoneNumber },
       });
+
     } catch (error) {
-      console.log("Send OTP Error:", error);
       setloading(false);
-      Toast.show("Something went wrong! Please re-check your phone number!", {
+
+      console.log("Send OTP Error:", error?.response?.data);
+
+      // Extract backend message
+      const message =
+        error?.response?.data?.message ||
+        "Unable to send OTP. Please try again.";
+
+      Toast.show(message, {
         type: "danger",
         placement: "bottom",
       });
     }
   };
+
 
   return (
     <>

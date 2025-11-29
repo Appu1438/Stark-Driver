@@ -261,7 +261,7 @@ export default function SignupScreen() {
                   {/* Phone */}
                   <Input
                     title="Phone Number"
-                    placeholder="Enter your phone number"
+                    placeholder="Without country code"
                     keyboardType="phone-pad"
                     value={formData.phoneNumber}
                     onChangeText={(text) => handleChange("phoneNumber", text)}

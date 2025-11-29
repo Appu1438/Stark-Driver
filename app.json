@@ -4,18 +4,10 @@
     "slug": "stark-driver",
     "version": "1.0.0",
     "orientation": "portrait",
-    "icon": "./assets/images/logo/FullLogo.png",
     "experiments": {
       "typedRoutes": true
     },
     "scheme": "stark-driver",
-    "deepLinks": {
-      "paths": [
-        "wallet-success",
-        "wallet-failed",
-        "wallet-cancelled"
-      ]
-    },
     "userInterfaceStyle": "light",
     "plugins": [
       [
@@ -37,20 +29,16 @@
             "./assets/fonts/TT-Octosquares-Medium.ttf"
           ]
         }
-      ]
+      ],
+      "expo-router"
     ],
     "android": {
-      "adaptiveIcon": {
-        "foregroundImage": "./assets/images/logo/FullLogo.png",
-        "backgroundColor": "#000000"
-      },
       "package": "com.adithyanskumar.starkdriver",
       "versionCode": 1,
-      "enableSeparateBuildPerArchitecture": true,
-      "enableProguardInReleaseBuilds": true,
       "permissions": [
         "ACCESS_FINE_LOCATION",
-        "ACCESS_COARSE_LOCATION"
+        "ACCESS_COARSE_LOCATION",
+        "NOTIFICATIONS"
       ],
       "config": {
         "googleMaps": {
@@ -60,7 +48,6 @@
     },
     "ios": {
       "supportsTablet": true,
-      "icon": "./assets/images/logo/FullLogo.png",
       "bundleIdentifier": "com.adithyanskumar.starkdriver",
       "config": {
         "googleMapsApiKey": "AIzaSyDZ3-iM9suiGVssgSjEdApgQXpXmDgvVAc"

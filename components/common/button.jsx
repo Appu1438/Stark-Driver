@@ -1,4 +1,4 @@
-import { Pressable, StyleSheet, Text } from "react-native";
+import { Pressable, StyleSheet, Text, TouchableOpacity } from "react-native";
 import React from "react";
 import { commonStyles } from "@/styles/common.style";
 import color from "@/themes/app.colors";
@@ -15,7 +15,7 @@ const Button = ({
 }) => {
   const widthNumber = width || "100%";
   return (
-    <Pressable
+    <TouchableOpacity
       style={[
         styles.container,
         {
@@ -34,7 +34,7 @@ const Button = ({
       >
         {title}
       </Text>
-    </Pressable>
+    </TouchableOpacity>
   );
 };
 
