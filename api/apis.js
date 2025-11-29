@@ -10,39 +10,72 @@ import { Alert, Linking } from "react-native";
 /**
  * Logout Function
  */
-export const logout = async (driverId, message) => {
+export const logout = async (driverId, message, setLoading) => {
     try {
-        const res = await axiosInstance.post("/driver/logout", { driverId }, { withCredentials: true });
+        // if a setLoading function is passed → start loading
+        if (typeof setLoading === "function") {
+            setLoading(true);
+        }
 
+        const res = await axiosInstance.post(
+            "/driver/logout",
+            { driverId },
+            { withCredentials: true }
+        );
+
+        // ❗ BACKEND FORCE-BLOCK LOGOUT
         if (res.data?.blockLogout) {
-            // DO NOT LOGOUT
             alert(res.data.message);
+
+            if (typeof setLoading === "function") {
+                setLoading(false);
+            }
             return;
         }
 
-        // continue normal logout
-        driverSocketService.sendLocationUpdate(driverId, { latitude: null, longitude: null });
+        // -------------------------------------
+        // NORMAL LOGOUT FLOW
+        // -------------------------------------
+
+        driverSocketService.sendLocationUpdate(driverId, {
+            latitude: null,
+            longitude: null,
+        });
 
         await AsyncStorage.removeItem("accessToken");
         await AsyncStorage.removeItem("driverData");
+
+        if (typeof setLoading === "function") {
+            setLoading(false);
+        }
 
         router.replace("/(routes)/login");
 
     } catch (error) {
 
-        // ❗ If backend returns blockLogout
+        // ❗ BACKEND BLOCK LOGOUT
         if (error.response?.data?.blockLogout) {
             alert(error.response.data.message);
+
+            if (typeof setLoading === "function") {
+                setLoading(false);
+            }
             return;
         }
 
-        // fallback: force logout only when not on ride
+        // -------------------------------------
+        // FALLBACK — FORCE LOGOUT
+        // -------------------------------------
         await AsyncStorage.removeItem("accessToken");
         await AsyncStorage.removeItem("driverData");
+
+        if (typeof setLoading === "function") {
+            setLoading(false);
+        }
+
         router.replace("/(routes)/login");
     }
 };
-
 
 /**
  * Refresh Token Function
@@ -60,24 +93,21 @@ export const refreshAccessToken = async () => {
             await AsyncStorage.setItem("accessToken", res.data.accessToken);
 
             // 🔔 If token is temporary (ride active + refresh expired)
+            // 🔔 TEMP TOKEN WARNING (Toast instead of alert)
             if (res.data.temp) {
-                alert("Your session is about to expire. Please login again after this ride.");
+                Toast.show({
+                    type: "info",
+                    text1: "Session Warning",
+                    text2:
+                        "Your session will expire soon. Please re-login after this ride ends.",
+                });
             }
-
             return res.data.accessToken;
         }
 
         throw new Error("No access token");
     } catch (err) {
         console.log("Refresh token failed:", err);
-
-        // // ❗ DO NOT LOGOUT IF DRIVER HAS ACTIVE RIDE
-        // const hasActiveRide = await checkIfDriverInRide(); // create this function
-
-        // if (hasActiveRide) {
-        //     alert("Session expired, but ride still active. Continue the trip.");
-        //     return null; // DO NOT LOGOUT
-        // }
 
         // Normal behaviour after ride ends:
         const driverStr = await AsyncStorage.getItem("driverData");
@@ -90,40 +120,58 @@ export const refreshAccessToken = async () => {
 
 
 
-export const handleAddMoney = async (params) => {
-    Alert.alert(
-        "Confirm Payment",
-        "Are you sure you want to proceed with this payment?",
-        [
-            { text: "Cancel", style: "cancel" },
-            {
-                text: "Proceed",
-                onPress: async () => {
-                    try {
-                        // const accessToken = await AsyncStorage.getItem("accessToken");
+export const handleAddMoney = async (params, setShowAlert, setAlertConfig) => {
 
-                        const { data } = await axiosInstance.post(
-                            `/session`,
-                            {
-                                // token: accessToken,
-                                driverId: params?.id,
-                                name: params?.name,
-                                email: params?.email,
-                                phone_number: params?.phone_number,
-                            }
-                        );
-
-                        const url = `${process.env.EXPO_PUBLIC_PAYMENT_API_URI}/${data.sessionId}`;
-                        Linking.openURL(url);
-                    } catch (error) {
-                        console.error("Failed to create session:", error);
-                        Alert.alert(
-                            "Error",
-                            "Could not start the payment process. Please try again."
-                        );
-                    }
+    // Helper for confirmation modal
+    const confirmAction = () =>
+        new Promise((resolve) => {
+            setAlertConfig({
+                title: "Confirm Payment",
+                message: "Are you sure you want to proceed with this payment?",
+                confirmText: "Proceed",
+                showCancel: true,
+                onCancel: () => {
+                    setShowAlert(false);
+                    resolve(false);
                 },
-            },
-        ]
-    );
+                onConfirm: () => {
+                    setShowAlert(false);
+                    resolve(true);
+                },
+            });
+            setShowAlert(true);
+        });
+
+    // Helper for info/error modal
+    const showInfo = (title, message) => {
+        setAlertConfig({
+            title,
+            message,
+            confirmText: "OK",
+            showCancel: false,
+            onConfirm: () => setShowAlert(false),
+        });
+        setShowAlert(true);
+    };
+
+    // Step 1 — Ask confirmation
+    const confirmed = await confirmAction();
+    if (!confirmed) return;
+
+    // Step 2 — If confirmed, process payment
+    try {
+        const { data } = await axiosInstance.post(`/session`, {
+            driverId: params?.id,
+            name: params?.name,
+            email: params?.email,
+            phone_number: params?.phone_number,
+        });
+
+        const url = `${process.env.EXPO_PUBLIC_PAYMENT_API_URI}/${data.sessionId}`;
+        Linking.openURL(url);
+
+    } catch (error) {
+        console.error("Failed to create session:", error);
+        showInfo("Error", "Could not start the payment process. Please try again.");
+    }
 };

@@ -59,6 +59,8 @@
     "utils/sound/playRideRequestSound.jsx",
     "utils/sound/playVoiceAlert.jsx",
     "utils/uploads/uploadToCloudinary.jsx",
-    "components/earnings/earningsModal.jsx"
-  ]
+    "components/earnings/earningsModal.jsx",
+    ".expo/types/**/*.ts",
+    "expo-env.d.ts"
+, "components/modal/alert-modal/alert.modal.jsx", "components/ride/ride.rating.stars.jsx"  ]
 }

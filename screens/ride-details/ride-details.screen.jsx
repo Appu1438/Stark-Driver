@@ -1,4 +1,4 @@
-import { View, Text, Linking, StyleSheet, ScrollView, TouchableOpacity, Modal, TextInput, Image, Platform, Alert } from "react-native";
+import { View, Text, Linking, StyleSheet, ScrollView, TouchableOpacity, Modal, TextInput, Image, Platform, Alert, ActivityIndicator } from "react-native";
 import React, { useEffect, useState } from "react";
 import { router, useLocalSearchParams } from "expo-router";
 import { fontSizes, windowHeight, windowWidth } from "@/themes/app.constant";
@@ -17,6 +17,8 @@ import { styles } from "./styles";
 import { customMapStyle } from "@/utils/map/mapStyle";
 import Images from "@/utils/images";
 import RideDetailsSkeleton from "./ride-details-skelton.screen";
+import AppAlert from "@/components/modal/alert-modal/alert.modal";
+import { renderStars } from "@/components/ride/ride.rating.stars";
 
 export default function RideDetailsScreen() {
   const { rideId } = useLocalSearchParams();
@@ -26,9 +28,24 @@ export default function RideDetailsScreen() {
   const [orderStatus, setOrderStatus] = useState("Booked");
   const [showOtpModal, setShowOtpModal] = useState(false);
   const [otpInput, setOtpInput] = useState(false);
+  const [isVerifyingOtp, setIsVerifyingOtp] = useState(false);
+
+  const [isStatusChanging, setIsStatusChanging] = useState(false);
 
   const [rating, setRating] = useState(0);
   const [submitted, setSubmitted] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+
+
+  const [showAlert, setShowAlert] = useState(false);
+  const [alertConfig, setAlertConfig] = useState({
+    title: "",
+    message: "",
+    confirmText: "OK",
+    showCancel: false,
+    onConfirm: () => setShowAlert(false),
+    onCancel: () => setShowAlert(false),
+  });
 
 
   const [region, setRegion] = useState({
@@ -108,6 +125,8 @@ export default function RideDetailsScreen() {
 
   const handleSubmit = async () => {
     if (!ride) return;
+
+    setIsStatusChanging(true)
     try {
       // Define status transitions
       const nextStatusMap = {
@@ -206,12 +225,18 @@ export default function RideDetailsScreen() {
         error.response.data.message
       );
       Toast.show(error.response.data.message, { type: "danger" });
+    } finally {
+      setIsStatusChanging(false)
     }
   };
 
   const handleOtpVerify = async (enteredOtp) => {
+    if (isVerifyingOtp) return; // Prevent double press
+    setIsVerifyingOtp(true);
+
     try {
-      console.log(enteredOtp)
+      console.log("Verifying OTP:", enteredOtp);
+
       const response = await axiosInstance.post(`/ride/verify-ride-otp`, {
         rideId: ride.id,
         otp: enteredOtp,
@@ -219,22 +244,19 @@ export default function RideDetailsScreen() {
 
       const updatedStatus = response.data.updatedRide.status;
       setOrderStatus(updatedStatus);
-      // Push notification messages
+
+      // Push Notification Message Logic
       let message = "";
       if (updatedStatus === "Processing") {
         message = "Your driver is on the way to pick you up!";
-      }
-      else if (updatedStatus === "Arrived") {
-        message = `Your ride has started! Have a Safe Journey`;
-      }
-      else if (updatedStatus === "Ongoing") {
+      } else if (updatedStatus === "Arrived") {
+        message = "Your driver has arrived! Ride starting soon.";
+      } else if (updatedStatus === "Ongoing") {
         message = "Your ride has started! Have a Safe Journey";
-      }
-      else if (updatedStatus === "Reached") {
-        message = "Your ride has started! Have a Safe Journey";
-      }
-      else if (updatedStatus === "Completed") {
-        message = "Your ride has been completed! Thank You";
+      } else if (updatedStatus === "Reached") {
+        message = "Your ride is almost completed.";
+      } else if (updatedStatus === "Completed") {
+        message = "Your ride has been completed! Thank You.";
       }
 
       if (message) {
@@ -243,6 +265,7 @@ export default function RideDetailsScreen() {
           `Ride Status Update: ${ride.destinationLocationName}`,
           message
         );
+
         sendPushNotification(
           ride.driverId.notificationToken,
           `Ride Status Update: ${ride.destinationLocationName}`,
@@ -250,74 +273,119 @@ export default function RideDetailsScreen() {
         );
       }
 
-      // Notify via socket
+      // Socket
       driverSocketService.send({
         type: "rideStatusUpdate",
         role: "driver",
         rideData: { id: ride.id, user: { id: ride.userId._id } },
         status: updatedStatus,
       });
+
       setShowOtpModal(false);
       Toast.show("Ride started successfully!", { type: "success" });
+
     } catch (error) {
+      console.log("OTP VERIFY ERROR:", error);
+
       setShowOtpModal(false);
+
       sendPushNotification(
         ride.userId.notificationToken,
         `Ride Status Update: ${ride.destinationLocationName}`,
-        'Invalid OTP , Please Share Correct Otp to driver to proceed.'
+        "Invalid OTP, please share the correct OTP with the driver."
       );
+
       sendPushNotification(
         ride.driverId.notificationToken,
         `Ride Status Update: ${ride.destinationLocationName}`,
-        'Invalid OTP , Please Collect Correct Otp from customer to proceed.'
+        "Invalid OTP, please collect the correct OTP from the customer."
       );
+
       Toast.show("Invalid OTP, Please try again", { type: "danger" });
+
+    } finally {
+      setIsVerifyingOtp(false); // 🔥 Unlock button
     }
   };
 
+
   const handleUserRating = async () => {
     try {
-      // Basic validation
+      // ⭐ Validate Rating
       if (!rating) {
-        Alert.alert("Rating Required", "Please select a star rating before submitting.");
+        setAlertConfig({
+          title: "Rating Required",
+          message: "Please select a star rating before submitting.",
+          confirmText: "OK",
+          showCancel: false,
+          onConfirm: () => setShowAlert(false),
+        });
+        setShowAlert(true);
         return;
       }
 
-      console.log(rating, rideId)
+      setIsSubmitting(true)
+      console.log(rating, rideId);
       const id = JSON.parse(rideId);
 
-
-      // Example payload
       const payload = {
-        rating,     // e.g. 4 or 5
-        rideId: id,     // optional - to link which ride this rating belongs to
+        rating,
+        rideId: id,
       };
 
-      // 🛰️ Example API call (replace with your backend endpoint)
-      const response = await axiosInstance.put('/ride/rating-user',
-        payload
-      );
+      const response = await axiosInstance.put("/ride/rating-user", payload);
 
       if (response.status === 200 || response.status === 201) {
+        // Push notification
         sendPushNotification(
           ride?.userId?.notificationToken,
           "You Received a New Rating ⭐",
-          `${ride?.driverId?.name || "A user"} rated you ${rating} star${rating > 1 ? "s" : ""} for the recent ride from ${ride?.currentLocationName} to ${ride?.destinationLocationName}.`
+          `${ride?.driverId?.name || "A user"} rated you ${rating} star${rating > 1 ? "s" : ""
+          } for the recent ride from ${ride?.currentLocationName} to ${ride?.destinationLocationName
+          }.`
         );
 
-        Alert.alert("Thank You!", "Your rating has been submitted successfully.");
+        // ⭐ SUCCESS ALERT
+        setAlertConfig({
+          title: "Thank You!",
+          message: "Your rating has been submitted successfully.",
+          confirmText: "OK",
+          showCancel: false,
+          onConfirm: () => setShowAlert(false),
+        });
+        setShowAlert(true);
+
         console.log("✅ Rating submitted:", response.data);
       } else {
-        Alert.alert("Error", "Failed to submit rating. Please try again later.");
+        // ⭐ FAILURE ALERT
+        setAlertConfig({
+          title: "Error",
+          message: "Failed to submit rating. Please try again later.",
+          confirmText: "OK",
+          showCancel: false,
+          onConfirm: () => setShowAlert(false),
+        });
+        setShowAlert(true);
       }
 
       setRide(response.data.updatedRide);
-      setSubmitted(true)
-
+      setSubmitted(true);
 
     } catch (error) {
       console.log("❌ Error submitting rating:", error);
-      Alert.alert("Error", "Something went wrong. Please try again later.");
+
+      // ⭐ GENERIC ERROR ALERT
+      setAlertConfig({
+        title: "Error",
+        message: "Something went wrong. Please try again later.",
+        confirmText: "OK",
+        showCancel: false,
+        onConfirm: () => setShowAlert(false),
+      });
+
+      setShowAlert(true);
+    } finally {
+      setIsSubmitting(false)
     }
   };
 
@@ -476,10 +544,10 @@ export default function RideDetailsScreen() {
                 <Image
                   source={Images.mapCancelMarker}
                   style={{
-                     width: windowWidth(35),
-                      height: windowHeight(35), 
+                    width: windowWidth(35),
+                    height: windowHeight(35),
                     tintColor: color.primaryGray
-                   }}
+                  }}
                   resizeMode="contain"
                 />
               </Marker>
@@ -564,10 +632,17 @@ export default function RideDetailsScreen() {
           {/* Passenger Info */}
           <View style={styles.section}>
             <Text style={styles.sectionTitle}>Passenger</Text>
+
             <View style={styles.passengerInfo}>
               <View style={styles.passengerDetails}>
+
+                {/* Passenger Name */}
                 <Text style={styles.passengerName}>{ride.userId.name}</Text>
-                {ride.status === "Arrived" && (
+
+
+
+                {/* Call Passenger Button */}
+                {ride.status === "Arrived" ? (
                   <TouchableOpacity
                     style={styles.callButton}
                     onPress={callPassenger}
@@ -575,7 +650,13 @@ export default function RideDetailsScreen() {
                     <FontAwesome name="phone" size={14} color={color.primary} />
                     <Text style={styles.callButtonText}> Call Passenger</Text>
                   </TouchableOpacity>
+                ) : (
+                  < View style={{ flexDirection: "row", alignItems: "center", marginTop: 4 }}>
+                    {/* <FontAwesome name="star" size={14} color="#FFD700" /> */}
+                    {renderStars(ride?.userId?.ratings ? ride.userId.ratings.toFixed(1) : 0)}
+                  </View>
                 )}
+
               </View>
             </View>
           </View>
@@ -675,7 +756,7 @@ export default function RideDetailsScreen() {
               >
                 {/* User → Driver Rating */}
                 <View style={{ alignItems: "center" }}>
-                  <Ionicons name="person-outline" size={22} color={color.primaryGray} />
+                  <Ionicons name="person-circle-outline" size={26} color={color.primaryGray} />
                   <Text
                     style={{
                       fontSize: fontSizes.FONT14,
@@ -687,22 +768,8 @@ export default function RideDetailsScreen() {
                     For Passenger
                   </Text>
                   <View style={{ flexDirection: "row", marginTop: 5 }}>
-                    {[1, 2, 3, 4, 5].map((star) => (
-                      <MaterialIcons
-                        key={star}
-                        name={
-                          star <= (ride.userRating || 0)
-                            ? "star"
-                            : "star-border"
-                        }
-                        size={20}
-                        color={
-                          star <= (ride.userRating || 0)
-                            ? "#FFD700"
-                            : "#B0B0B0"
-                        }
-                      />
-                    ))}
+                    {renderStars(ride.userRating || 0)}
+
                   </View>
                 </View>
 
@@ -718,7 +785,7 @@ export default function RideDetailsScreen() {
 
                 {/* Driver → User Rating */}
                 <View style={{ alignItems: "center" }}>
-                  <Ionicons name="car-outline" size={22} color={color.primaryGray} />
+                  <Ionicons name="id-card-outline" size={26} color={color.primaryGray} />
                   <Text
                     style={{
                       fontSize: fontSizes.FONT14,
@@ -730,22 +797,7 @@ export default function RideDetailsScreen() {
                     For You
                   </Text>
                   <View style={{ flexDirection: "row", marginTop: 5 }}>
-                    {[1, 2, 3, 4, 5].map((star) => (
-                      <MaterialIcons
-                        key={star}
-                        name={
-                          star <= (ride.driverRating || 0)
-                            ? "star"
-                            : "star-border"
-                        }
-                        size={20}
-                        color={
-                          star <= (ride.driverRating || 0)
-                            ? "#FFD700"
-                            : "#B0B0B0"
-                        }
-                      />
-                    ))}
+                    {renderStars(ride.driverRating || 0)}
                   </View>
                 </View>
 
@@ -761,7 +813,7 @@ export default function RideDetailsScreen() {
 
                 {/* Overall Ride Rating */}
                 <View style={{ alignItems: "center" }}>
-                  <Ionicons name="stats-chart-outline" size={22} color={color.primaryGray} />
+                  <Ionicons name="podium-outline" size={26} color={color.primaryGray} />
                   <Text
                     style={{
                       fontSize: fontSizes.FONT14,
@@ -773,22 +825,7 @@ export default function RideDetailsScreen() {
                     Ride Avg
                   </Text>
                   <View style={{ flexDirection: "row", marginTop: 5 }}>
-                    {[1, 2, 3, 4, 5].map((star) => (
-                      <MaterialIcons
-                        key={star}
-                        name={
-                          star <= (ride.rating || 0)
-                            ? "star"
-                            : "star-border"
-                        }
-                        size={20}
-                        color={
-                          star <= (ride.rating || 0)
-                            ? "#FFD700"
-                            : "#B0B0B0"
-                        }
-                      />
-                    ))}
+                    {renderStars(ride.rating || 0)}
                   </View>
                 </View>
               </View>
@@ -832,7 +869,8 @@ export default function RideDetailsScreen() {
                 <Button
                   onPress={handleUserRating}
                   style={[styles.actionButton, styles.supportButton]}
-                  title={"Submit Rating"}
+                  title={isSubmitting ? <ActivityIndicator color={color.primary} /> : "Submit Rating"}
+                  disabled={isSubmitting}
                 />
               )}
             </View>
@@ -841,42 +879,90 @@ export default function RideDetailsScreen() {
         </ScrollView>
 
         {/* Action Button */}
-        {ride.status !== "Completed" && ride.status !== "Cancelled" && (
-          <View style={styles.actionButtonContainer}>
-            <Button
-              title={getActionButtonTitle(orderStatus)}
-              height={48}
-              backgroundColor={color.buttonBg}
-              textColor={color.primary}
-              onPress={handleSubmit}
-              disabled={ride.status === "Completed"}
-            />
-          </View>
-        )}
-      </View>
+        {
+          ride.status !== "Completed" && ride.status !== "Cancelled" ? (
+            <View style={styles.actionButtonContainer}>
+              <Button
+                title={isStatusChanging ? <ActivityIndicator color={color.primary} /> : getActionButtonTitle(orderStatus)}
+                height={48}
+                backgroundColor={color.buttonBg}
+                textColor={color.primary}
+                onPress={handleSubmit}
+                disabled={ride.status === "Completed" || isStatusChanging}
+              />
+            </View>
+          ) : (
+            <View style={styles.actionButtonContainer}>
+              {/* 📞 Contact Support Button */}
+              <Button
+                onPress={() => router.push('/(routes)/profile/help-support')}
+                style={[styles.actionButton, styles.supportButton]}
+                title={"Contact Support"}
+              />
+            </View>
+          )
+        }
+      </View >
 
       {/* OTP Modal */}
-      {showOtpModal && (
-        <Modal transparent visible animationType="slide">
-          <View style={styles.modalContainer}>
-            <View style={styles.modalBox}>
-              <Text style={styles.modalTitle}>Enter OTP to start ride</Text>
-              <TextInput
-                style={styles.input}
-                value={otpInput}
-                onChangeText={setOtpInput}
-                keyboardType="numeric"
-                maxLength={4}
-              />
-              <View style={styles.buttonRow}>
-                <Button title="Verify OTP" onPress={() => handleOtpVerify(otpInput)} width={"45%"} />
-                <Button title="Cancel" onPress={() => setShowOtpModal(false)} width={"45%"} />
+      {
+        showOtpModal && (
+          <Modal transparent visible animationType="slide">
+            <View style={styles.modalContainer}>
+              <View style={styles.modalBox}>
+                <Text style={styles.modalTitle}>Enter OTP to start ride</Text>
+
+                <TextInput
+                  style={styles.input}
+                  value={otpInput}
+                  onChangeText={setOtpInput}
+                  keyboardType="numeric"
+                  maxLength={4}
+                />
+
+                <View style={styles.buttonRow}>
+                  <Button
+                    title={
+                      isVerifyingOtp ? (
+                        <ActivityIndicator color={color.primary} />
+                      ) : (
+                        "Verify OTP"
+                      )
+                    }
+                    onPress={() => {
+                      if (!isVerifyingOtp) handleOtpVerify(otpInput);
+                    }}
+                    width={"45%"}
+                    disabled={isVerifyingOtp}
+                  />
+
+                  <Button
+                    title="Cancel"
+                    onPress={() => {
+                      if (!isVerifyingOtp) setShowOtpModal(false);
+                    }}
+                    width={"45%"}
+                    disabled={isVerifyingOtp}
+                  />
+                </View>
               </View>
             </View>
-          </View>
-        </Modal>
-      )}
-    </View>
+          </Modal>
+        )
+      }
+
+      <AppAlert
+        visible={showAlert}
+        title={alertConfig.title}
+        message={alertConfig.message}
+        confirmText={alertConfig.confirmText}
+        showCancel={alertConfig.showCancel}
+        onConfirm={alertConfig.onConfirm}
+        onCancel={alertConfig.onCancel}
+      />
+
+
+    </View >
   );
 
 }

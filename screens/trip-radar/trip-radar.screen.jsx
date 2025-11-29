@@ -12,7 +12,8 @@ import {
   LayoutAnimation,
   UIManager,
   TouchableOpacity,
-  RefreshControl
+  RefreshControl,
+  ActivityIndicator
 } from "react-native";
 import MapView, { Marker, PROVIDER_GOOGLE } from "react-native-maps";
 import MapViewDirections from "react-native-maps-directions";
@@ -39,13 +40,13 @@ import { useDriverLocationStore } from "@/store/driverLocationStore";
 // }
 
 export default function TripRadarScreen() {
-  const { requests, rejectRequest, acceptRequest } = useTripRadar();
+  const { requests, rejectRequest, acceptRequest, loadingRejectRequests, loadingAcceptRequests } = useTripRadar();
+
   const { driver, loading: driverDataLoading, refetchData } = useGetDriverData();
   const { earnings, loading: driverEarningsLoading, refetchEarnings } = useDriverEarnings();
 
   const { currentLocation, animatedLocation, heading } = useDriverLocationStore();
 
-  console.log(currentLocation, animatedLocation, heading)
 
 
   const [refreshing, setRefreshing] = useState(false);
@@ -303,6 +304,9 @@ export default function TripRadarScreen() {
             )}
             renderItem={({ item }) => {
               const r = item.data;
+              const isAcceptLoading = loadingAcceptRequests[item.id];
+              const isRejectLoading = loadingRejectRequests[item.id];
+
 
               return (
                 <TouchableOpacity
@@ -344,14 +348,16 @@ export default function TripRadarScreen() {
                     {/* Actions */}
                     <View style={styles.actionRow}>
                       <Button
-                        title="Decline"
+                        title={isRejectLoading ? <ActivityIndicator color={color.primary} /> : "Reject"}
                         width="45%"
+                        disabled={isRejectLoading || isAcceptLoading}
                         onPress={() => rejectRequest(item.id)}
                       />
                       <Button
-                        title="Accept"
+                        title={isAcceptLoading ? <ActivityIndicator color={color.primary} /> : "Accept"}
                         width="45%"
                         textColor="#000"
+                        disabled={isAcceptLoading || isRejectLoading}
                         onPress={() => {
                           acceptRequest(item.id);
                         }}

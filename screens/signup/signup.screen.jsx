@@ -1,4 +1,13 @@
-import { View, Text, ScrollView, KeyboardAvoidingView, Platform, Pressable, Image } from "react-native";
+import {
+  View,
+  Text,
+  ScrollView,
+  KeyboardAvoidingView,
+  Platform,
+  Pressable,
+  Image,
+  ActivityIndicator
+} from "react-native";
 import React, { useState } from "react";
 import { windowHeight, windowWidth } from "@/themes/app.constant";
 import ProgressBar from "@/components/common/progress.bar";
@@ -11,13 +20,38 @@ import { countryNameItems } from "@/configs/country--name-list";
 import Button from "@/components/common/button";
 import color from "@/themes/app.colors";
 import { router } from "expo-router";
-import * as ImagePicker from 'expo-image-picker';
+import * as ImagePicker from "expo-image-picker";
 import { uploadToCloudinary } from "@/utils/uploads/uploadToCloudinary";
+import AppAlert from "@/components/modal/alert-modal/alert.modal";
 
 export default function SignupScreen() {
   const { colors } = useTheme();
+
   const [emailFormatWarning, setEmailFormatWarning] = useState("");
-  const [showWarning, setShowWarning] = useState(false);
+  const [uploadingImage, setUploadingImage] = useState(false);
+
+  // 🚨 AppAlert handler
+  const [showAlert, setShowAlert] = useState(false);
+  const [alertConfig, setAlertConfig] = useState({
+    title: "",
+    message: "",
+    confirmText: "OK",
+    showCancel: false,
+    onConfirm: () => setShowAlert(false),
+    onCancel: () => setShowAlert(false)
+  });
+
+  const openAlert = (title, message) => {
+    setAlertConfig({
+      title,
+      message,
+      confirmText: "OK",
+      showCancel: false,
+      onConfirm: () => setShowAlert(false)
+    });
+    setShowAlert(true);
+  };
+
   const [formData, setFormData] = useState({
     name: "",
     phoneNumber: "",
@@ -29,21 +63,22 @@ export default function SignupScreen() {
     address: "",
     city: "",
     aadhar: "",
-    profilePicture: null,   // <-- ADD THIS
+    profilePicture: null
   });
-
 
   const handleChange = (key, value) => {
     setFormData((prevData) => ({
       ...prevData,
-      [key]: value,
+      [key]: value
     }));
   };
 
+  // 📸 Pick Image + Upload to Cloudinary
   const pickProfileImage = async () => {
-    const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
+    const { status } =
+      await ImagePicker.requestMediaLibraryPermissionsAsync();
     if (status !== "granted") {
-      alert("Permission required to upload profile picture.");
+      openAlert("Permission Required", "Please enable storage permission.");
       return;
     }
 
@@ -52,247 +87,267 @@ export default function SignupScreen() {
       allowsEditing: true,
       aspect: [1, 1],
       quality: 0.7,
-      base64: true, // <-- IMPORTANT
-
+      base64: true
     });
 
     if (result.canceled) return;
 
     const file = result.assets[0];
 
-    // Upload to Cloudinary
+    setUploadingImage(true); // Loader ON
     const cloudUrl = await uploadToCloudinary(file);
+    setUploadingImage(false); // Loader OFF
 
     if (cloudUrl) {
-      console.log(cloudUrl)
       handleChange("profilePicture", cloudUrl);
+    } else {
+      openAlert("Upload Failed", "Unable to upload image. Try again.");
     }
   };
 
   const gotoDocument = () => {
-    const isEmailEmpty = formData.email.trim() === "";
-    const isEmailInvalid = !isEmailEmpty && emailFormatWarning !== "";
+    const {
+      name,
+      phoneNumber,
+      email,
+      countryCode,
+      dob,
+      gender,
+      address,
+      city,
+      aadhar,
+      profilePicture
+    } = formData;
 
-    if (isEmailEmpty) {
-      setShowWarning(true);
-    } else if (isEmailInvalid) {
-      setShowWarning(true);
-    } else {
-      setShowWarning(false);
-      // const phoneNumberData = countryNameItems.find(
-      //   (i: any) => i.label === formData.country
-      // );
+    if (!countryCode)
+      return openAlert("Missing Country", "Please select your country.");
 
-      const phone_number = `+${formData?.countryCode}${formData.phoneNumber}`;
-      console.log(phone_number)
-      const selectedCountry = countryNameItems.find(
-        (item) => item.value === formData.countryCode
-      );
-      console.log(selectedCountry.label)
+    if (!name.trim())
+      return openAlert("Missing Name", "Please enter your full name.");
 
+    if (!profilePicture)
+      return openAlert("Profile Missing", "Please upload your profile picture.");
 
-      const driverData = {
-        name: formData.name,
-        country: selectedCountry.label,
-        phone_number,
-        email: formData.email,
-        dob: formData.dob,
-        gender: formData.gender,
-        address: formData.address,
-        city: formData.city,
-        aadhar: formData.aadhar,
-        profilePic: formData.profilePicture,
-      };
+    if (!phoneNumber.trim())
+      return openAlert("Missing Phone", "Please enter your phone number.");
 
-      router.push({
-        pathname: "/(routes)/document-verification",
-        params: driverData,
-      });
-    }
+    if (!email.trim())
+      return openAlert("Missing Email", "Please enter your email address.");
+
+    if (emailFormatWarning)
+      return openAlert("Invalid Email", "Please enter a valid email.");
+
+    if (!dob.trim())
+      return openAlert("Missing DOB", "Please enter your date of birth.");
+
+    if (!gender.trim())
+      return openAlert("Missing Gender", "Please select your gender.");
+
+    if (!address.trim())
+      return openAlert("Missing Address", "Please enter your full address.");
+
+    if (!city.trim())
+      return openAlert("Missing City", "Please enter your city.");
+
+    if (!aadhar.trim())
+      return openAlert("Missing Aadhar", "Please enter your Aadhar number.");
+
+    const phone_number = `+${countryCode}${phoneNumber}`;
+
+    const selectedCountry = countryNameItems.find(
+      (item) => item.value === countryCode
+    );
+
+    const driverData = {
+      name,
+      country: selectedCountry?.label,
+      phone_number,
+      email,
+      dob,
+      gender,
+      address,
+      city,
+      aadhar,
+      profilePic: profilePicture
+    };
+
+    router.push({
+      pathname: "/(routes)/document-verification",
+      params: driverData
+    });
   };
 
   return (
-    <KeyboardAvoidingView
-      style={{ flex: 1 }}
-      behavior={Platform.OS === "ios" ? "padding" : 'height'}
-    >
-      <ScrollView
+    <>
+      <KeyboardAvoidingView
         style={{ flex: 1 }}
-        contentContainerStyle={{ flexGrow: 1 }}
-        keyboardShouldPersistTaps="handled"
+        behavior={Platform.OS === "ios" ? "padding" : "height"}
       >
-        <View>
-          {/* logo */}
-          <Text
-            style={{
-              fontFamily: "TT-Octosquares-Medium",
-              fontSize: windowHeight(22),
-              paddingTop: windowHeight(50),
-              textAlign: "center",
-              color: color.lightGray
-            }}
-          >
-            Stark Driver
-          </Text>
-          <View style={{ padding: windowWidth(20) }}>
-            <ProgressBar fill={1} />
-            <View
-              style={[styles.subView, { backgroundColor: colors.background }]}
+        <ScrollView
+          style={{ flex: 1 }}
+          contentContainerStyle={{ flexGrow: 1 }}
+          keyboardShouldPersistTaps="handled"
+        >
+          <View>
+            <Text
+              style={{
+                fontFamily: "TT-Octosquares-Medium",
+                fontSize: windowHeight(22),
+                paddingTop: windowHeight(50),
+                textAlign: "center",
+                color: color.lightGray
+              }}
             >
-              <View style={styles.space}>
-                <TitleView
-                  title={"Create your account"}
-                  subTitle={"Explore your life by joining Ride Wave"}
-                />
+              Stark Driver
+            </Text>
 
-                <SelectInput
-                  title=""
-                  placeholder="Select your country"
-                  value={formData.country} // should be like '91'
-                  onValueChange={(val) => {
-                    console.log("Selected country value:", val); // logs "91"
-                    handleChange("countryCode", val)
-                  }}
-                  items={countryNameItems}
-                  showWarning={false}
-                  warning="Please choose your country code!"
-                />
+            <View style={{ padding: windowWidth(20) }}>
+              <ProgressBar fill={1} />
+              <View
+                style={[styles.subView, { backgroundColor: colors.background }]}
+              >
+                <View className={styles.space}>
+                  <TitleView
+                    title={"Create your account"}
+                    subTitle={"Explore your life by joining Ride Wave"}
+                  />
 
-                <Input
-                  title="Name"
-                  placeholder="Enter your name"
-                  value={formData.name}
-                  onChangeText={(text) => handleChange("name", text)}
-                  showWarning={showWarning && formData.name === ""}
-                  warning={"Please enter your name!"}
-                />
+                  {/* Country */}
+                  <SelectInput
+                    placeholder="Select your country"
+                    value={formData.countryCode}
+                    onValueChange={(val) => handleChange("countryCode", val)}
+                    items={countryNameItems}
+                    showWarning={false}
+                  />
 
-                <View style={{ alignItems: "center", marginVertical: 20 }}>
-                  <Pressable
-                    onPress={pickProfileImage}
-                    style={{
-                      width: 120,
-                      height: 120,
-                      borderRadius: 60,
-                      backgroundColor: color.border,
-                      justifyContent: "center",
-                      alignItems: "center",
-                      overflow: "hidden",
-                    }}
-                  >
-                    {formData.profilePicture ? (
-                      <Image
-                        source={{ uri: formData.profilePicture }}
-                        style={{ width: "100%", height: "100%" }}
-                      />
-                    ) : (
-                      <Text style={{ color: color.lightGray }}>Upload Photo</Text>
-                    )}
-                  </Pressable>
+                  {/* Name */}
+                  <Input
+                    title="Name"
+                    placeholder="Enter your name"
+                    value={formData.name}
+                    onChangeText={(text) => handleChange("name", text)}
+                  />
 
-                  {showWarning && !formData.profilePicture && (
-                    <Text style={{ color: "red", marginTop: 8, fontSize: 12 }}>
-                      Profile picture is required!
-                    </Text>
-                  )}
+                  {/* Upload Photo */}
+                  <View style={{ alignItems: "center", marginVertical: 20 }}>
+                    <Pressable
+                      onPress={pickProfileImage}
+                      style={{
+                        width: 120,
+                        height: 120,
+                        borderRadius: 60,
+                        backgroundColor: color.border,
+                        justifyContent: "center",
+                        alignItems: "center",
+                        overflow: "hidden"
+                      }}
+                    >
+                      {uploadingImage ? (
+                        <ActivityIndicator size="large" color={color.primaryGray} />
+                      ) : formData.profilePicture ? (
+                        <Image
+                          source={{ uri: formData.profilePicture }}
+                          style={{ width: "100%", height: "100%" }}
+                        />
+                      ) : (
+                        <Text style={{ color: color.lightGray }}>
+                          Upload Photo
+                        </Text>
+                      )}
+                    </Pressable>
+                  </View>
+
+                  {/* Phone */}
+                  <Input
+                    title="Phone Number"
+                    placeholder="Enter your phone number"
+                    keyboardType="phone-pad"
+                    value={formData.phoneNumber}
+                    onChangeText={(text) => handleChange("phoneNumber", text)}
+                  />
+
+                  {/* Email */}
+                  <Input
+                    title="Email Address"
+                    placeholder="Enter your email address"
+                    keyboardType="email-address"
+                    value={formData.email}
+                    onChangeText={(text) => handleChange("email", text)}
+                    emailFormatWarning={emailFormatWarning}
+                  />
+
+                  {/* DOB */}
+                  <Input
+                    title="Date of Birth"
+                    placeholder="DD-MM-YYYY"
+                    value={formData.dob}
+                    onChangeText={(text) => handleChange("dob", text)}
+                  />
+
+                  {/* Gender */}
+                  <SelectInput
+                    title="Gender"
+                    placeholder="Select gender"
+                    value={formData.gender}
+                    onValueChange={(val) => handleChange("gender", val)}
+                    items={[
+                      { label: "Male", value: "Male" },
+                      { label: "Female", value: "Female" },
+                      { label: "Other", value: "Other" }
+                    ]}
+                  />
+
+                  {/* Address */}
+                  <Input
+                    title="Address"
+                    placeholder="Enter your address with zip code"
+                    value={formData.address}
+                    onChangeText={(text) => handleChange("address", text)}
+                  />
+
+                  {/* City */}
+                  <Input
+                    title="City"
+                    placeholder="Enter your city"
+                    value={formData.city}
+                    onChangeText={(text) => handleChange("city", text)}
+                  />
+
+                  {/* Aadhar */}
+                  <Input
+                    title="Aadhar Number"
+                    placeholder="Enter your Aadhar number"
+                    value={formData.aadhar}
+                    onChangeText={(text) => handleChange("aadhar", text)}
+                  />
                 </View>
 
-
-                {/* <SelectInput
-                title="Country"
-                placeholder="Select your country"
-                value={formData.country}
-                onValueChange={(text) => handleChange("countryCode", text)}
-                showWarning={showWarning && formData.country === ""}
-                items={countryNameItems}
-              /> */}
-                <Input
-                  title="Phone Number"
-                  placeholder="Enter your phone number"
-                  keyboardType="phone-pad"
-                  value={formData.phoneNumber}
-                  onChangeText={(text) => handleChange("phoneNumber", text)}
-                  showWarning={showWarning && formData.phoneNumber === ""}
-                  warning={"Please enter your phone number!"}
-                />
-                <Input
-                  title={"Email Address"}
-                  placeholder={"Enter your email address"}
-                  keyboardType="email-address"
-                  value={formData.email}
-                  onChangeText={(text) => handleChange("email", text)}
-                  showWarning={
-                    showWarning &&
-                    (formData.email === "" || emailFormatWarning !== "")
-                  }
-                  warning={
-                    emailFormatWarning !== ""
-                      ? "Please enter your email!"
-                      : "Please enter a validate email!"
-                  }
-                  emailFormatWarning={emailFormatWarning}
-                />
-                <Input
-                  title="Date of Birth"
-                  placeholder="DD-MM-YYYY"
-                  value={formData.dob}
-                  onChangeText={(text) => handleChange("dob", text)}
-                  showWarning={showWarning && formData.dob === ""}
-                  warning="Please enter your DOB!"
-                />
-
-                <SelectInput
-                  title="Gender"
-                  placeholder="Select gender"
-                  value={formData.gender}
-                  onValueChange={(val) => handleChange("gender", val)}
-                  items={[
-                    { label: "Male", value: "Male" },
-                    { label: "Female", value: "Female" },
-                    { label: "Other", value: "Other" },
-                  ]}
-                  showWarning={showWarning && formData.gender === ""}
-                />
-
-                <Input
-                  title="Address"
-                  placeholder="Enter your address with zip code"
-                  value={formData.address}
-                  onChangeText={(text) => handleChange("address", text)}
-                  showWarning={showWarning && formData.address === ""}
-                />
-
-                <Input
-                  title="City"
-                  placeholder="Enter your city"
-                  value={formData.city}
-                  onChangeText={(text) => handleChange("city", text)}
-                  showWarning={showWarning && formData.city === ""}
-                />
-
-                <Input
-                  title="Aadhar Number"
-                  placeholder="Enter your Aadhar number"
-                  keyboardType="default"
-                  value={formData.aadhar}
-                  onChangeText={(text) => handleChange("aadhar", text)}
-                  showWarning={showWarning && formData.aadhar === ""}
-                />
-
-              </View>
-              <View style={styles.margin}>
-                <Button
-                  onPress={gotoDocument}
-                  height={windowHeight(30)}
-                  title={"Next"}
-                  backgroundColor={color.buttonBg}
-                  textColor={color.primary}
-                />
+                <View style={styles.margin}>
+                  <Button
+                    onPress={gotoDocument}
+                    height={windowHeight(30)}
+                    title={"Next"}
+                    backgroundColor={color.buttonBg}
+                    textColor={color.primary}
+                  />
+                </View>
               </View>
             </View>
           </View>
-        </View>
-      </ScrollView>
-    </KeyboardAvoidingView>
+        </ScrollView>
+      </KeyboardAvoidingView>
+
+      {/* 🔔 AppAlert Modal */}
+      <AppAlert
+        visible={showAlert}
+        title={alertConfig.title}
+        message={alertConfig.message}
+        confirmText={alertConfig.confirmText}
+        showCancel={alertConfig.showCancel}
+        onConfirm={alertConfig.onConfirm}
+        onCancel={alertConfig.onCancel}
+      />
+    </>
   );
 }

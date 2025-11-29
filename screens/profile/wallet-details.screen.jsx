@@ -15,9 +15,10 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import { LinearGradient } from "expo-linear-gradient";
 import { Ionicons } from "@expo/vector-icons";
 import color from "@/themes/app.colors";
-import { useDriverEarnings, useGetDriverWallet } from "@/hooks/useGetDriverData";
+import { useDriverEarnings, useGetDriverData, useGetDriverWallet } from "@/hooks/useGetDriverData";
 import { handleAddMoney } from "@/api/apis";
 import { windowHeight, windowWidth } from "@/themes/app.constant";
+import AppAlert from "@/components/modal/alert-modal/alert.modal";
 
 /* -------------------- SHIMMER SKELETON -------------------- */
 const WalletSkeleton = () => {
@@ -68,6 +69,7 @@ const WalletSkeleton = () => {
             <ShimmerOverlay />
         </View>
     );
+
 
     return (
         <ScrollView
@@ -124,7 +126,18 @@ const WalletSkeleton = () => {
 /* -------------------- MAIN WALLET SCREEN -------------------- */
 export default function WalletDetails() {
     const { wallet, loading: walletLoading, refetchWallet } = useGetDriverWallet();
+    const { driver, loading: dataLoading, refetchData } = useGetDriverData();
+
     const [refreshing, setRefreshing] = useState(false);
+    const [showAlert, setShowAlert] = useState(false);
+    const [alertConfig, setAlertConfig] = useState({
+        title: "",
+        message: "",
+        confirmText: "OK",
+        showCancel: false,
+        onConfirm: () => setShowAlert(false),
+        onCancel: () => setShowAlert(false),
+    });
 
     const onRefresh = async () => {
         try {
@@ -162,7 +175,7 @@ export default function WalletDetails() {
 
                     <TouchableOpacity
                         style={styles.addButton}
-                        onPress={() => handleAddMoney(wallet)}
+                        onPress={() => handleAddMoney(driver, setShowAlert, setAlertConfig)}
                         activeOpacity={0.85}
                     >
                         <Ionicons name="add-circle-outline" size={18} color={color.primary} />
@@ -222,6 +235,15 @@ export default function WalletDetails() {
                     <Text style={styles.noTransactions}>No transactions yet.</Text>
                 )}
             </ScrollView>
+            <AppAlert
+                visible={showAlert}
+                title={alertConfig.title}
+                message={alertConfig.message}
+                confirmText={alertConfig.confirmText}
+                showCancel={alertConfig.showCancel}
+                onConfirm={alertConfig.onConfirm}
+                onCancel={alertConfig.onCancel}
+            />
         </SafeAreaView>
     );
 }

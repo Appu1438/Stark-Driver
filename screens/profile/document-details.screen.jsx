@@ -131,8 +131,9 @@ const styles = StyleSheet.create({
     padding: 15,
     marginBottom: 30,
     borderLeftWidth: 4,
-    borderBottomWidth: .5,
-    borderColor: color.lightGreen,
+    borderLeftColor: color.lightGray,
+    borderColor: color.border,
+    borderWidth: 1
   },
   infoText: {
     fontSize: fontSizes.FONT14,

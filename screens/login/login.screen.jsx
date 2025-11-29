@@ -1,4 +1,12 @@
-import { View, Text, Image, TouchableOpacity, Alert, BackHandler, Platform } from "react-native";
+import {
+  View,
+  Text,
+  Image,
+  TouchableOpacity,
+  BackHandler,
+  Platform,
+  ActivityIndicator,
+} from "react-native";
 import React, { useCallback, useState } from "react";
 import AuthContainer from "@/utils/container/auth-container";
 import { windowHeight, windowWidth } from "@/themes/app.constant";
@@ -10,29 +18,44 @@ import Button from "@/components/common/button";
 import { router } from "expo-router";
 import PhoneNumberInput from "@/components/login/phone-number.input";
 import { Toast } from "react-native-toast-notifications";
-import axios from 'axios'
 import axiosInstance from "@/api/axiosInstance";
 import { useFocusEffect } from "@react-navigation/native";
 import color from "@/themes/app.colors";
+import AppAlert from "@/components/modal/alert-modal/alert.modal";
 
 export default function LoginScreen() {
   const [phone_number, setphone_number] = useState("");
   const [loading, setloading] = useState(false);
   const [countryCode, setCountryCode] = useState("91");
 
+  // 🔔 Custom Alert State
+  const [showAlert, setShowAlert] = useState(false);
+  const [alertConfig, setAlertConfig] = useState({
+    title: "",
+    message: "",
+    confirmText: "OK",
+    showCancel: true,
+    onConfirm: () => setShowAlert(false),
+    onCancel: () => setShowAlert(false),
+  });
+
+  // 🔥 Replace Alert.alert with AppAlert
   useFocusEffect(
     useCallback(() => {
       const onBackPress = () => {
-        Alert.alert(
-          "Exit App",
-          "Are you sure you want to exit?",
-          [
-            { text: "Cancel", style: "cancel" },
-            { text: "Exit", onPress: () => BackHandler.exitApp() },
-          ],
-          { cancelable: true }
-        );
-        return true; // Prevent default back behavior
+        setAlertConfig({
+          title: "Exit App",
+          message: "Are you sure you want to exit?",
+          confirmText: "Exit",
+          showCancel: true,
+          onCancel: () => setShowAlert(false),
+          onConfirm: () => {
+            setShowAlert(false);
+            BackHandler.exitApp();
+          },
+        });
+        setShowAlert(true);
+        return true;
       };
 
       if (Platform.OS === "android") {
@@ -40,8 +63,6 @@ export default function LoginScreen() {
           "hardwareBackPress",
           onBackPress
         );
-
-        // Cleanup on unmount
         return () => subscription.remove();
       }
     }, [])
@@ -65,7 +86,6 @@ export default function LoginScreen() {
 
       setloading(false);
 
-      // Navigate to OTP Verification screen with phone number
       router.push({
         pathname: "/(routes)/otp-verification",
         params: { phone_number: phoneNumber },
@@ -80,13 +100,12 @@ export default function LoginScreen() {
     }
   };
 
-
   return (
-    <AuthContainer
-      topSpace={windowHeight(150)}
-      imageShow={true}
-      container={
-        <View>
+    <>
+      <AuthContainer
+        topSpace={windowHeight(150)}
+        imageShow={true}
+        container={
           <View>
             <View>
               <Image style={styles.transformLine} source={Images.line} />
@@ -100,11 +119,18 @@ export default function LoginScreen() {
                 />
                 <View style={[external.mt_25, external.Pb_15]}>
                   <Button
-                    title={loading?"Sending Otp":"Get Otp"}
+                    title={
+                      loading ? (
+                        <ActivityIndicator color={color.primary} />
+                      ) : (
+                        "Get OTP"
+                      )
+                    }
                     disabled={loading}
-                    onPress={() => handleSubmit()}
+                    onPress={handleSubmit}
                   />
                 </View>
+
                 <View
                   style={{
                     flexDirection: "row",
@@ -113,21 +139,25 @@ export default function LoginScreen() {
                     paddingBottom: windowHeight(15),
                   }}
                 >
-                  <Text style={{
-                    fontSize: windowHeight(10),
-                    fontFamily: 'TT-Octosquares-Medium',
-                    color: color.primaryText,
-                  }}>
+                  <Text
+                    style={{
+                      fontSize: windowHeight(10),
+                      fontFamily: "TT-Octosquares-Medium",
+                      color: color.primaryText,
+                    }}
+                  >
                     Don't have any rider account?
                   </Text>
                   <TouchableOpacity
                     onPress={() => router.push("/(routes)/signup")}
                   >
-                    <Text style={{
-                      fontSize: windowHeight(10), fontFamily: 'TT-Octosquares-Medium',
-                      color: color.primaryText,
-
-                    }}>
+                    <Text
+                      style={{
+                        fontSize: windowHeight(10),
+                        fontFamily: "TT-Octosquares-Medium",
+                        color: color.primaryText,
+                      }}
+                    >
                       Sign Up
                     </Text>
                   </TouchableOpacity>
@@ -135,8 +165,19 @@ export default function LoginScreen() {
               </View>
             </View>
           </View>
-        </View>
-      }
-    />
+        }
+      />
+
+      {/* 🔔 AppAlert Component */}
+      <AppAlert
+        visible={showAlert}
+        title={alertConfig.title}
+        message={alertConfig.message}
+        confirmText={alertConfig.confirmText}
+        showCancel={alertConfig.showCancel}
+        onConfirm={alertConfig.onConfirm}
+        onCancel={alertConfig.onCancel}
+      />
+    </>
   );
 }

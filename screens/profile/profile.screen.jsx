@@ -6,6 +6,7 @@ import {
   TouchableOpacity,
   ScrollView,
   RefreshControl,
+  ActivityIndicator,
 } from "react-native";
 import { useGetDriverData, useGetDriverWallet } from "@/hooks/useGetDriverData";
 import { router } from "expo-router";
@@ -20,12 +21,24 @@ import { fontSizes, windowHeight, windowWidth } from "@/themes/app.constant";
 import { getAvatar } from "@/utils/avatar/getAvatar";
 import { handleAddMoney, logout } from "@/api/apis";
 import DriverProfileSkeleton from "./profile-skelton.screen";
+import AppAlert from "@/components/modal/alert-modal/alert.modal";
 
 export default function Profile() {
   const { driver, loading: dataLoading, refetchData } = useGetDriverData();
   const { wallet, loading: walletLoading, refetchWallet } = useGetDriverWallet();
 
   const [refreshing, setRefreshing] = useState(false);
+  const [isLoggingOut, setIsLoggingOut] = useState(false);
+  const [showAlert, setShowAlert] = useState(false);
+  const [alertConfig, setAlertConfig] = useState({
+    title: "",
+    message: "",
+    confirmText: "OK",
+    showCancel: false,
+    onConfirm: () => setShowAlert(false),
+    onCancel: () => setShowAlert(false),
+  });
+
 
   const onRefresh = async () => {
     setRefreshing(true);
@@ -33,6 +46,28 @@ export default function Profile() {
     await refetchWallet();
     setRefreshing(false);
   };
+
+  const confirmLogout = () =>
+    new Promise((resolve) => {
+      setAlertConfig({
+        title: "Confirm Logout",
+        message: "Are you sure you want to log out?",
+        confirmText: "Log Out",
+        showCancel: true,
+
+        onCancel: () => {
+          setShowAlert(false);
+          resolve(false);
+        },
+
+        onConfirm: () => {
+          setShowAlert(false);
+          resolve(true);
+        },
+      });
+
+      setShowAlert(true);
+    });
 
   if (dataLoading || walletLoading) {
     return <DriverProfileSkeleton />;
@@ -182,7 +217,7 @@ export default function Profile() {
               borderRadius: 10,
               height: 38,
             }}
-            onPress={() => handleAddMoney(driver)}
+            onPress={() => handleAddMoney(driver, setShowAlert, setAlertConfig)}
           >
             <Ionicons
               name="add-circle-outline"
@@ -311,7 +346,13 @@ export default function Profile() {
 
       {/* ---------- LOGOUT ---------- */}
       <TouchableOpacity
-        onPress={() => logout(driver?.id, "LoggedOut Successfully")}
+        disabled={isLoggingOut}
+        onPress={async () => {
+          const confirmed = await confirmLogout();
+          if (!confirmed) return;
+
+          await logout(driver?.id, "LoggedOut Successfully", setIsLoggingOut);
+        }}
         style={{
           marginHorizontal: 20,
           marginTop: 40,
@@ -328,11 +369,20 @@ export default function Profile() {
             fontFamily: "TT-Octosquares-Medium",
           }}
         >
-          Log Out
+          {isLoggingOut ? <ActivityIndicator color={color.primary} /> : "Log Out"}
         </Text>
       </TouchableOpacity>
 
       <View style={{ height: 60 }} />
+      <AppAlert
+        visible={showAlert}
+        title={alertConfig.title}
+        message={alertConfig.message}
+        confirmText={alertConfig.confirmText}
+        showCancel={alertConfig.showCancel}
+        onConfirm={alertConfig.onConfirm}
+        onCancel={alertConfig.onCancel}
+      />
     </ScrollView>
   );
 }

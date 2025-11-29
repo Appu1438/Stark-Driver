@@ -11,6 +11,8 @@ import { Toast } from "react-native-toast-notifications";
 export const useTripRadar = create((set, get) => ({
   requests: [],
   timers: {},
+  loadingAcceptRequests: {},
+  loadingRejectRequests: {},
   driver: null, // store driver for accept handler
 
   setDriver: (driver) => set({ driver }),
@@ -49,7 +51,7 @@ export const useTripRadar = create((set, get) => ({
         kmToPickup,
         kmPickupToDrop,
       },
-      countdown: 120,
+      countdown: 30,
     };
 
     set((state) => ({
@@ -88,28 +90,47 @@ export const useTripRadar = create((set, get) => ({
   // ————————————————————
   // REJECT REQUEST
   // ————————————————————
-  rejectRequest: (id) => {
+  rejectRequest: async (id) => {
     const req = get().requests.find((r) => r.id === id);
     if (!req) return;
 
-    // Clear timer
-    clearInterval(get().timers[id]);
-    const t = { ...get().timers };
-    delete t[id];
+    const { loadingRejectRequests } = get();
 
-    // Remove request
+    // ❗ Prevent double press
+    if (loadingRejectRequests[id]) return;
+
+    // 🔄 Start loader
     set({
-      requests: get().requests.filter((r) => r.id !== id),
-      timers: t,
+      loadingRejectRequests: { ...loadingRejectRequests, [id]: true }
     });
 
-    // Notify user via socket
-    driverSocketService.send({
-      type: "rideRejected",
-      role: "driver",
-      driverId: get().driver?.id,
-      userId: req.data.user.id,
-    });
+    try {
+      // normal reject flow
+      clearInterval(get().timers[id]);
+
+      const t = { ...get().timers };
+      delete t[id];
+
+      set({
+        requests: get().requests.filter((r) => r.id !== id),
+        timers: t,
+      });
+
+      driverSocketService.send({
+        type: "rideRejected",
+        role: "driver",
+        driverId: get().driver?.id,
+        userId: req.data.user.id,
+      });
+
+    } catch (err) {
+      console.log("❌ Reject Error:", err);
+    }
+
+    // ✔ Clear loader for this request only
+    const updated = { ...get().loadingRejectRequests };
+    delete updated[id];
+    set({ loadingRejectRequests: updated });
 
     console.log("❌ Ride Rejected:", id);
   },
@@ -118,13 +139,21 @@ export const useTripRadar = create((set, get) => ({
   // ACCEPT REQUEST (FULL BACKEND + SOCKET)
   // ————————————————————
   acceptRequest: async (id) => {
+    const { loadingAcceptRequests } = get();
     const req = get().requests.find((r) => r.id === id);
     const driver = get().driver;
 
     if (!req || !driver) return;
 
+    // 🚫 Prevent double taps
+    if (loadingAcceptRequests[id]) return;
+
+    // 🔄 Start loader for only this request
+    set({
+      loadingAcceptRequests: { ...loadingAcceptRequests, [id]: true }
+    });
+
     try {
-      // Backend Ride Creation
       const response = await axiosInstance.post(`/ride/new-ride`, {
         userId: req.data.user.id,
         totalFare: req.data.fare.totalFare,
@@ -139,11 +168,13 @@ export const useTripRadar = create((set, get) => ({
       });
 
       const createdRide = response.data.newRide;
-      sendPushNotification(req.data.user.notificationToken,
-        "Ride Request Accepted!",
-        `Your driver will pick you on the location!`)
 
-      // Notify user
+      sendPushNotification(
+        req.data.user.notificationToken,
+        "Ride Request Accepted!",
+        "Your driver will pick you on the location!"
+      );
+
       driverSocketService.send({
         type: "rideAccepted",
         role: "driver",
@@ -156,29 +187,34 @@ export const useTripRadar = create((set, get) => ({
         },
       });
 
-      // Clear list
-      set({ requests: [] });
-      // Clear ALL timers
-      Object.values(get().timers).forEach(clearInterval);
-      set({ timers: {} });
+      // Clear everything
+      set({
+        requests: [],
+        timers: {},
+        loadingAcceptRequests: {}
+      });
 
-      // Navigate
       router.push({
         pathname: "/(routes)/ride-details",
         params: { rideId: JSON.stringify(createdRide.id) },
       });
 
-      console.log("✅ Ride Accepted:", createdRide.id);
+      return createdRide;
 
-      return {
-        ...req.data,
-        rideData: createdRide,
-      };
     } catch (err) {
       console.log("❌ Accept Error:", err);
-      const msg = err?.response?.data?.message || "Unable to accept the ride. Please try again.";
-      Toast.show(msg, { type: "danger" });
-      // get().rejectRequest(id);
+
+      // ❗ Reset only this request loader
+      const updated = { ...get().loadingAccpetRequests };
+      delete updated[id];
+      set({ loadingAcceptRequests: updated });
+
+      Toast.show(
+        err?.response?.data?.message ||
+        "Unable to accept the ride. Please try again.",
+        { type: "danger" }
+      );
+
       return null;
     }
   },

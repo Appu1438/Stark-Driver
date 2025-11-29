@@ -1,4 +1,4 @@
-import { View, Text, ScrollView, KeyboardAvoidingView, Platform } from "react-native";
+import { View, Text, ScrollView, KeyboardAvoidingView, Platform, ActivityIndicator } from "react-native";
 import React, { useState } from "react";
 import { windowHeight, windowWidth } from "@/themes/app.constant";
 import ProgressBar from "@/components/common/progress.bar";
@@ -13,6 +13,7 @@ import { router, useLocalSearchParams } from "expo-router";
 import axios from "axios";
 import { Toast } from "react-native-toast-notifications";
 import axiosInstance from "@/api/axiosInstance";
+import AppAlert from "@/components/modal/alert-modal/alert.modal";
 
 export default function DocumentVerificationScreen() {
     const driverData = useLocalSearchParams();
@@ -31,6 +32,16 @@ export default function DocumentVerificationScreen() {
         insurance_expiry: "",
     });
 
+    const [showAlert, setShowAlert] = useState(false);
+    const [alertConfig, setAlertConfig] = useState({
+        title: "",
+        message: "",
+        confirmText: "OK",
+        showCancel: false,
+        onConfirm: () => setShowAlert(false),
+    });
+
+
     const handleChange = (key, value) => {
         setFormData((prevData) => ({
             ...prevData,
@@ -40,6 +51,41 @@ export default function DocumentVerificationScreen() {
     };
 
     const handleSubmit = async () => {
+
+        // LIST ALL REQUIRED FIELDS WITH NICE LABELS
+        const fieldLabels = {
+            vehicleType: "Vehicle Type",
+            capacity: "Maximum Capacity",
+            registration_number: "Registration Number",
+            registration_date: "Registration Date",
+            driving_license: "Driving License Number",
+            color: "Vehicle Color",
+            license_expiry: "License Expiry Date",
+            insurance_number: "Insurance Number",
+            insurance_expiry: "Insurance Expiry Date",
+        };
+
+        // Detect empty fields
+        const missing = Object.keys(fieldLabels).filter(
+            (key) => !formData[key] || formData[key].trim() === ""
+        );
+
+        if (missing.length > 0) {
+            const message = missing.map((key) => `• ${fieldLabels[key]}`).join("\n");
+
+            setAlertConfig({
+                title: "Missing Information",
+                message: `Please complete the following fields:\n\n${message}`,
+                confirmText: "OK",
+                showCancel: false,
+                onConfirm: () => setShowAlert(false),
+            });
+
+            setShowAlert(true);
+            return;
+        }
+
+        // Passed validation → Continue
         setLoading(true);
 
         const driver = {
@@ -55,10 +101,8 @@ export default function DocumentVerificationScreen() {
             capacity: formData.capacity,
         };
 
-        console.log(driver);
-
         try {
-            const res = await axiosInstance.post("driver/send-otp", {
+            await axiosInstance.post("driver/send-otp", {
                 phone_number: `${driverData.phone_number}`,
             });
 
@@ -82,6 +126,8 @@ export default function DocumentVerificationScreen() {
             setLoading(false);
         }
     };
+
+
 
     return (
         <KeyboardAvoidingView
@@ -120,8 +166,6 @@ export default function DocumentVerificationScreen() {
                                     placeholder="Choose your vehicle type"
                                     value={formData.vehicleType}
                                     onValueChange={(text) => handleChange("vehicleType", text)}
-                                    showWarning={showWarning && formData.vehicleType === ""}
-                                    warning={"Please choose your vehicle type!"}
                                     items={[
                                         { label: "Sedan", value: "Sedan" },
                                         { label: "Auto", value: "Auto" },
@@ -138,8 +182,6 @@ export default function DocumentVerificationScreen() {
                                     onChangeText={(text) =>
                                         handleChange("capacity", text)
                                     }
-                                    showWarning={showWarning && formData.capacity === ""}
-                                    warning={"Please enter your vehicle capacity!"}
                                 />
                                 <Input
                                     title="Registration Number"
@@ -148,8 +190,6 @@ export default function DocumentVerificationScreen() {
                                     onChangeText={(text) =>
                                         handleChange("registration_number", text)
                                     }
-                                    showWarning={showWarning && formData.registration_number === ""}
-                                    warning={"Please enter your vehicle registration number!"}
                                     keyboardType="default"   // ✅ alphanumeric
 
                                 />
@@ -162,8 +202,7 @@ export default function DocumentVerificationScreen() {
                                     onChangeText={(text) =>
                                         handleChange("registration_date", text)
                                     }
-                                    showWarning={showWarning && formData.registration_date === ""}
-                                    warning={"Please enter your vehicle registration date!"}
+                                    
 
                                 />
 
@@ -174,8 +213,7 @@ export default function DocumentVerificationScreen() {
                                     onChangeText={(text) =>
                                         handleChange("driving_license", text)
                                     }
-                                    showWarning={showWarning && formData.driving_license === ""}
-                                    warning={"Please enter your driving license number!"}
+                                   
                                 />
 
                                 <Input
@@ -183,8 +221,7 @@ export default function DocumentVerificationScreen() {
                                     placeholder={"Enter your vehicle color"}
                                     value={formData.color}
                                     onChangeText={(text) => handleChange("color", text)}
-                                    showWarning={showWarning && formData.color === ""}
-                                    warning={"Please enter your vehicle color!"}
+                                   
                                 />
 
                                 <Input
@@ -192,7 +229,6 @@ export default function DocumentVerificationScreen() {
                                     placeholder="DD-MM-YYYY"
                                     value={formData.license_expiry}
                                     onChangeText={(text) => handleChange("license_expiry", text)}
-                                    showWarning={showWarning && formData.license_expiry === ""}
                                 />
 
                                 <Input
@@ -200,7 +236,6 @@ export default function DocumentVerificationScreen() {
                                     placeholder="Enter your insurance number"
                                     value={formData.insurance_number}
                                     onChangeText={(text) => handleChange("insurance_number", text)}
-                                    showWarning={showWarning && formData.insurance_number === ""}
                                 />
 
                                 <Input
@@ -208,7 +243,6 @@ export default function DocumentVerificationScreen() {
                                     placeholder="DD-MM-YYYY"
                                     value={formData.insurance_expiry}
                                     onChangeText={(text) => handleChange("insurance_expiry", text)}
-                                    showWarning={showWarning && formData.insurance_expiry === ""}
                                 />
 
                             </View>
@@ -216,7 +250,7 @@ export default function DocumentVerificationScreen() {
                             <View style={styles.margin}>
                                 <Button
                                     onPress={() => handleSubmit()}
-                                    title={"Submit"}
+                                    title={loading ? <ActivityIndicator color={color.primary} /> : "Submit"}
                                     backgroundColor={color.buttonBg}
                                     textColor={color.primary}
                                 />
@@ -225,6 +259,14 @@ export default function DocumentVerificationScreen() {
                     </View>
                 </View>
             </ScrollView>
+            <AppAlert
+                visible={showAlert}
+                title={alertConfig.title}
+                message={alertConfig.message}
+                confirmText={alertConfig.confirmText}
+                showCancel={alertConfig.showCancel}
+                onConfirm={alertConfig.onConfirm}
+            />
         </KeyboardAvoidingView>
     );
 }

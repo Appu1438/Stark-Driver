@@ -1,4 +1,4 @@
-import { View, Text, TouchableOpacity } from "react-native";
+import { View, Text, TouchableOpacity, ActivityIndicator } from "react-native";
 import React, { useState } from "react";
 import { router, useLocalSearchParams } from "expo-router";
 import AuthContainer from "@/utils/container/auth-container";
@@ -77,12 +77,12 @@ export default function EmailVerificationScreen() {
           />
           <View style={[external.mt_30]}>
             <Button
-              title={loader ? "Verifying Otp" : "Verify Otp"}
+              title={loader ? <ActivityIndicator color={color.primary} /> : 'Verify OTP'}
               onPress={() => handleSubmit()}
               disabled={loader}
             />
           </View>
-          <View style={[external.mb_15]}>
+          {/* <View style={[external.mb_15]}>
             <View
               style={[
                 external.pt_10,
@@ -103,7 +103,7 @@ export default function EmailVerificationScreen() {
                 </Text>
               </TouchableOpacity>
             </View>
-          </View>
+          </View> */}
         </View>
       }
     />

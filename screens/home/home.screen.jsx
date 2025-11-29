@@ -40,9 +40,9 @@ import RideModal from "@/components/ride/ride.modal";
 import DriverHomeSkeleton from "./home-skelton.screen";
 import { useTripRadar } from "@/store/useTripRadar";
 import { useDriverLocationStore } from "@/store/driverLocationStore";
+import AppAlert from "@/components/modal/alert-modal/alert.modal";
 
 export default function HomeScreen() {
-    const notificationListener = useRef();
     const { driver, loading: DriverDataLoading, refetchData } = useGetDriverData();
     const setDriver = useTripRadar(state => state.setDriver);
 
@@ -55,34 +55,11 @@ export default function HomeScreen() {
     const { recentRides, loading: rideHistoryLoading, refetchRides } = useGetDriverRideHistories();
 
     const driverRef = useRef(driver);
-    const [userData, setUserData] = useState(null);
     const [isOn, setIsOn] = useState();
     const [loading, setloading] = useState(false);
-    const [isModalVisible, setIsModalVisible] = useState(false);
-    const [region, setRegion] = useState({
-        latitude: 37.78825,
-        longitude: -122.4324,
-        latitudeDelta: 0.0922,
-        longitudeDelta: 0.0421,
-    });
-    // at top of the component
-    const [timeoutMessage, setTimeoutMessage] = useState("");
-    const [countdown, setCountdown] = useState(null);
-    const currentRequestRef = useRef(null);
-    const countdownIntervalRef = useRef(null);
-    const autoRejectTimeoutRef = useRef(null);
 
-    const [rideDetails, setRideDetails] = useState("");
-    const [currentLocationName, setcurrentLocationName] = useState("");
-    const [destinationLocationName, setdestinationLocationName] = useState("");
-    const [distance, setdistance] = useState();
-    const [wsConnected, setWsConnected] = useState(false);
-    const [firstMarker, setFirstMarker] = useState(null);
-    const [secondMarker, setSecondMarker] = useState(null);
-    const [fare, setFare] = useState(null);
-    const [currentLocation, setCurrentLocation] = useState(null);
+    // at top of the component
     const [lastLocation, setLastLocation] = useState(null);
-    const lastUpdateTimeRef = useRef(0);
 
     const [driverLocation, setDriverLocation] = useState(null);
     const driverLocationRef = useRef(null);
@@ -93,19 +70,33 @@ export default function HomeScreen() {
 
     const { colors } = useTheme();
 
+    const [showAlert, setShowAlert] = useState(false);
+    const [alertConfig, setAlertConfig] = useState({
+        title: "",
+        message: "",
+        confirmText: "OK",
+        showCancel: false,
+        onConfirm: () => setShowAlert(false),
+        onCancel: () => setShowAlert(false),
+    });
+
     useFocusEffect(
         useCallback(() => {
             const onBackPress = () => {
-                Alert.alert(
-                    "Exit App",
-                    "Are you sure you want to exit?",
-                    [
-                        { text: "Cancel", style: "cancel" },
-                        { text: "Exit", onPress: () => BackHandler.exitApp() },
-                    ],
-                    { cancelable: true }
-                );
-                return true; // Prevent default back behavior
+                setAlertConfig({
+                    title: "Exit App",
+                    message: "Are you sure you want to exit?",
+                    confirmText: "Exit",
+                    showCancel: true,
+                    onConfirm: () => {
+                        setShowAlert(false);
+                        BackHandler.exitApp();
+                    },
+                    onCancel: () => setShowAlert(false),
+                });
+
+                setShowAlert(true);
+                return true; // prevent default
             };
 
             if (Platform.OS === "android") {
@@ -114,11 +105,11 @@ export default function HomeScreen() {
                     onBackPress
                 );
 
-                // Cleanup on unmount
                 return () => subscription.remove();
             }
         }, [])
     );
+
 
     // Keep the ref updated whenever driver changes
     useEffect(() => {
@@ -240,34 +231,40 @@ export default function HomeScreen() {
 
     const sendLocationUpdate = async (location) => {
         try {
+            // ⛔ 1. Skip if status update is in progress
+            if (loading === true) {
+                console.log("Status update in progress — skipping location update");
+                return;
+            }
 
-            AsyncStorage.getItem("driverData").then(async (driverStr) => {
-                if (driverStr) {
-                    const res = await axiosInstance.get(`/driver/me`);
+            const driverStr = await AsyncStorage.getItem("driverData");
+            if (!driverStr) {
+                console.log("Driver data not found — skipping location update");
+                return;
+            }
 
-                    if (res.data.success) {
-                        const driver = res.data.driver;
+            const res = await axiosInstance.get(`/driver/me`);
+            if (!res.data.success) {
+                console.log("Driver fetch unsuccessful — skipping location update");
+                return;
+            }
 
-                        if (driver.status === "active") {
-                            console.log('Driver active updating location')
-                            driverSocketService.sendLocationUpdate(driver.id, location);
-                        } else {
-                            console.log('Driver inactive skip updating location')
+            const driver = res.data.driver;
 
-                        }
-                    } else {
-                        console.log("Driver fetch unsuccessful, skipping location update.");
-                    }
-                } else {
-                    console.log("Driver data not found, location updates will not start.");
-                }
-            });
+            // ⛔ 2. Skip if driver is inactive
+            if (driver.status !== "active") {
+                console.log("Driver is not active — skipping location update");
+                return;
+            }
+
+            // ✅ 3. Finally send location if all good
+            console.log("Driver active — sending location update");
+            driverSocketService.sendLocationUpdate(driver.id, location);
 
         } catch (error) {
             console.log("Location update failed:", error);
         }
     };
-
 
     const updateLocation = useDriverLocationStore(state => state.updateLocation);
     const setDistrict = useDriverLocationStore(state => state.setDistrict);
@@ -348,238 +345,6 @@ export default function HomeScreen() {
         return () => unsubscribe();
     }, []);
 
-
-    // ---------- socket listener + auto-reject ----------
-    // useEffect(() => {
-    //     // message handler
-    //     const handleMessage = (message) => {
-    //         console.log(message)
-    //         if (message.type === "rideRequest") {
-    //             const orderData = message.rideRequest;
-
-    //             // save current request (so accept/reject can reference it)
-    //             currentRequestRef.current = orderData;
-
-    //             // populate UI states (your existing setters)
-    //             setRideDetails(orderData);
-    //             setFirstMarker({
-    //                 latitude: orderData.currentLocation.latitude,
-    //                 longitude: orderData.currentLocation.longitude,
-    //             });
-    //             setSecondMarker({
-    //                 latitude: orderData.marker.latitude,
-    //                 longitude: orderData.marker.longitude,
-    //             });
-    //             setRegion({
-    //                 latitude: (orderData.currentLocation.latitude + orderData.marker.latitude) / 2,
-    //                 longitude: (orderData.currentLocation.longitude + orderData.marker.longitude) / 2,
-    //                 latitudeDelta:
-    //                     Math.abs(orderData.currentLocation.latitude - orderData.marker.latitude) * 2,
-    //                 longitudeDelta:
-    //                     Math.abs(orderData.currentLocation.longitude - orderData.marker.longitude) * 2,
-    //             });
-    //             setdistance(orderData.distance);
-    //             setcurrentLocationName(orderData.currentLocationName);
-    //             setdestinationLocationName(orderData.destinationLocation);
-    //             setUserData(orderData.user);
-    //             setFare(orderData.fare);
-
-    //             // show modal
-    //             setIsModalVisible(true);
-
-    //             // reset any old timers / messages
-    //             setTimeoutMessage("");
-    //             if (countdownIntervalRef.current) {
-    //                 clearInterval(countdownIntervalRef.current);
-    //                 countdownIntervalRef.current = null;
-    //             }
-    //             if (autoRejectTimeoutRef.current) {
-    //                 clearTimeout(autoRejectTimeoutRef.current);
-    //                 autoRejectTimeoutRef.current = null;
-    //             }
-
-    //             // start countdown (15 seconds)
-    //             setTimeoutMessage("⏱ This request will auto-reject in 30 seconds...");
-    //             setCountdown(30);
-    //             countdownIntervalRef.current = setInterval(() => {
-    //                 setCountdown((prev) => {
-    //                     if (prev === null) return null;
-    //                     if (prev <= 1) {
-    //                         // stop the interval (we'll trigger auto-reject below via timeout too)
-    //                         if (countdownIntervalRef.current) {
-    //                             clearInterval(countdownIntervalRef.current);
-    //                             countdownIntervalRef.current = null;
-    //                         }
-    //                         return 0;
-    //                     }
-    //                     return prev - 1;
-    //                 });
-    //             }, 1000);
-
-    //             // auto reject fallback at 15s
-    //             autoRejectTimeoutRef.current = setTimeout(() => {
-    //                 // ensure the modal is still open and request matches
-    //                 if (!currentRequestRef.current) return;
-
-    //                 setTimeoutMessage("⚠️ Ride request expired. Auto-rejected.");
-    //                 // call same reject handler used for manual reject
-    //                 rejectRideHandler({
-    //                     ...(currentRequestRef.current || {}), // fallback empty object
-    //                     ...(driverRef.current?.id ? { driverId: driverRef.current.id } : {}), // only add if defined
-    //                 });
-
-    //             }, 30000);
-    //         }
-    //     };
-
-    //     // register handler (replace existing onMessage)
-    //     // driverSocketService.onMessage(handleMessage);
-    //     const unsubscribe = driverSocketService.onMessage(handleMessage);
-
-
-    //     // cleanup on unmount: remove handler, clear timers
-    //     return () => {
-    //         // remove handler by setting empty callback (your service sets a single callback)
-    //         unsubscribe(); // removes only this listener
-    //         if (countdownIntervalRef.current) {
-    //             clearInterval(countdownIntervalRef.current);
-    //             countdownIntervalRef.current = null;
-    //         }
-    //         if (autoRejectTimeoutRef.current) {
-    //             clearTimeout(autoRejectTimeoutRef.current);
-    //             autoRejectTimeoutRef.current = null;
-    //         }
-    //         currentRequestRef.current = null;
-    //     };
-    // }, []); // run once
-
-
-    const clearTimerAndCloseModal = () => {
-        setTimeoutMessage("");
-        setIsModalVisible(false);
-    };
-
-    const acceptRideHandler = async (rideRequest) => {
-        try {
-            // Clear timers so auto-reject won't fire
-            if (countdownIntervalRef.current) {
-                clearInterval(countdownIntervalRef.current);
-                countdownIntervalRef.current = null;
-            }
-            if (autoRejectTimeoutRef.current) {
-                clearTimeout(autoRejectTimeoutRef.current);
-                autoRejectTimeoutRef.current = null;
-            }
-            setTimeoutMessage("");
-            setCountdown(null);
-            currentRequestRef.current = null;
-            setIsModalVisible(false);
-
-
-            const response = await axiosInstance.post(
-                `/ride/new-ride`,
-                {
-                    userId: rideRequest.user.id,
-                    totalFare: rideRequest.fare.totalFare,
-                    driverEarnings: rideRequest.fare.driverEarnings,
-                    platformShare: rideRequest.fare.platformShare,
-                    status: "Booked",
-                    currentLocationName: rideRequest.currentLocationName,
-                    currentLocation: rideRequest.currentLocation,
-                    destinationLocationName: rideRequest.destinationLocation,
-                    destinationLocation: rideRequest.marker,
-                    distance: rideRequest.distance,
-                }
-            );
-
-            const createdRide = response.data.newRide;
-
-            // notify user (server should route this to the correct userId)
-            sendPushNotification(rideRequest.user.notificationToken,
-                "Ride Request Accepted!",
-                `Your driver will pick you on the location!`)
-            driverSocketService.send({
-                type: "rideAccepted",
-                role: "driver",
-                rideData: {
-                    user: rideRequest.user,
-                    firstMarker: {
-                        latitude: rideRequest.currentLocation.latitude,
-                        longitude: rideRequest.currentLocation.longitude,
-                    },
-                    secondMarker: {
-                        latitude: rideRequest.marker.latitude,
-                        longitude: rideRequest.marker.longitude,
-                    },
-                    driver: driver,
-                    rideData: createdRide,
-                },
-            });
-
-            // navigate
-            const rideData = {
-                user: rideRequest.user,
-                firstMarker: {
-                    latitude: rideRequest.currentLocation.latitude,
-                    longitude: rideRequest.currentLocation.longitude,
-                },
-                secondMarker: {
-                    latitude: rideRequest.marker.latitude,
-                    longitude: rideRequest.marker.longitude,
-                },
-                driver: driver,
-                rideData: createdRide,
-            };
-
-            router.push({
-                pathname: "/(routes)/ride-details",
-                params: { rideId: JSON.stringify(rideData.rideData.id) },
-            });
-        } catch (error) {
-            // clear timers if any and show toast, then optionally auto-reject
-            if (countdownIntervalRef.current) {
-                clearInterval(countdownIntervalRef.current);
-                countdownIntervalRef.current = null;
-            }
-            if (autoRejectTimeoutRef.current) {
-                clearTimeout(autoRejectTimeoutRef.current);
-                autoRejectTimeoutRef.current = null;
-            }
-            setTimeoutMessage("");
-            setCountdown(null);
-            currentRequestRef.current = null;
-            setIsModalVisible(false);
-
-            const msg = error?.response?.data?.message || "Unable to accept the ride. Please try again.";
-            Toast.show(msg, { type: "danger" });
-
-            rejectRideHandler(rideRequest);
-        }
-    };
-
-    const rejectRideHandler = (rideRequest) => {
-        // Clear timers
-        if (countdownIntervalRef.current) {
-            clearInterval(countdownIntervalRef.current);
-            countdownIntervalRef.current = null;
-        }
-        if (autoRejectTimeoutRef.current) {
-            clearTimeout(autoRejectTimeoutRef.current);
-            autoRejectTimeoutRef.current = null;
-        }
-
-        setTimeoutMessage("");
-        setCountdown(null);
-        currentRequestRef.current = null;
-        setIsModalVisible(false);
-
-        driverSocketService.send({
-            type: "rideRejected",
-            role: "driver",
-            driverId: rideRequest.driverId || driverRef.current?.id, // fallback
-            userId: rideRequest.user.id,
-        });
-    };
 
 
     const [refreshing, setRefreshing] = useState(false);
@@ -662,25 +427,15 @@ export default function HomeScreen() {
                     </View>
                 </ScrollView>
             </View>
-            <RideModal
-                visible={isModalVisible}
-                onClose={clearTimerAndCloseModal}
-                title="🚘 New Ride Request!"
-                countdown={countdown}
-                timeoutMessage={timeoutMessage}
-                region={region}
-                firstMarker={firstMarker}
-                secondMarker={secondMarker}
-                currentLocationName={currentLocationName}
-                destinationLocationName={destinationLocationName}
-                distance={distance}
-                fare={fare}
-                onAccept={() => acceptRideHandler(rideDetails)}
-                onReject={() => rejectRideHandler(rideDetails)}
+            <AppAlert
+                visible={showAlert}
+                title={alertConfig.title}
+                message={alertConfig.message}
+                confirmText={alertConfig.confirmText}
+                showCancel={alertConfig.showCancel}
+                onConfirm={alertConfig.onConfirm}
+                onCancel={alertConfig.onCancel}
             />
-
-
-
         </View>
     );
 }

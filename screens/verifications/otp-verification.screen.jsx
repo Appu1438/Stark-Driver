@@ -1,4 +1,4 @@
-import { View, Text, TouchableOpacity } from "react-native";
+import { View, Text, TouchableOpacity, ActivityIndicator } from "react-native";
 import React, { useState } from "react";
 import SignInText from "@/components/login/signin.text";
 import Button from "@/components/common/button";
@@ -115,7 +115,7 @@ export default function OtpVerificationScreen() {
                     />
                     <View style={[external.mt_30]}>
                         <Button
-                            title={loader ? "Verifying Otp" : "Verify Otp"}
+                            title={loader ? <ActivityIndicator color={color.primary} /> : 'Verify OTP'}
                             onPress={() => handleSubmit()}
                             disabled={loader}
                         />
@@ -135,7 +135,9 @@ export default function OtpVerificationScreen() {
                             <Text style={[commonStyles.regularText, {
                                 fontFamily: 'TT-Octosquares-Medium',
                             }]}>Not Received yet?</Text>
-                            <TouchableOpacity>
+                            <TouchableOpacity onPress={() => {
+                                router.back()
+                            }}>
                                 <Text style={[styles.signUpText, {
                                     color: color.lightGray,
                                     fontFamily: 'TT-Octosquares-Medium',

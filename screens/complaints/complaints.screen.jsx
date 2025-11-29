@@ -20,6 +20,7 @@ import Button from "@/components/common/button";
 import axiosInstance from "@/api/axiosInstance";
 import ComplaintSkeleton from "./complaints-skelton.screen";
 import { useGetDriverRideHistories } from "@/hooks/useGetDriverData";
+import AppAlert from "@/components/modal/alert-modal/alert.modal";
 
 export default function DriverComplaints() {
   const { recentRides } = useGetDriverRideHistories();
@@ -30,6 +31,47 @@ export default function DriverComplaints() {
   const [rideModalVisible, setRideModalVisible] = useState(false);
   const [loadingComplaints, setLoadingComplaints] = useState(true);
   const [submitting, setSubmitting] = useState(false);
+
+  const [showAlert, setShowAlert] = useState(false);
+  const [alertConfig, setAlertConfig] = useState({
+    title: "",
+    message: "",
+    confirmText: "OK",
+    showCancel: false,
+    onConfirm: () => setShowAlert(false),
+    onCancel: () => setShowAlert(false),
+  });
+
+  const confirmAction = (title, message, confirmText = "Yes") =>
+    new Promise((resolve) => {
+      setAlertConfig({
+        title,
+        message,
+        confirmText,
+        showCancel: true,
+        onCancel: () => {
+          setShowAlert(false);
+          resolve(false);
+        },
+        onConfirm: () => {
+          setShowAlert(false);
+          resolve(true);
+        },
+      });
+      setShowAlert(true);
+    });
+
+  const showInfo = (title, message) => {
+    setAlertConfig({
+      title,
+      message,
+      confirmText: "OK",
+      showCancel: false,
+      onConfirm: () => setShowAlert(false),
+    });
+    setShowAlert(true);
+  };
+
 
   useEffect(() => {
     fetchComplaints();
@@ -51,12 +93,21 @@ export default function DriverComplaints() {
 
   const handleSubmit = async () => {
     if (!category || !message.trim()) {
-      Alert.alert("Missing fields", "Please select a complaint type and describe your issue.");
+      showInfo("Missing Fields", "Please select a complaint type and describe your issue.");
       return;
     }
 
+    const confirmed = await confirmAction(
+      "Submit Complaint",
+      "Are you sure you want to submit this complaint?",
+      "Submit"
+    );
+
+    if (!confirmed) return;
+
     try {
       setSubmitting(true);
+
       const payload = {
         category,
         message: message.trim(),
@@ -64,7 +115,7 @@ export default function DriverComplaints() {
       if (selectedRide?.id) payload.rideId = selectedRide.id;
 
       const res = await axiosInstance.post("/complaints/driver", payload);
-      const created = res?.data?.data; // since backend returns array
+      const created = res?.data?.data;
 
       if (created) {
         setComplaints((prev) => [created, ...prev]);
@@ -72,17 +123,19 @@ export default function DriverComplaints() {
         setCategory("");
         setMessage("");
         setRideModalVisible(false);
-        Alert.alert("Success", "Your complaint has been submitted.");
+
+        showInfo("Success", "Your complaint has been submitted.");
       } else {
-        Alert.alert("Notice", "Complaint submitted, but no response received.");
+        showInfo("Notice", "Complaint submitted, but no response received.");
       }
     } catch (err) {
       console.error("Submit complaint failed:", err);
-      Alert.alert("Error", "Could not submit complaint. Please try again later.");
+      showInfo("Error", "Could not submit complaint. Please try again later.");
     } finally {
       setSubmitting(false);
     }
   };
+
 
   const getStatusColor = (status) => {
     switch (status) {
@@ -268,7 +321,7 @@ export default function DriverComplaints() {
 
           <View style={{ marginTop: 18 }}>
             <Button
-              title={submitting ? "Submitting..." : "Submit Complaint"}
+              title={submitting ? <ActivityIndicator color={color.primary} /> : "Submit Complaint"}
               onPress={handleSubmit}
               disabled={submitting}
             />
@@ -411,6 +464,15 @@ export default function DriverComplaints() {
           </View>
         </View>
       </Modal>
+      <AppAlert
+        visible={showAlert}
+        title={alertConfig.title}
+        message={alertConfig.message}
+        confirmText={alertConfig.confirmText}
+        showCancel={alertConfig.showCancel}
+        onConfirm={alertConfig.onConfirm}
+        onCancel={alertConfig.onCancel}
+      />
     </KeyboardAvoidingView>
   );
 }

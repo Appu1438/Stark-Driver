@@ -3,10 +3,11 @@ import { fontSizes, windowHeight, windowWidth } from "@/themes/app.constant";
 import fonts from "@/themes/app.fonts";
 import { StyleSheet } from "react-native";
 
- const styles = StyleSheet.create({
-  container: { flex: 1,
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
     //  backgroundColor: color.background
-     },
+  },
 
   header: {
     alignItems: "center",
@@ -141,58 +142,60 @@ import { StyleSheet } from "react-native";
 export { styles }
 
 const basicStyles = StyleSheet.create({
-    container: {
-        flex: 1,
-        paddingHorizontal: 20,
-        paddingTop: windowHeight(50)
-    },
-    title: {
-        fontSize: fontSizes.FONT22,
-        fontFamily: "TT-Octosquares-Medium",
+  container: {
+    flex: 1,
+    paddingHorizontal: 20,
+    paddingTop: windowHeight(50)
+  },
+  title: {
+    fontSize: fontSizes.FONT22,
+    fontFamily: "TT-Octosquares-Medium",
 
-        // fontWeight: "700",
-        marginVertical: 20,
-        textAlign: "center",
-        color: color.primaryText,
-    },
-    card: {
-        borderRadius: 12,
-        // padding: 15,
-        marginBottom: 20,
-    },
-    infoBox: {
-        borderRadius: 10,
-        padding: 15,
-        marginBottom: 30,
-        borderLeftWidth: 4,
-        borderBottomWidth: 1,
-        borderColor: color.primaryGray,
-    },
-    infoText: {
-        fontSize: fontSizes.FONT14,
-        color: color.primaryText,
-        lineHeight: 20,
-        fontFamily: "TT-Octosquares-Medium",
-    },
-    inputBox: {
-        marginBottom: 15,
-        paddingVertical: 12,
-        paddingHorizontal: 15,
-        borderWidth: 1,
-        borderColor: color.border,
-        borderRadius: 10
-    },
-    label: {
-        fontFamily: "TT-Octosquares-Medium",
-        fontSize: fontSizes.FONT14,
-        color: color.primaryText,
-        marginBottom: 4,
-    },
-    value: {
-        fontFamily: "TT-Octosquares-Medium",
-        fontSize: fontSizes.FONT16,
-        color: color.primaryGray,
-    },
+    // fontWeight: "700",
+    marginVertical: 20,
+    textAlign: "center",
+    color: color.primaryText,
+  },
+  card: {
+    borderRadius: 12,
+    // padding: 15,
+    marginBottom: 20,
+  },
+  infoBox: {
+    backgroundColor: color.subPrimary,
+    borderRadius: 10,
+    padding: 15,
+    marginBottom: 30,
+    borderLeftWidth: 4,
+    borderLeftColor: color.lightGray,
+    borderColor: color.border,
+    borderWidth: 1
+  },
+  infoText: {
+    fontSize: fontSizes.FONT14,
+    color: color.primaryText,
+    lineHeight: 20,
+    fontFamily: "TT-Octosquares-Medium",
+  },
+  inputBox: {
+    marginBottom: 15,
+    paddingVertical: 12,
+    paddingHorizontal: 15,
+    borderWidth: 1,
+    borderColor: color.border,
+    borderRadius: 10
+  },
+  label: {
+    fontFamily: "TT-Octosquares-Medium",
+    fontSize: fontSizes.FONT14,
+    color: color.primaryText,
+    marginBottom: 4,
+  },
+  value: {
+    fontFamily: "TT-Octosquares-Medium",
+    fontSize: fontSizes.FONT16,
+    color: color.primaryGray,
+  },
 
 });
 

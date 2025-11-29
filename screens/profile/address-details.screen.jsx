@@ -131,7 +131,7 @@ const styles = StyleSheet.create({
     shadowRadius: 6,
     shadowOffset: { width: 0, height: 2 },
     elevation: 3,
-     borderColor: color.border,
+    borderColor: color.border,
     borderWidth: 2
   },
   detailRow: {
@@ -154,8 +154,9 @@ const styles = StyleSheet.create({
     padding: 15,
     marginBottom: 30,
     borderLeftWidth: 4,
-    borderBottomWidth:.5,
-    borderColor: color.lightGray,
+    borderLeftColor: color.lightGray,
+    borderColor: color.border,
+    borderWidth: 1
   },
   infoText: {
     fontSize: fontSizes.FONT14,
