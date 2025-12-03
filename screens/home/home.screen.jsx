@@ -368,7 +368,6 @@ export default function HomeScreen() {
                 } else {
                     setIsOn(false);
                     driverSocketService.sendLocationUpdate(driver?.id, { latitude: null, longitude: null });
-                    setLastLocation("");
                     Toast.show("You are now inactive and not available for rides!", { type: "info" });
                 }
             } catch (err) {

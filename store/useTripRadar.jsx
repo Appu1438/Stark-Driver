@@ -13,6 +13,8 @@ export const useTripRadar = create((set, get) => ({
   timers: {},
   loadingAcceptRequests: {},
   loadingRejectRequests: {},
+  isProcessing: false,     // 🔥 GLOBAL LOCK
+
   driver: null, // store driver for accept handler
 
   setDriver: (driver) => set({ driver }),
@@ -97,11 +99,13 @@ export const useTripRadar = create((set, get) => ({
     const { loadingRejectRequests } = get();
 
     // ❗ Prevent double press
-    if (loadingRejectRequests[id]) return;
+    if (get().isProcessing) return;
 
     // 🔄 Start loader
     set({
-      loadingRejectRequests: { ...loadingRejectRequests, [id]: true }
+      loadingRejectRequests: { ...loadingRejectRequests, [id]: true },
+      isProcessing: true,
+
     });
 
     try {
@@ -130,7 +134,10 @@ export const useTripRadar = create((set, get) => ({
     // ✔ Clear loader for this request only
     const updated = { ...get().loadingRejectRequests };
     delete updated[id];
-    set({ loadingRejectRequests: updated });
+    set({
+      loadingRejectRequests: updated,
+      isProcessing: false
+    });
 
     console.log("❌ Ride Rejected:", id);
   },
@@ -145,13 +152,15 @@ export const useTripRadar = create((set, get) => ({
 
     if (!req || !driver) return;
 
-    // 🚫 Prevent double taps
-    if (loadingAcceptRequests[id]) return;
+    // 🔥 Global lock
+    if (get().isProcessing) return;
 
-    // 🔄 Start loader for only this request
+    // Local loader + global lock
     set({
-      loadingAcceptRequests: { ...loadingAcceptRequests, [id]: true }
+      loadingAcceptRequests: { ...loadingAcceptRequests, [id]: true },
+      isProcessing: true,
     });
+
 
     try {
       const response = await axiosInstance.post(`/ride/new-ride`, {
@@ -191,7 +200,9 @@ export const useTripRadar = create((set, get) => ({
       set({
         requests: [],
         timers: {},
-        loadingAcceptRequests: {}
+        loadingAcceptRequests: {},
+        isProcessing: false,     // 🔥 Release lock
+
       });
 
       router.push({
@@ -207,7 +218,10 @@ export const useTripRadar = create((set, get) => ({
       // ❗ Reset only this request loader
       const updated = { ...get().loadingAccpetRequests };
       delete updated[id];
-      set({ loadingAcceptRequests: updated });
+      set({
+        loadingAcceptRequests: updated,
+        isProcessing: false      // 🔥 Release lock
+      });
 
       Toast.show(
         err?.response?.data?.message ||

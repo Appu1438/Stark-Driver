@@ -236,6 +236,40 @@ export default function Profile() {
           </TouchableOpacity>
         </View>
       </View>
+      {wallet?.balance !== undefined && wallet.balance < 250 && (
+        <View
+          style={{
+            marginHorizontal: 25,
+            marginTop: 10,
+            backgroundColor: "#FFF4D1", // light yellow
+            borderLeftWidth: 4,
+            borderLeftColor: "#FF9800", // orange warning tone
+            padding: 12,
+            borderRadius: 8,
+            flexDirection: "row",
+            alignItems: "center",
+          }}
+        >
+          <Ionicons
+            name="warning-outline"
+            size={20}
+            color="#FF9800"
+            style={{ marginRight: 10 }}
+          />
+          <Text
+            style={{
+              color: "#FF9800",
+              fontFamily: "TT-Octosquares-Medium",
+              fontSize: fontSizes.FONT15,
+              flexShrink: 1,
+            }}
+          >
+            Your wallet balance is low. Please add money now to accept rides
+            .
+          </Text>
+        </View>
+      )}
+
 
       {/* ---------- QUICK STATS ---------- */}
       <View

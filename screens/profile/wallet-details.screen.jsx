@@ -17,7 +17,7 @@ import { Ionicons } from "@expo/vector-icons";
 import color from "@/themes/app.colors";
 import { useDriverEarnings, useGetDriverData, useGetDriverWallet } from "@/hooks/useGetDriverData";
 import { handleAddMoney } from "@/api/apis";
-import { windowHeight, windowWidth } from "@/themes/app.constant";
+import { fontSizes, windowHeight, windowWidth } from "@/themes/app.constant";
 import AppAlert from "@/components/modal/alert-modal/alert.modal";
 
 /* -------------------- SHIMMER SKELETON -------------------- */
@@ -181,7 +181,40 @@ export default function WalletDetails() {
                         <Ionicons name="add-circle-outline" size={18} color={color.primary} />
                         <Text style={styles.addButtonText}>Add Money</Text>
                     </TouchableOpacity>
-                </LinearGradient>
+                </LinearGradient>  {wallet?.balance !== undefined && wallet.balance < 250 && (
+                    <View
+                        style={{
+                            marginHorizontal: 5,
+                            marginTop: 10,
+                            backgroundColor: "#FFF4D1", // light yellow
+                            borderLeftWidth: 4,
+                            borderLeftColor: "#FF9800", // orange warning tone
+                            padding: 12,
+                            borderRadius: 8,
+                            flexDirection: "row",
+                            alignItems: "center",
+                        }}
+                    >
+                        <Ionicons
+                            name="warning-outline"
+                            size={20}
+                            color="#FF9800"
+                            style={{ marginRight: 10 }}
+                        />
+                        <Text
+                            style={{
+                                color: "#FF9800",
+                                fontFamily: "TT-Octosquares-Medium",
+                                fontSize: fontSizes.FONT15,
+                                flexShrink: 1,
+                            }}
+                        >
+                            Your wallet balance is low. Please add money now to accept rides
+                            .
+                        </Text>
+                    </View>
+                )}
+
 
                 {/* ---------- TRANSACTION LIST ---------- */}
                 <Text style={styles.historyTitle}>Recent Transactions</Text>

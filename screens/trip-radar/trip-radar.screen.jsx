@@ -36,6 +36,8 @@ import { shallow } from "zustand/shallow";
 
 export default function TripRadarScreen() {
   const { requests, rejectRequest, acceptRequest, loadingRejectRequests, loadingAcceptRequests } = useTripRadar();
+  const isGlobalProcessing = useTripRadar((s) => s.isProcessing);
+
 
   const { driver, loading: driverDataLoading, refetchData } = useGetDriverData();
   const { earnings, loading: driverEarningsLoading, refetchEarnings } = useDriverEarnings();
@@ -356,14 +358,14 @@ export default function TripRadarScreen() {
                       <Button
                         title={isRejectLoading ? <ActivityIndicator color={color.primary} /> : "Reject"}
                         width="45%"
-                        disabled={isRejectLoading || isAcceptLoading}
+                        disabled={isRejectLoading || isAcceptLoading || isGlobalProcessing}
                         onPress={() => rejectRequest(item.id)}
                       />
                       <Button
                         title={isAcceptLoading ? <ActivityIndicator color={color.primary} /> : "Accept"}
                         width="45%"
                         textColor="#000"
-                        disabled={isAcceptLoading || isRejectLoading}
+                        disabled={isAcceptLoading || isRejectLoading || isGlobalProcessing}
                         onPress={() => {
                           acceptRequest(item.id);
                         }}
