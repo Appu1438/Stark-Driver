@@ -9,6 +9,8 @@ import { Map } from "@/assets/icons/map";
 import { MapLight } from "@/assets/icons/mapLight";
 import { useTripRadar } from "@/store/useTripRadar";
 import { View, Text } from "react-native";
+import { Navigation } from "@/assets/icons/navigation";
+import { NavigationLight } from "@/assets/icons/navigationLight";
 
 export default function _layout() {
   const { requests } = useTripRadar();   // <-- you already have this
@@ -76,6 +78,16 @@ export default function _layout() {
               );
             }
 
+            // // NAVIGATION TAB
+            // else if (route.name === "navigation/index") {
+            //   iconName = focused ? (
+            //     <Navigation fill={color.buttonBg} width={24} height={24} />
+            //   ) : (
+            //     <NavigationLight stroke={"#8F8F8F"} width={24} height={24} />
+            //   );
+            // }
+
+
             // RIDES
             else if (route.name === "rides/index") {
               iconName = focused ? (
@@ -101,6 +113,7 @@ export default function _layout() {
     >
       <Tabs.Screen name="home" />
       <Tabs.Screen name="trip-radar/index" />
+      {/* <Tabs.Screen name="navigation/index" /> */}
       <Tabs.Screen name="rides/index" />
       <Tabs.Screen name="profile/index" />
     </Tabs>

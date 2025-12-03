@@ -6,21 +6,21 @@ export const useDriverLocationStore = create((set, get) => ({
   animatedLocation: new AnimatedRegion({
     latitude: 0,
     longitude: 0,
-    latitudeDelta: 0.01,
-    longitudeDelta: 0.01,
   }),
-  lastLocation: null,
   heading: 0,
   district: null,
 
   setDistrict: (d) => set({ district: d }),
 
   updateLocation: (newLocation) => {
-    const { lastLocation, animatedLocation } = get();
+    const { currentLocation, animatedLocation, heading, district } = get();
+
+    console.log(currentLocation, heading, district)
+
 
     // ---- Calculate heading (bearing) ----
-    if (lastLocation) {
-      const angle = calculateHeading(lastLocation, newLocation);
+    if (currentLocation) {
+      const angle = calculateHeading(currentLocation.latitude, currentLocation.longitude, newLocation.latitude, newLocation.longitude);
       set({ heading: angle });
     }
 
@@ -28,33 +28,29 @@ export const useDriverLocationStore = create((set, get) => ({
     animatedLocation.timing({
       latitude: newLocation.latitude,
       longitude: newLocation.longitude,
-      duration: 800,               // smoothness
+      duration: 1000,               // smoothness
       useNativeDriver: false,
     }).start();
 
 
     set({
       currentLocation: newLocation,
-      lastLocation: newLocation,
     });
   },
+
 }));
 
 // ---- Bearing calculation ----
-const calculateHeading = (start, end) => {
-  const startLat = (start.latitude * Math.PI) / 180;
-  const startLng = (start.longitude * Math.PI) / 180;
-  const endLat = (end.latitude * Math.PI) / 180;
-  const endLng = (end.longitude * Math.PI) / 180;
+function calculateHeading(lat1, lon1, lat2, lon2) {
+  const toRad = (deg) => deg * (Math.PI / 180);
+  const toDeg = (rad) => rad * (180 / Math.PI);
 
-  const dLng = endLng - startLng;
-
-  const y = Math.sin(dLng) * Math.cos(endLat);
+  const dLon = toRad(lon2 - lon1);
+  const y = Math.sin(dLon) * Math.cos(toRad(lat2));
   const x =
-    Math.cos(startLat) * Math.sin(endLat) -
-    Math.sin(startLat) * Math.cos(endLat) * Math.cos(dLng);
+    Math.cos(toRad(lat1)) * Math.sin(toRad(lat2)) -
+    Math.sin(toRad(lat1)) * Math.cos(toRad(lat2)) * Math.cos(dLon);
 
-  let angle = (Math.atan2(y, x) * 180) / Math.PI;
+  return ((toDeg(Math.atan2(y, x)) + 360) % 360);
+}
 
-  return (angle + 360) % 360;
-};

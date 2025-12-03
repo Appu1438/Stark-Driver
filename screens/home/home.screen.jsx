@@ -58,8 +58,13 @@ export default function HomeScreen() {
     const [isOn, setIsOn] = useState();
     const [loading, setloading] = useState(false);
 
-    // at top of the component
-    const [lastLocation, setLastLocation] = useState(null);
+    const { currentLocation, setDistrict, updateLocation } = useDriverLocationStore();
+    const currentLocRef = useRef(currentLocation);
+
+    useEffect(() => {
+        currentLocRef.current = currentLocation;
+    }, [currentLocation]);
+
 
     const [driverLocation, setDriverLocation] = useState(null);
     const driverLocationRef = useRef(null);
@@ -109,7 +114,6 @@ export default function HomeScreen() {
             }
         }, [])
     );
-
 
     // Keep the ref updated whenever driver changes
     useEffect(() => {
@@ -208,24 +212,104 @@ export default function HomeScreen() {
         }
     }, []);
 
+
+
+    useEffect(() => {
+        if (!isOn) return;  // 🔥 Only run when driver is online
+
+        let watchSub = null;
+
+        (async () => {
+            // -------------------------
+            // 1. Ask permission
+            // -------------------------
+            const { status } = await GeoLocation.requestForegroundPermissionsAsync();
+            if (status !== "granted") {
+                Toast.show("Please allow location access!");
+                return;
+            }
+
+            // -------------------------
+            // 2. Start watching position
+            // -------------------------
+            watchSub = await GeoLocation.watchPositionAsync(
+                {
+                    accuracy: GeoLocation.Accuracy.High,
+                    timeInterval: 2000,     // every 2 sec
+                    distanceInterval: 2,    // or every 2 meters
+                },
+                async (position) => {
+                    const { latitude, longitude } = position.coords;
+                    const newLoc = { latitude, longitude };
+                    const lastLoc = currentLocRef.current;
+
+
+                    // First-time location
+                    console.log('Last Location', lastLoc)
+
+                    if (!lastLoc) {
+                        console.log('No Last Location Found , Updating...', newLoc)
+                        updateLocation(newLoc);
+                        setDriverLocation(newLoc);
+                        await sendLocationUpdate(newLoc);
+                        getDistrict(latitude, longitude, setDistrict);
+                        return;
+                    }
+                    else {
+                        // -------------------------
+                        // 3. Compare movement
+                        // -------------------------
+                        const moved = haversineDistance(lastLoc, newLoc);
+                        console.log(`Moved ${moved} meters `)
+
+                        if (moved >= 5) {    // 🔥 moved >= 200 meters
+                            console.log('Updating Store and Socket', newLoc)
+                            updateLocation(newLoc);         // update Zustand
+                            setDriverLocation(newLoc);      // local state if needed
+                            getDistrict(latitude, longitude, setDistrict);
+                            await sendLocationUpdate(newLoc);
+                        } else {
+                            console.log('Skiping Store and Socket', newLoc)
+
+                        }
+                    }
+
+                }
+            );
+        })();
+
+        // -------------------------
+        // Cleanup watcher on unmount
+        // -------------------------
+        return () => {
+            if (watchSub && typeof watchSub.remove === "function") {
+                watchSub.remove();
+            }
+        };
+    }, [isOn]);
+
+    // -------------------------
+    // 🔹 Haversine Utility (Keep Outside Component)
+    // -------------------------
     const haversineDistance = (coords1, coords2) => {
         const toRad = (x) => (x * Math.PI) / 180;
 
-        const R = 6371e3; // Radius of the Earth in meters
+        const R = 6371e3; // Earth radius (m)
         const lat1 = toRad(coords1.latitude);
         const lat2 = toRad(coords2.latitude);
-        const deltaLat = toRad(coords2.latitude - coords1.latitude);
-        const deltaLon = toRad(coords2.longitude - coords1.longitude);
+        const dLat = toRad(coords2.latitude - coords1.latitude);
+        const dLon = toRad(coords2.longitude - coords1.longitude);
 
         const a =
-            Math.sin(deltaLat / 2) * Math.sin(deltaLat / 2) +
+            Math.sin(dLat / 2) ** 2 +
             Math.cos(lat1) *
             Math.cos(lat2) *
-            Math.sin(deltaLon / 2) *
-            Math.sin(deltaLon / 2);
-        const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+            Math.sin(dLon / 2) ** 2;
 
-        const distance = R * c; // Distance in meters
+        const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+        const distance = R * c;
+
+        console.log("Moved distance:", distance, "m");
         return distance;
     };
 
@@ -266,41 +350,6 @@ export default function HomeScreen() {
         }
     };
 
-    const updateLocation = useDriverLocationStore(state => state.updateLocation);
-    const setDistrict = useDriverLocationStore(state => state.setDistrict);
-
-    useEffect(() => {
-        (async () => {
-            let { status } = await GeoLocation.requestForegroundPermissionsAsync();
-            if (status !== "granted") {
-                Toast.show("Please allow location access!");
-                return;
-            }
-
-            await GeoLocation.watchPositionAsync(
-                {
-                    accuracy: GeoLocation.Accuracy.High,
-                    timeInterval: 2000,
-                    distanceInterval: 2,
-                },
-                async (position) => {
-                    const { latitude, longitude } = position.coords;
-                    const newLocation = { latitude, longitude };
-
-                    if (
-                        !lastLocation ||
-                        haversineDistance(lastLocation, newLocation) >= 200
-                    ) {
-                        getDistrict(latitude, longitude, setDistrict);
-                        updateLocation(newLocation);       // 🔥 write to Zustand
-                        setDriverLocation(newLocation)
-                        await sendLocationUpdate(newLocation);  // socket update
-                    }
-                }
-            );
-        })();
-    }, [isOn]);
-
 
 
     const handleStatusChange = async () => {
@@ -320,7 +369,6 @@ export default function HomeScreen() {
                     setIsOn(false);
                     driverSocketService.sendLocationUpdate(driver?.id, { latitude: null, longitude: null });
                     setLastLocation("");
-                    setCurrentLocation("");
                     Toast.show("You are now inactive and not available for rides!", { type: "info" });
                 }
             } catch (err) {

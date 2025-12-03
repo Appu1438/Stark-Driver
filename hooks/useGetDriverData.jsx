@@ -23,7 +23,7 @@ export const useGetDriverData = () => {
       .finally(() => {
         setTimeout(() => {
           setLoading(false);
-        }, 2000);
+        }, 0);
       })
 
   };
@@ -51,7 +51,7 @@ export const useGetDriverWallet = () => {
       .finally(() => {
         setTimeout(() => {
           setLoading(false);
-        }, 2000);
+        }, 0);
       })
   };
   useEffect(() => {
@@ -72,7 +72,7 @@ export const useGetDriverRideHistories = () => {
     } catch (error) {
       console.log("Failed to fetch rides:", error);
     } finally {
-      setTimeout(() => setLoading(false), 3000);
+      setTimeout(() => setLoading(false), 0);
     }
   };
 
@@ -98,7 +98,7 @@ export const useDriverEarnings = (period = "daily") => {
     } finally {
       setTimeout(() => {
         setLoading(false);
-      }, 3000);
+      }, 0);
     }
   };
 

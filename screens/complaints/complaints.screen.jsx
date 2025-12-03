@@ -85,9 +85,9 @@ export default function DriverComplaints() {
       setComplaints(data);
     } catch (err) {
       console.error("Failed to fetch complaints:", err);
-      Alert.alert("Error", "Unable to fetch complaints. Please try again later.");
+      showInfo("Error", "Unable to fetch complaints. Please try again later.");
     } finally {
-      setTimeout(() => setLoadingComplaints(false), 2000);
+      setTimeout(() => setLoadingComplaints(false), 0);
     }
   };
 

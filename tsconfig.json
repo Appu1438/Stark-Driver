@@ -62,5 +62,5 @@
     "components/earnings/earningsModal.jsx",
     ".expo/types/**/*.ts",
     "expo-env.d.ts"
-, "components/modal/alert-modal/alert.modal.jsx", "components/ride/ride.rating.stars.jsx"  ]
+, "components/modal/alert-modal/alert.modal.jsx", "components/ride/ride.rating.stars.jsx", "screens/navigation/navigation.screen.jsx"  ]
 }

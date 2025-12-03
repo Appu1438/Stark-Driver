@@ -92,7 +92,7 @@ export default function RideDetailsScreen() {
       } finally {
         setTimeout(() => {
           setLoading(false);
-        }, 2000);
+        }, 0);
       }
     };
 
@@ -667,7 +667,10 @@ export default function RideDetailsScreen() {
             <View style={styles.buttonRow}>
               <TouchableOpacity
                 style={[styles.navButton, { marginRight: 8 }]}
-                onPress={() => openNavigation(ride?.currentLocation)}
+                onPress={() => {
+                  openNavigation(ride?.currentLocation)
+                }
+                }
               >
                 <MaterialIcons name="directions" size={20} color={color.primary} />
                 <Text style={styles.navButtonText}>Pickup</Text>

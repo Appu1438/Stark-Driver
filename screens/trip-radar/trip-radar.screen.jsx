@@ -31,13 +31,8 @@ import BottomSheet, { BottomSheetView } from "@gorhom/bottom-sheet";
 import { BottomSheetFlatList } from "@gorhom/bottom-sheet";
 import fonts from "@/themes/app.fonts";
 import { useDriverLocationStore } from "@/store/driverLocationStore";
-
-// Enable LayoutAnimation for Android
-// if (Platform.OS === 'android') {
-//   if (UIManager.setLayoutAnimationEnabledExperimental) {
-//     UIManager.setLayoutAnimationEnabledExperimental(true);
-//   }
-// }
+import getVehicleIcon from "@/utils/ride/getVehicleIcon";
+import { shallow } from "zustand/shallow";
 
 export default function TripRadarScreen() {
   const { requests, rejectRequest, acceptRequest, loadingRejectRequests, loadingAcceptRequests } = useTripRadar();
@@ -45,7 +40,9 @@ export default function TripRadarScreen() {
   const { driver, loading: driverDataLoading, refetchData } = useGetDriverData();
   const { earnings, loading: driverEarningsLoading, refetchEarnings } = useDriverEarnings();
 
-  const { currentLocation, animatedLocation, heading } = useDriverLocationStore();
+  const currentLocation = useDriverLocationStore((s) => s.currentLocation);
+  const animatedLocation = useDriverLocationStore((s) => s.animatedLocation);
+  const heading = useDriverLocationStore((s) => s.heading);
 
 
 
@@ -197,6 +194,8 @@ export default function TripRadarScreen() {
         provider={PROVIDER_GOOGLE}
         // showsUserLocation
         userInterfaceStyle="dark"
+        rotateEnabled={false}
+        pitchEnabled={false}
       >
         {animatedLocation && (
           <Marker.Animated
@@ -204,13 +203,20 @@ export default function TripRadarScreen() {
             anchor={{ x: 0.5, y: 0.5 }}
           >
             <Image
-              source={Images.mapSelfMarker}
+              source={getVehicleIcon(driver ? driver.vehicle_type : "Sedan")}
               style={{
-                width: windowWidth(30),
-                height: windowHeight(30),
-                transform: [{ rotate: `${heading + 180}deg` }],
+                width: 35,
+                height: 35,
+                resizeMode: "contain",
+                transform: [
+                  {
+                    rotate: `${driver?.vehicle_type === "Auto"
+                      ? heading + 180
+                      : heading
+                      }deg`,
+                  },
+                ],
               }}
-              resizeMode="contain"
             />
           </Marker.Animated>
         )}
