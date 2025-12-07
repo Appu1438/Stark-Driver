@@ -215,8 +215,6 @@ export default function HomeScreen() {
 
 
     useEffect(() => {
-        if (!isOn) return;  // 🔥 Only run when driver is online
-
         let watchSub = null;
 
         (async () => {
@@ -425,7 +423,7 @@ export default function HomeScreen() {
     return (
         <View style={[external.fx_1]}>
             <View style={styles.spaceBelow}>
-                <Header isOn={isOn} toggleSwitch={() => handleStatusChange()} driver={driver} />
+                <Header isOn={isOn} toggleSwitch={() => handleStatusChange()} loading={loading} driver={driver} />
                 <ScrollView
                     refreshControl={
                         <RefreshControl
@@ -465,7 +463,7 @@ export default function HomeScreen() {
                                         You didn't take any ride yet!
                                     </Text>
                                 }
-                                contentContainerStyle={{ paddingBottom: 10 }}
+                                contentContainerStyle={{ paddingBottom: windowHeight(50) }}
                                 showsVerticalScrollIndicator={false}
                             />
                         </View>

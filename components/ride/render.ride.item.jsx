@@ -7,26 +7,28 @@ import { LinearGradient } from "expo-linear-gradient";
 
 export default function RenderRideItem({ item }) {
   const iconIndex = parseInt(item.id) - 1;
-  const icon = rideIcons[iconIndex];
+  // Safely get icon or fallback to first one if index is out of bounds
+  const icon = rideIcons[iconIndex] || rideIcons[0];
 
   return (
     <LinearGradient
-      colors={[color.subPrimary, "rgba(255,255,255,0.04)"]}
+      colors={["rgba(255,255,255,0.06)", "rgba(255,255,255,0.02)"]}
       start={{ x: 0, y: 0 }}
       end={{ x: 1, y: 1 }}
       style={styles.card}
     >
-      {/* ---------- Top Row ---------- */}
+      {/* ---------- Header Row (Icon + Label) ---------- */}
       <View style={styles.cardTop}>
-        <View>
-          <Text style={styles.valueText}>{item.value ?? 0}</Text>
+        <View style={styles.iconWrapper}>
+          {icon}
         </View>
-
-        <View style={styles.iconWrapper}>{icon}</View>
       </View>
 
-      {/* ---------- Bottom Text ---------- */}
-      <Text style={styles.labelText}>{item.title}</Text>
+      {/* ---------- Content (Value + Title) ---------- */}
+      <View style={styles.contentContainer}>
+        <Text style={styles.valueText}>{item.value ?? 0}</Text>
+        <Text style={styles.labelText}>{item.title}</Text>
+      </View>
     </LinearGradient>
   );
 }
@@ -34,46 +36,61 @@ export default function RenderRideItem({ item }) {
 const styles = StyleSheet.create({
   card: {
     flex: 1,
-    borderRadius: 16,
-    paddingVertical: windowHeight(15),
-    paddingHorizontal: windowWidth(15),
-    margin: windowWidth(8),
-    minHeight: windowHeight(100),
+    borderRadius: 20,
+    padding: 16,
+    margin: 6,
+    minHeight: windowHeight(110),
     justifyContent: "space-between",
+    
+    // Glassmorphism Border
     borderWidth: 1,
     borderColor: "rgba(255,255,255,0.08)",
-    // marginHorizontal:5
+    
+    // // Subtle Shadow
+    // shadowColor: "#000",
+    // shadowOpacity: 0.15,
+    // shadowRadius: 10,
+    // shadowOffset: { width: 0, height: 4 },
+    // elevation: 4,
   },
 
   /* ---------- Layout ---------- */
   cardTop: {
     flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
+    justifyContent: "flex-end", // Moves icon to right
+    marginBottom: 10,
   },
 
   /* ---------- Icon ---------- */
   iconWrapper: {
-    height: windowHeight(35),
-    width: windowHeight(35),
-    borderRadius: 50,
-    backgroundColor: "rgba(255,255,255,0.1)",
+    height: 38,
+    width: 38,
+    borderRadius: 12, // Squircle shape
+    backgroundColor: "rgba(255,255,255,0.05)",
     alignItems: "center",
     justifyContent: "center",
     borderWidth: 1,
-    borderColor: "rgba(255,255,255,0.1)",
+    borderColor: "rgba(255,255,255,0.05)",
   },
 
-  /* ---------- Text ---------- */
+  /* ---------- Text Content ---------- */
+  contentContainer: {
+    justifyContent: 'flex-end',
+  },
   valueText: {
-    fontSize: fontSizes.FONT26,
+    fontSize: 28,
     fontFamily: "TT-Octosquares-Medium",
-    color: color.primaryText,
+    color: "#fff",
+    marginBottom: 4,
+    textShadowColor: 'rgba(0,0,0,0.3)',
+    textShadowOffset: { width: 0, height: 2 },
+    textShadowRadius: 4,
   },
   labelText: {
-    marginTop: windowHeight(10),
-    fontSize: fontSizes.FONT14,
-    color: color.lightGray,
+    fontSize: 13,
+    color: color.secondaryFont || "#888",
     fontFamily: "TT-Octosquares-Medium",
+    textTransform: "capitalize",
+    letterSpacing: 0.5,
   },
 });

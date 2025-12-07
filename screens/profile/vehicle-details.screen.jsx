@@ -1,8 +1,10 @@
 import React from "react";
-import { View, Text, ScrollView, StyleSheet, Image } from "react-native";
-import { useLocalSearchParams } from "expo-router";
+import { View, Text, ScrollView, StyleSheet, Image, StatusBar, TouchableOpacity, Platform } from "react-native";
+import { useLocalSearchParams, router } from "expo-router";
+import { LinearGradient } from "expo-linear-gradient";
+import { Ionicons, MaterialCommunityIcons, FontAwesome5 } from "@expo/vector-icons";
 import color from "@/themes/app.colors";
-import { fontSizes, windowHeight } from "@/themes/app.constant";
+import { SafeAreaView } from "react-native-safe-area-context";
 
 export default function VehicleDetails() {
     const params = useLocalSearchParams();
@@ -17,8 +19,17 @@ export default function VehicleDetails() {
     } = params;
 
     // Check insurance expiry
-    const isExpired =
-        insurance_expiry && new Date(insurance_expiry) < new Date();
+    const isExpired = insurance_expiry && new Date(insurance_expiry) < new Date();
+
+    // Helper for dates
+    const formatDate = (dateString) => {
+        if (!dateString) return "N/A";
+        return new Date(dateString).toLocaleDateString("en-GB", {
+            day: "2-digit",
+            month: "short",
+            year: "numeric",
+        });
+    };
 
     // Choose vehicle image based on type
     const getVehicleImage = (type) => {
@@ -34,159 +45,318 @@ export default function VehicleDetails() {
         }
     };
 
-    const details = [
-        { label: "Vehicle Type", value: vehicle_type },
-        { label: "Registration Number", value: registration_number },
+    const specs = [
         {
-            label: "Registration Date",
-            value: registration_date
-                ? new Date(registration_date).toLocaleDateString("en-GB", {
-                    day: "2-digit",
-                    month: "2-digit",
-                    year: "numeric",
-                })
-                : "N/A",
+            label: "Vehicle Type",
+            value: vehicle_type,
+            icon: <Ionicons name="car-sport" size={18} color="#4A90E2" />
         },
-        { label: "Vehicle Color", value: vehicle_color },
-        { label: "Seating Capacity", value: capacity },
-        { label: "Insurance Number", value: insurance_number },
         {
-            label: "Insurance Expiry",
-            value: insurance_expiry
-                ? new Date(insurance_expiry).toLocaleDateString("en-GB", {
-                    day: "2-digit",
-                    month: "2-digit",
-                    year: "numeric",
-                })
-                : "N/A",
+            label: "Registration No.",
+            value: registration_number,
+            icon: <MaterialCommunityIcons name="license" size={18} color="#00E676" />
+        },
+        {
+            label: "Reg. Date",
+            value: formatDate(registration_date),
+            icon: <Ionicons name="calendar" size={18} color="#FFAB00" />
+        },
+        {
+            label: "Color",
+            value: vehicle_color,
+            icon: <Ionicons name="color-palette" size={18} color="#E040FB" />
+        },
+        {
+            label: "Seating Capacity",
+            value: `${capacity} Seats`,
+            icon: <MaterialCommunityIcons name="car-seat" size={18} color="#FF5252" />
         },
     ];
 
     return (
-        <ScrollView style={styles.container}>
-            <Text style={styles.title}>Vehicle Details</Text>
+        <View style={styles.mainContainer}>
+            <LinearGradient
+                colors={[color.bgDark, color.subPrimary]} style={StyleSheet.absoluteFill}
+            />
 
-            {/* Vehicle Image */}
-            <View style={styles.imageContainer}>
-                <Image source={getVehicleImage(vehicle_type)} style={styles.vehicleImage} />
-            </View>
+            <SafeAreaView style={{ flex: 1 }}>
+                <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
 
-            {/* Vehicle Details Card */}
-            <View style={styles.card}>
-                {details.map((item, index) => {
-                    if (item.label === "Insurance Expiry") {
-                        return (
-                            <View key={index} style={styles.detailRow}>
-                                <Text style={styles.label}>{item.label}</Text>
-                                <View style={{ flexDirection: "row", alignItems: "center" }}>
-                                    <Text
-                                        style={[
-                                            styles.value,
-                                            isExpired && { color: "red" }, // make date red if expired
-                                        ]}
-                                    >
-                                        {item.value || "N/A"}
-                                    </Text>
-                                    {isExpired && (
-                                        <Text style={styles.expiredText}>(Expired)</Text>
-                                    )}
+                    {/* HEADER */}
+                    <View style={styles.header}>
+                        <TouchableOpacity onPress={() => router.back()} style={styles.backButton}>
+                            <Ionicons name="arrow-back" size={24} color="#fff" />
+                        </TouchableOpacity>
+                        <View>
+                            <Text style={styles.pageTitle}>Vehicle Info</Text>
+                            <Text style={styles.pageSubtitle}>Your registered transport</Text>
+                        </View>
+                    </View>
+
+                    {/* HERO IMAGE SECTION */}
+                    <View style={styles.heroContainer}>
+                        <LinearGradient
+                            colors={['rgba(255,255,255,0.0)', 'rgba(255,255,255,0.05)', 'rgba(255,255,255,0.0)']}
+                            style={styles.heroGlow}
+                        />
+                        <Image
+                            source={getVehicleImage(vehicle_type)}
+                            style={styles.vehicleImage}
+                        />
+                        <View style={styles.plateBadge}>
+                            <Text style={styles.plateText}>{registration_number || "NO PLATE"}</Text>
+                        </View>
+                    </View>
+
+                    {/* SPECIFICATIONS CARD */}
+                    <View style={styles.sectionHeader}>
+                        <Text style={styles.sectionTitle}>Specifications</Text>
+                    </View>
+
+                    <View style={styles.card}>
+                        {specs.map((item, index) => (
+                            <View key={index} style={[styles.row, index === specs.length - 1 && styles.lastRow]}>
+                                <View style={styles.iconBox}>
+                                    {item.icon}
+                                </View>
+                                <View style={styles.infoContent}>
+                                    <Text style={styles.label}>{item.label}</Text>
+                                    <Text style={styles.value}>{item.value || "N/A"}</Text>
                                 </View>
                             </View>
-                        );
-                    }
+                        ))}
+                    </View>
 
-                    return (
-                        <View key={index} style={styles.detailRow}>
-                            <Text style={styles.label}>{item.label}</Text>
-                            <Text style={styles.value}>{item.value || "N/A"}</Text>
+                    {/* INSURANCE SECTION */}
+                    <View style={styles.sectionHeader}>
+                        <Text style={styles.sectionTitle}>Insurance Details</Text>
+                    </View>
+
+                    <View style={[styles.card, styles.insuranceCard]}>
+                        <View style={styles.row}>
+                            <View style={[styles.iconBox, { backgroundColor: 'rgba(0, 224, 255, 0.1)' }]}>
+                                <Ionicons name="shield-checkmark" size={18} color={color.primaryText} />
+                            </View>
+                            <View style={styles.infoContent}>
+                                <Text style={styles.label}>Policy Number</Text>
+                                <Text style={styles.value}>{insurance_number || "N/A"}</Text>
+                            </View>
                         </View>
-                    );
-                })}
-            </View>
 
-            {/* Info Box */}
-            <View style={styles.infoBox}>
-                <Text style={styles.infoText}>
-                    Please ensure that your insurance and vehicle registration details are
-                    up-to-date. Keeping your documents current is required for approval and
-                    a smooth driving experience.
-                </Text>
-            </View>
-        </ScrollView>
+                        <View style={styles.divider} />
+
+                        <View style={[styles.row, { paddingTop: 0, paddingBottom: 0, borderBottomWidth: 0 }]}>
+                            <View>
+                                <Text style={styles.label}>Expiry Date</Text>
+                                <Text style={[styles.value, isExpired && { color: '#FF5252' }]}>
+                                    {formatDate(insurance_expiry)}
+                                </Text>
+                            </View>
+
+                            <View style={[styles.statusBadge, isExpired ? styles.badgeExpired : styles.badgeActive]}>
+                                <Text style={[styles.statusText, isExpired ? styles.textExpired : styles.textActive]}>
+                                    {isExpired ? "EXPIRED" : "ACTIVE"}
+                                </Text>
+                            </View>
+                        </View>
+                    </View>
+
+                    {/* FOOTER INFO */}
+                    <View style={styles.infoBox}>
+                        <MaterialCommunityIcons name="information-outline" size={20} color="#888" />
+                        <Text style={styles.infoText}>
+                            Ensure vehicle details match your physical documents to avoid issues during rides.
+                        </Text>
+                    </View>
+
+                </ScrollView>
+            </SafeAreaView>
+        </View>
     );
 }
 
+// STYLES
 const styles = StyleSheet.create({
-    container: {
+    mainContainer: {
         flex: 1,
-        // backgroundColor: "#f9f9f9",
-        paddingHorizontal: 20,
-        paddingTop: windowHeight(50),
+        backgroundColor: "#050505",
     },
-    title: {
-        fontSize: fontSizes.FONT22,
-        fontFamily: "TT-Octosquares-Medium",
-        marginVertical: 20,
-        textAlign: "center",
-        color: color.primaryText,
-    },
-    imageContainer: {
-        alignItems: "center",
-        marginBottom: 20,
-    },
-    vehicleImage: {
-        width: 200,
-        height: 120,
-        resizeMode: "contain",
-    },
-    card: {
-        backgroundColor: color.subPrimary,
-        borderRadius: 12,
+    scrollContent: {
         padding: 20,
+        paddingBottom: 50,
+    },
+
+    // Header
+    header: {
+        flexDirection: 'row',
+        alignItems: 'center',
         marginBottom: 20,
-        shadowColor: "#000",
-        shadowOpacity: 0.08,
-        shadowRadius: 6,
-        shadowOffset: { width: 0, height: 2 },
-        elevation: 3,
-        borderColor: color.border,
-        borderWidth: 2
+        gap: 15,
     },
-    detailRow: {
-        marginBottom: 15,
+    backButton: {
+        width: 40,
+        height: 40,
+        borderRadius: 12,
+        backgroundColor: 'rgba(255,255,255,0.1)',
+        alignItems: 'center',
+        justifyContent: 'center',
     },
-    label: {
-        fontSize: fontSizes.FONT14,
-        color: color.primaryText,
-        fontFamily: "TT-Octosquares-Medium",
-        marginBottom: 5,
-    },
-    value: {
-        fontSize: fontSizes.FONT16,
-        color: color.lightGray,
+    pageTitle: {
+        fontSize: 24,
+        color: "#fff",
         fontFamily: "TT-Octosquares-Medium",
     },
-    infoBox: {
-        backgroundColor: color.subPrimary,
-        borderRadius: 10,
-        padding: 15,
-        marginBottom: 30,
-        borderLeftWidth: 4,
-        borderLeftColor: color.lightGray,
-        borderColor: color.border,
-        borderWidth: 1
-    },
-    infoText: {
-        fontSize: fontSizes.FONT14,
-        color: color.lightGray,
-        lineHeight: 20,
-        fontFamily: "TT-Octosquares-Medium",
-    },
-    expiredText: {
-        color: "red",
-        fontSize: fontSizes.FONT14,
-        marginLeft: 8,
+    pageSubtitle: {
+        fontSize: 13,
+        color: "#888",
         fontFamily: "TT-Octosquares-Medium",
     },
 
+    // Hero Image
+    heroContainer: {
+        alignItems: 'center',
+        justifyContent: 'center',
+        marginBottom: 30,
+        marginTop: 10,
+        position: 'relative',
+        height: 180,
+    },
+    heroGlow: {
+        position: 'absolute',
+        width: '100%',
+        height: '100%',
+        borderRadius: 100,
+        transform: [{ scaleX: 1.5 }],
+    },
+    vehicleImage: {
+        width: 280,
+        height: 160,
+        resizeMode: "contain",
+        zIndex: 2,
+    },
+    plateBadge: {
+        position: 'absolute',
+        bottom: 0,
+        backgroundColor: '#fff', // Indian plate style
+        paddingHorizontal: 12,
+        paddingVertical: 4,
+        borderRadius: 6,
+        borderWidth: 2,
+        borderColor: '#000',
+        zIndex: 3,
+        shadowColor: "#fff",
+        shadowOpacity: 0.2,
+        shadowRadius: 10,
+    },
+    plateText: {
+        color: '#000',
+        fontSize: 14,
+        fontFamily: "TT-Octosquares-Medium",
+    },
+
+    // Section Headers
+    sectionHeader: {
+        marginBottom: 10,
+        marginTop: 10,
+    },
+    sectionTitle: {
+        color: '#666',
+        fontSize: 12,
+        textTransform: 'uppercase',
+        letterSpacing: 1,
+        fontFamily: "TT-Octosquares-Medium",
+    },
+
+    // Cards
+    card: {
+        backgroundColor: "rgba(255,255,255,0.03)",
+        borderRadius: 20,
+        borderWidth: 1,
+        borderColor: "rgba(255,255,255,0.05)",
+        overflow: "hidden",
+        marginBottom: 15,
+    },
+    insuranceCard: {
+        padding: 20,
+    },
+    row: {
+        flexDirection: "row",
+        alignItems: "center",
+        padding: 16,
+        borderBottomWidth: 1,
+        borderBottomColor: "rgba(255,255,255,0.05)",
+    },
+    lastRow: {
+        borderBottomWidth: 0,
+    },
+    divider: {
+        height: 1,
+        backgroundColor: "rgba(255,255,255,0.05)",
+        marginVertical: 10,
+    },
+
+    // Content Styling
+    iconBox: {
+        width: 36,
+        height: 36,
+        borderRadius: 10,
+        backgroundColor: "rgba(255,255,255,0.05)",
+        alignItems: "center",
+        justifyContent: "center",
+        marginRight: 15,
+    },
+    infoContent: {
+        flex: 1,
+    },
+    label: {
+        fontSize: 11,
+        color: "#666",
+        fontFamily: "TT-Octosquares-Medium",
+        marginBottom: 4,
+        textTransform: "uppercase",
+    },
+    value: {
+        fontSize: 15,
+        color: "#fff",
+        fontFamily: "TT-Octosquares-Medium",
+    },
+
+    // Badges
+    statusBadge: {
+        paddingHorizontal: 10,
+        paddingVertical: 5,
+        borderRadius: 6,
+        borderWidth: 1,
+        marginLeft: 'auto',
+    },
+    badgeActive: {
+        backgroundColor: "rgba(0, 230, 118, 0.1)",
+        borderColor: "rgba(0, 230, 118, 0.3)",
+    },
+    badgeExpired: {
+        backgroundColor: "rgba(255, 82, 82, 0.1)",
+        borderColor: "rgba(255, 82, 82, 0.3)",
+    },
+    statusText: {
+        fontSize: 10,
+        fontFamily: "TT-Octosquares-Medium",
+    },
+    textActive: { color: "#00E676" },
+    textExpired: { color: "#FF5252" },
+
+    // Footer
+    infoBox: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        gap: 10,
+        paddingHorizontal: 10,
+        marginTop: 10,
+    },
+    infoText: {
+        fontSize: 12,
+        color: "#666",
+        lineHeight: 18,
+        fontFamily: "TT-Octosquares-Medium",
+        flex: 1,
+    },
 });

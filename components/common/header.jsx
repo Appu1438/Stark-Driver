@@ -5,6 +5,7 @@ import {
   StyleSheet,
   TouchableOpacity,
   Image,
+  ActivityIndicator,
 } from "react-native";
 import { fontSizes, windowHeight, windowWidth } from "@/themes/app.constant";
 import color from "@/themes/app.colors";
@@ -12,7 +13,7 @@ import SwitchToggle from "react-native-switch-toggle";
 import { Notification } from "@/utils/icons";
 import { LinearGradient } from "expo-linear-gradient";
 
-export default function Header({ isOn, toggleSwitch, driver }) {
+export default function Header({ isOn, toggleSwitch, loading, driver }) {
   return (
     <LinearGradient
       colors={[color.darkPrimary, color.bgDark]}
@@ -55,21 +56,29 @@ export default function Header({ isOn, toggleSwitch, driver }) {
               },
             ]}
           />
+          {/* Text stays steady based on current status */}
           <Text style={styles.statusLabel}>
             {isOn ? "You’re online and visible to riders" : "You’re currently offline"}
           </Text>
         </View>
 
-        <SwitchToggle
-          switchOn={isOn}
-          onPress={toggleSwitch}
-          containerStyle={styles.switchView}
-          circleStyle={styles.switchCircle}
-          backgroundColorOff="rgba(255,255,255,0.1)"
-          backgroundColorOn="rgba(0,255,200,0.1)"
-          circleColorOn="rgba(0,255,200,0.9)"
-          circleColorOff="rgba(255,255,255,0.5)"
-        />
+        {/* LOADING INDICATOR REPLACES SWITCH ONLY */}
+        <View style={styles.loaderContainer}>
+          {loading ? (
+            <ActivityIndicator size="small" color={color.primary} />
+          ) : (
+            <SwitchToggle
+              switchOn={isOn}
+              onPress={toggleSwitch}
+              containerStyle={styles.switchView}
+              circleStyle={styles.switchCircle}
+              backgroundColorOff="rgba(255,255,255,0.1)"
+              backgroundColorOn="rgba(0,255,200,0.1)"
+              circleColorOn="rgba(0,255,200,0.9)"
+              circleColorOff="rgba(255,255,255,0.5)"
+            />
+          )}
+        </View>
       </View>
     </LinearGradient>
   );
@@ -139,6 +148,7 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     gap: 8,
+    flex: 1,
   },
   statusDot: {
     width: 10,
@@ -150,6 +160,15 @@ const styles = StyleSheet.create({
     fontFamily: "TT-Octosquares-Medium",
     fontSize: fontSizes.FONT14,
   },
+  
+  // Container for switch or loader (Fixed size to prevent jumping)
+  loaderContainer: {
+    width: 60, 
+    height: 28, 
+    alignItems: 'flex-end', 
+    justifyContent: 'center'
+  },
+  
   switchView: {
     width: 60,
     height: 28,

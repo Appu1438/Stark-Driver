@@ -9,18 +9,22 @@ import {
     RefreshControl,
     Animated,
     Dimensions,
+    StatusBar,
     StyleSheet as RNStyleSheet,
+    Platform,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { LinearGradient } from "expo-linear-gradient";
-import { Ionicons } from "@expo/vector-icons";
+import { Ionicons, MaterialCommunityIcons } from "@expo/vector-icons";
 import color from "@/themes/app.colors";
-import { useDriverEarnings, useGetDriverData, useGetDriverWallet } from "@/hooks/useGetDriverData";
-import { handleAddMoney } from "@/api/apis";
-import { fontSizes, windowHeight, windowWidth } from "@/themes/app.constant";
+import { useGetDriverData, useGetDriverWallet } from "@/hooks/useGetDriverData";
+import { router } from "expo-router";
 import AppAlert from "@/components/modal/alert-modal/alert.modal";
+import { fontSizes } from "@/themes/app.constant";
 
-/* -------------------- SHIMMER SKELETON -------------------- */
+// ---------------------------------------------
+// ⭐ PREMIUM SKELETON LOADER
+// ---------------------------------------------
 const WalletSkeleton = () => {
     const shimmerAnim = useRef(new Animated.Value(0)).current;
 
@@ -39,351 +43,404 @@ const WalletSkeleton = () => {
         outputRange: [-200, Dimensions.get("window").width + 200],
     });
 
-    const ShimmerOverlay = () => (
-        <Animated.View
-            style={{
-                ...RNStyleSheet.absoluteFillObject,
-                transform: [{ translateX }],
-            }}
-        >
-            <LinearGradient
-                colors={["transparent", "rgba(255,255,255,0.25)", "transparent"]}
-                start={{ x: 0, y: 0 }}
-                end={{ x: 1, y: 0 }}
-                style={{ flex: 1 }}
-            />
-        </Animated.View>
-    );
-
-    const SkeletonBox = ({ width, height, radius = 10, marginBottom = 10 }) => (
+    const SkeletonBox = ({ width, height, radius = 10, style }) => (
         <View
-            style={{
+            style={[{
                 width,
                 height,
                 borderRadius: radius,
-                backgroundColor: "rgba(255,255,255,0.08)",
+                backgroundColor: "rgba(255,255,255,0.05)",
                 overflow: "hidden",
-                marginBottom,
-            }}
+            }, style]}
         >
-            <ShimmerOverlay />
+            <Animated.View
+                style={{
+                    ...RNStyleSheet.absoluteFillObject,
+                    transform: [{ translateX }],
+                }}
+            >
+                <LinearGradient
+                    colors={["transparent", "rgba(255,255,255,0.05)", "transparent"]}
+                    start={{ x: 0, y: 0 }}
+                    end={{ x: 1, y: 0 }}
+                    style={{ flex: 1 }}
+                />
+            </Animated.View>
         </View>
     );
 
-
     return (
-        <ScrollView
-            showsVerticalScrollIndicator={false}
-            style={{ flex: 1, backgroundColor: color.background }}
-            contentContainerStyle={{
-                paddingHorizontal: windowWidth(25),
-                paddingTop: windowHeight(40),
-                paddingBottom: windowHeight(40),
-            }}
-        >
-            {/* ---------- BALANCE CARD ---------- */}
-            <View
-                style={{
-                    borderRadius: 25,
-                    backgroundColor: color.subPrimary,
-                    padding: 25,
-                    marginBottom: 30,
-                    overflow: "hidden",
-                }}
-            >
-                <ShimmerOverlay />
-                <SkeletonBox width={150} height={16} radius={8} />
-                <SkeletonBox width={180} height={38} radius={8} />
-                <SkeletonBox width={100} height={35} radius={20} marginBottom={0} />
-            </View>
-
-            {/* ---------- TRANSACTION HEADER ---------- */}
-            <SkeletonBox width={200} height={20} radius={8} marginBottom={15} />
-
-            {/* ---------- TRANSACTION ITEMS ---------- */}
-            {[1, 2, 3, 4, 5].map((i) => (
-                <View
-                    key={i}
-                    style={{
-                        backgroundColor: color.subPrimary,
-                        borderRadius: 15,
-                        paddingVertical: 18,
-                        paddingHorizontal: 15,
-                        marginBottom: 12,
-                        overflow: "hidden",
-                    }}
-                >
-                    <ShimmerOverlay />
-                    <SkeletonBox width="70%" height={16} radius={6} />
-                    <SkeletonBox width="40%" height={12} radius={6} />
-                    <SkeletonBox width="50%" height={12} radius={6} />
-                </View>
+        <View style={styles.skeletonContainer}>
+            <SkeletonBox width="100%" height={220} radius={24} style={{ marginBottom: 40 }} />
+            <SkeletonBox width={150} height={20} radius={8} style={{ marginBottom: 20 }} />
+            {[1, 2, 3, 4].map((i) => (
+                <SkeletonBox key={i} width="100%" height={80} radius={16} style={{ marginBottom: 15 }} />
             ))}
-        </ScrollView>
+        </View>
     );
 };
 
-/* -------------------- MAIN WALLET SCREEN -------------------- */
+// ---------------------------------------------
+// ⭐ MAIN WALLET SCREEN
+// ---------------------------------------------
 export default function WalletDetails() {
     const { wallet, loading: walletLoading, refetchWallet } = useGetDriverWallet();
-    const { driver, loading: dataLoading, refetchData } = useGetDriverData();
+    const { driver } = useGetDriverData();
 
     const [refreshing, setRefreshing] = useState(false);
     const [showAlert, setShowAlert] = useState(false);
     const [alertConfig, setAlertConfig] = useState({
-        title: "",
-        message: "",
-        confirmText: "OK",
-        showCancel: false,
+        title: "", message: "", confirmText: "OK", showCancel: false,
         onConfirm: () => setShowAlert(false),
         onCancel: () => setShowAlert(false),
     });
 
     const onRefresh = async () => {
-        try {
-            setRefreshing(true);
-            await refetchWallet();
-        } finally {
-            setRefreshing(false);
-        }
+        setRefreshing(true);
+        await refetchWallet();
+        setRefreshing(false);
     };
 
-    if (walletLoading) return <WalletSkeleton />;
+    if (walletLoading) {
+        return (
+            <View style={styles.mainContainer}>
+                <LinearGradient colors={[color.bgDark, color.subPrimary]} style={StyleSheet.absoluteFill} />
+                <WalletSkeleton />
+            </View>
+        );
+    }
+
+    // Helper to format currency
+    const formatCurrency = (amount) => {
+        return new Intl.NumberFormat('en-IN', {
+            style: 'currency',
+            currency: 'INR',
+            maximumFractionDigits: 0
+        }).format(amount);
+    };
 
     return (
-        <SafeAreaView style={styles.container}>
-            <ScrollView
-                refreshControl={
-                    <RefreshControl
-                        tintColor={color.primary}
-                        refreshing={refreshing}
-                        onRefresh={onRefresh}
-                    />
-                }
-                showsVerticalScrollIndicator={false}
-                contentContainerStyle={{ paddingBottom: 50 }}
-            >
-                {/* ---------- BALANCE CARD ---------- */}
-                <LinearGradient
-                    colors={[color.primary, color.darkPrimary]}
-                    start={{ x: 0, y: 0 }}
-                    end={{ x: 1, y: 1 }}
-                    style={styles.balanceCard}
+        <View style={styles.mainContainer}>
+            <LinearGradient colors={[color.bgDark, color.subPrimary]} style={StyleSheet.absoluteFill} />
+
+
+            <SafeAreaView style={{ flex: 1 }}>
+                <ScrollView
+                    refreshControl={
+                        <RefreshControl tintColor={color.primary} refreshing={refreshing} onRefresh={onRefresh} />
+                    }
+                    showsVerticalScrollIndicator={false}
+                    contentContainerStyle={styles.scrollContent}
                 >
-                    <Text style={styles.balanceLabel}>Current Balance</Text>
-                    <Text style={styles.balanceValue}>₹{wallet?.balance || 0}</Text>
-
-                    <TouchableOpacity
-                        style={styles.addButton}
-                        onPress={() => handleAddMoney(driver, setShowAlert, setAlertConfig)}
-                        activeOpacity={0.85}
-                    >
-                        <Ionicons name="add-circle-outline" size={18} color={color.primary} />
-                        <Text style={styles.addButtonText}>Add Money</Text>
-                    </TouchableOpacity>
-                </LinearGradient>  {wallet?.balance !== undefined && wallet.balance < 250 && (
-                    <View
-                        style={{
-                            marginHorizontal: 5,
-                            marginTop: 10,
-                            backgroundColor: "#FFF4D1", // light yellow
-                            borderLeftWidth: 4,
-                            borderLeftColor: "#FF9800", // orange warning tone
-                            padding: 12,
-                            borderRadius: 8,
-                            flexDirection: "row",
-                            alignItems: "center",
-                        }}
-                    >
-                        <Ionicons
-                            name="warning-outline"
-                            size={20}
-                            color="#FF9800"
-                            style={{ marginRight: 10 }}
-                        />
-                        <Text
-                            style={{
-                                color: "#FF9800",
-                                fontFamily: "TT-Octosquares-Medium",
-                                fontSize: fontSizes.FONT15,
-                                flexShrink: 1,
-                            }}
-                        >
-                            Your wallet balance is low. Please add money now to accept rides
-                            .
-                        </Text>
+                    {/* HEADER */}
+                    <View style={styles.header}>
+                        <TouchableOpacity onPress={() => router.back()} style={styles.backButton}>
+                            <Ionicons name="arrow-back" size={24} color="#fff" />
+                        </TouchableOpacity>
+                        <Text style={styles.pageTitle}>My Wallet</Text>
                     </View>
-                )}
 
+                    {/* 1. GLASS CARD (BALANCE) */}
+                    <LinearGradient
+                        colors={[color.bgDark, color.subPrimary]} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }}
+                        style={styles.cardContainer}
+                    >
+                        {/* Gradient Overlay for Shine */}
+                        <LinearGradient
+                            colors={['rgba(255,255,255,0.05)', 'transparent']}
+                            style={StyleSheet.absoluteFill}
+                        />
 
-                {/* ---------- TRANSACTION LIST ---------- */}
-                <Text style={styles.historyTitle}>Recent Transactions</Text>
+                        <View style={styles.cardTop}>
+                            <MaterialCommunityIcons name="integrated-circuit-chip" size={32} color="#D4AF37" />
+                            <Text style={styles.cardBrand}>STARK WALLET</Text>
+                        </View>
 
-                {wallet?.history?.length > 0 ? (
-                    <FlatList
-                        data={[...wallet.history].reverse()}
-                        keyExtractor={(item) => item._id}
-                        scrollEnabled={false}
-                        renderItem={({ item }) => {
-                            const isCredit = item.type === "credit";
-                            return (
-                                <LinearGradient
-                                    colors={
-                                        isCredit
-                                            ? ["rgba(40,167,69,0.1)", "rgba(40,167,69,0.05)"]
-                                            : ["rgba(220,53,69,0.1)", "rgba(220,53,69,0.05)"]
-                                    }
-                                    start={{ x: 0, y: 0 }}
-                                    end={{ x: 1, y: 0 }}
-                                    style={[
-                                        styles.transactionItem,
-                                        { borderLeftColor: isCredit ? "#28A745" : "#DC3545" },
-                                    ]}
-                                >
-                                    <View>
-                                        <Text style={styles.transactionAction}>
-                                            {item.action.toUpperCase()}
-                                        </Text>
-                                        <Text style={styles.transactionDate}>
-                                            {new Date(item.actionOn).toLocaleString()}
-                                        </Text>
-                                        <Text style={styles.balanceAfter}>
-                                            Balance After: ₹{item.balanceAfter}
-                                        </Text>
+                        <View>
+                            <Text style={styles.balanceLabel}>Total Balance</Text>
+                            <Text style={styles.balanceValue}>{formatCurrency(wallet?.balance || 0)}</Text>
+                        </View>
+
+                        <View style={styles.cardBottom}>
+                            <Text style={styles.cardNumber}>**** **** **** {driver?.phone_number?.slice(-4) || '8888'}</Text>
+
+                            <TouchableOpacity
+                                style={styles.addBtn}
+                                onPress={() => router.push('/(routes)/payment')}
+                                activeOpacity={0.8}
+                            >
+                                <Ionicons name="add" size={20} color="#000" />
+                                <Text style={styles.addBtnText}>Add Funds</Text>
+                            </TouchableOpacity>
+                        </View>
+                    </LinearGradient>
+
+                    {/* LOW BALANCE ALERT */}
+                    {wallet?.balance !== undefined && wallet.balance < 250 && (
+                        <View style={styles.warningBox}>
+                            <Ionicons name="warning" size={20} color="#FFAB00" />
+                            <Text style={styles.warningText}>
+                                Low balance. Recharge now to accept new rides.
+                            </Text>
+                        </View>
+                    )}
+
+                    {/* 2. TRANSACTIONS LIST */}
+                    <View style={styles.sectionHeader}>
+                        <Text style={styles.sectionTitle}>Recent Transactions</Text>
+                    </View>
+
+                    {wallet?.history?.length > 0 ? (
+                        <View style={styles.listContainer}>
+                            {[...wallet.history].reverse().map((item, index) => {
+                                const isCredit = item.type === "credit";
+                                const iconName = isCredit ? "arrow-down-left" : "arrow-up-right";
+                                const iconColor = isCredit ? "#00E676" : "#FF5252";
+                                const bgColor = isCredit ? "rgba(0, 230, 118, 0.1)" : "rgba(255, 82, 82, 0.1)";
+
+                                return (
+                                    <View key={item._id || index} style={styles.transactionRow}>
+                                        {/* Icon */}
+                                        <View style={[styles.iconBox, { backgroundColor: bgColor }]}>
+                                            <MaterialCommunityIcons name={iconName} size={20} color={iconColor} />
+                                        </View>
+
+                                        {/* Details */}
+                                        <View style={styles.transDetails}>
+                                            <Text style={styles.transAction}>{item.action}</Text>
+                                            <Text style={styles.transDate}>
+                                                {new Date(item.actionOn).toLocaleDateString('en-GB', {
+                                                    day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit'
+                                                })}
+                                            </Text>
+                                        </View>
+
+                                        {/* Amount */}
+                                        <View style={{ alignItems: 'flex-end' }}>
+                                            <Text style={[styles.transAmount, { color: iconColor }]}>
+                                                {isCredit ? "+" : "-"}{formatCurrency(item.amount)}
+                                            </Text>
+                                            <Text style={styles.transBalance}>Bal: ₹{item.balanceAfter}</Text>
+                                        </View>
                                     </View>
+                                );
+                            })}
+                        </View>
+                    ) : (
+                        <View style={styles.emptyState}>
+                            <Ionicons name="receipt-outline" size={48} color="#333" />
+                            <Text style={styles.emptyText}>No transactions yet</Text>
+                        </View>
+                    )}
 
-                                    <Text
-                                        style={[
-                                            styles.transactionAmount,
-                                            isCredit ? styles.credit : styles.debit,
-                                        ]}
-                                    >
-                                        {isCredit ? "+" : "-"}₹{item.amount}
-                                    </Text>
-                                </LinearGradient>
-                            );
-                        }}
-                    />
-                ) : (
-                    <Text style={styles.noTransactions}>No transactions yet.</Text>
-                )}
-            </ScrollView>
-            <AppAlert
-                visible={showAlert}
-                title={alertConfig.title}
-                message={alertConfig.message}
-                confirmText={alertConfig.confirmText}
-                showCancel={alertConfig.showCancel}
-                onConfirm={alertConfig.onConfirm}
-                onCancel={alertConfig.onCancel}
-            />
-        </SafeAreaView>
+                </ScrollView>
+
+                <AppAlert
+                    visible={showAlert}
+                    title={alertConfig.title}
+                    message={alertConfig.message}
+                    confirmText={alertConfig.confirmText}
+                    showCancel={alertConfig.showCancel}
+                    onConfirm={alertConfig.onConfirm}
+                    onCancel={alertConfig.onCancel}
+                />
+            </SafeAreaView>
+        </View>
     );
 }
 
-/* -------------------- STYLES -------------------- */
+// ---------------------------------------------
+// ⭐ STYLES
+// ---------------------------------------------
 const styles = StyleSheet.create({
-    container: {
+    mainContainer: {
         flex: 1,
-        backgroundColor: color.background,
-        paddingHorizontal: windowWidth(25),
+        backgroundColor: "#050505",
+    },
+    scrollContent: {
+        padding: 20,
+        paddingBottom: 50,
+    },
+    skeletonContainer: {
+        padding: 20,
+        marginTop: 60,
     },
 
-    /* ---------- BALANCE SECTION ---------- */
-    balanceCard: {
-        borderRadius: 25,
-        paddingVertical: 35,
-        paddingHorizontal: 25,
-        marginTop: 20,
-        alignItems: "center",
-        shadowColor: "#000",
-        shadowOpacity: 0.25,
-        shadowRadius: 10,
-        elevation: 8,
+    // Header
+    header: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        marginBottom: 25,
+        gap: 15,
+    },
+    backButton: {
+        width: 40,
+        height: 40,
+        borderRadius: 12,
+        backgroundColor: 'rgba(255,255,255,0.1)',
+        alignItems: 'center',
+        justifyContent: 'center',
+    },
+    pageTitle: {
+        fontSize: 24,
+        color: "#fff",
+        fontFamily: "TT-Octosquares-Medium",
+    },
+
+    // Credit Card UI
+    cardContainer: {
+        height: 220,
+        borderRadius: 24,
+        padding: 24,
+        justifyContent: 'space-between',
+        borderWidth: 1,
+        borderColor: 'rgba(255,255,255,0.1)',
+        marginBottom: 25,
+        overflow: 'hidden',
+    },
+    cardTop: {
+        flexDirection: 'row',
+        justifyContent: 'space-between',
+        alignItems: 'flex-start',
+    },
+    cardBrand: {
+        color: 'rgba(255,255,255,0.4)',
+        fontFamily: "TT-Octosquares-Medium",
+        letterSpacing: 2,
+        fontSize: 12,
     },
     balanceLabel: {
-        fontSize: 16,
+        color: '#888',
+        fontSize: 12,
+        textTransform: 'uppercase',
+        letterSpacing: 1,
+        marginBottom: 5,
         fontFamily: "TT-Octosquares-Medium",
-        color: "rgba(255,255,255,0.8)",
-        marginBottom: 6,
+
     },
     balanceValue: {
-        fontSize: 42,
-        color: "white",
+        fontSize: 36,
+        color: '#fff',
         fontFamily: "TT-Octosquares-Medium",
-        marginBottom: 16,
+        textShadowColor: 'rgba(0,0,0,0.5)',
+        textShadowOffset: { width: 0, height: 2 },
+        textShadowRadius: 4,
     },
-    addButton: {
-        flexDirection: "row",
-        alignItems: "center",
-        backgroundColor: "white",
-        paddingVertical: 10,
-        paddingHorizontal: 22,
-        borderRadius: 25,
-        shadowColor: "#000",
-        shadowOpacity: 0.1,
-        shadowRadius: 6,
+    cardBottom: {
+        flexDirection: 'row',
+        justifyContent: 'space-between',
+        alignItems: 'center',
     },
-    addButtonText: {
-        color: color.primary,
+    cardNumber: {
+        color: '#666',
+        fontSize: fontSizes.FONT14,
         fontFamily: "TT-Octosquares-Medium",
-        fontSize: 15,
-        marginLeft: 6,
+        letterSpacing: 1,
+    },
+    addBtn: {
+        backgroundColor: color.buttonBg,
+        flexDirection: 'row',
+        alignItems: 'center',
+        paddingVertical: 8,
+        paddingHorizontal: 10,
+        borderRadius: 20,
+        gap: 4,
+    },
+    addBtnText: {
+        color: '#000',
+        fontFamily: "TT-Octosquares-Medium",
+        fontSize: 12,
     },
 
-    /* ---------- TRANSACTION SECTION ---------- */
-    historyTitle: {
-        fontSize: 20,
+    // Warning
+    warningBox: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        backgroundColor: 'rgba(255, 171, 0, 0.1)',
+        padding: 12,
+        borderRadius: 12,
+        marginBottom: 25,
+        borderWidth: 1,
+        borderColor: 'rgba(255, 171, 0, 0.2)',
+        gap: 10,
+    },
+    warningText: {
+        color: '#FFAB00',
+        fontSize: 13,
+        flex: 1,
         fontFamily: "TT-Octosquares-Medium",
-        color: color.primaryText,
-        marginVertical: 25,
     },
-    transactionItem: {
-        flexDirection: "row",
-        justifyContent: "space-between",
-        alignItems: "center",
-        paddingVertical: 14,
-        paddingHorizontal: 18,
-        borderRadius: 16,
-        marginBottom: 12,
-        borderLeftWidth: 4,
-        backgroundColor: color.subPrimary,
-        borderWidth: 2,
-        borderColor: color.border
+
+    // Transactions
+    sectionHeader: {
+        marginBottom: 15,
     },
-    transactionAction: {
+    sectionTitle: {
+        fontSize: 18,
+        color: '#fff',
+        fontFamily: "TT-Octosquares-Medium",
+    },
+    listContainer: {
+        backgroundColor: 'rgba(255,255,255,0.03)',
+        borderRadius: 20,
+        padding: 10,
+        borderWidth: 1,
+        borderColor: 'rgba(255,255,255,0.05)',
+    },
+    transactionRow: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        paddingVertical: 15,
+        paddingHorizontal: 10,
+        borderBottomWidth: 1,
+        borderBottomColor: 'rgba(255,255,255,0.05)',
+    },
+    iconBox: {
+        width: 40,
+        height: 40,
+        borderRadius: 12,
+        alignItems: 'center',
+        justifyContent: 'center',
+        marginRight: 15,
+    },
+    transDetails: {
+        flex: 1,
+    },
+    transAction: {
+        color: '#eee',
+        fontSize: 14,
+        fontFamily: "TT-Octosquares-Medium",
+        marginBottom: 4,
+        textTransform: 'capitalize',
+    },
+    transDate: {
+        color: '#666',
+        fontSize: 11,
+        fontFamily: "TT-Octosquares-Medium",
+
+    },
+    transAmount: {
         fontSize: 16,
         fontFamily: "TT-Octosquares-Medium",
-        color: color.primaryText,
-        marginBottom: 4,
+        marginBottom: 2,
     },
-    transactionDate: {
-        fontSize: 12,
-        color: color.regularText,
+    transBalance: {
+        color: '#666',
+        fontSize: 10,
         fontFamily: "TT-Octosquares-Medium",
+
     },
-    balanceAfter: {
-        fontSize: 13,
-        color: color.primaryText,
-        fontFamily: "TT-Octosquares-Medium",
-        marginTop: 4,
+
+    // Empty State
+    emptyState: {
+        alignItems: 'center',
+        justifyContent: 'center',
+        paddingVertical: 50,
     },
-    transactionAmount: {
-        fontSize: 18,
-        fontFamily: "TT-Octosquares-Medium",
-        textAlign: "right",
-    },
-    credit: {
-        color: "#28A745",
-    },
-    debit: {
-        color: "#DC3545",
-    },
-    noTransactions: {
-        textAlign: "center",
-        color: color.lightGray,
-        marginTop: 40,
-        fontSize: 15,
+    emptyText: {
+        color: '#444',
+        marginTop: 10,
+        fontSize: 14,
         fontFamily: "TT-Octosquares-Medium",
     },
 });

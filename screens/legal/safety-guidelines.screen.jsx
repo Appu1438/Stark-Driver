@@ -2,6 +2,7 @@ import { View, Text, ScrollView } from "react-native";
 import React from "react";
 import { fontSizes, windowHeight, windowWidth } from "@/themes/app.constant";
 import color from "@/themes/app.colors";
+import FooterNote from "@/components/common/footer-note";
 
 export default function SafetyGuidelines() {
   return (
@@ -108,18 +109,8 @@ Repeated violations or unsafe driving behavior may lead to account suspension or
         content={`We continuously update our safety protocols and driver training modules. Feedback from drivers is always welcome to help enhance safety standards across our platform.`}
       />
 
-      <Text
-        style={{
-          fontSize: fontSizes.FONT14,
-          color: "#999",
-          textAlign: "center",
-          marginTop: 20,
-          fontFamily: "TT-Octosquares-Medium",
-          marginBottom: 25,
-        }}
-      >
-        © {new Date().getFullYear()} Stark OPC Pvt. Ltd. All rights reserved.
-      </Text>
+      {/* ---------- FOOTER NOTE ---------- */}
+      <FooterNote />
     </ScrollView>
   );
 }

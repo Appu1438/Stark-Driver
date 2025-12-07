@@ -28,12 +28,12 @@ export const slides = [
 ];
 
 export const rideIcons = [
-  <Wallet colors={color.primary} />,
-  <Wallet colors={color.primary} />,
-  <SmallCard color={color.primary} />,
-  <Wallet colors={color.primary} />,
-  <SmallCard color={color.primary} />,
-  <SmallCard color={color.primary} />,
+  <Wallet colors={color.primaryGray} />,
+  <Wallet colors={color.primaryGray} />,
+  <SmallCard color={color.primaryGray} />,
+  <Wallet colors={color.primaryGray} />,
+  <SmallCard color={color.primaryGray} />,
+  <SmallCard color={color.primaryGray} />,
 
 ];
 

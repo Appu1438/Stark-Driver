@@ -52,7 +52,7 @@ export default function RideHistory() {
                         You didn't take any ride yet!
                     </Text>
                 }
-                contentContainerStyle={{ paddingBottom: 10 }}
+                contentContainerStyle={{ paddingBottom: windowHeight(50) }}
                 showsVerticalScrollIndicator={false}
                 refreshControl={
                     <RefreshControl

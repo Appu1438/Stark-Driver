@@ -46,7 +46,7 @@ export const EarningsModal = ({ visible, onClose, item }) => {
 
         {/* Platform Fee (15% Total) */}
         <View style={styles.row}>
-          <Text style={styles.label}>Total Deductions (15%)</Text>
+          <Text style={styles.label}>Total Deductions (15%) From Wallet</Text>
           <Text style={[styles.value, { color: "#ff6f6f" }]}>
             - ₹ {item.platformFee.toLocaleString("en-IN")}
           </Text>

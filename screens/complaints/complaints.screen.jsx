@@ -10,17 +10,20 @@ import {
   Platform,
   Modal,
   ActivityIndicator,
-  Alert,
+  StyleSheet,
+  StatusBar,
 } from "react-native";
-import { Ionicons } from "@expo/vector-icons";
+import { Ionicons, MaterialIcons, Feather } from "@expo/vector-icons";
 import { LinearGradient } from "expo-linear-gradient";
-import { fontSizes, windowHeight, windowWidth } from "@/themes/app.constant";
+import { SafeAreaView } from "react-native-safe-area-context";
+import { fontSizes } from "@/themes/app.constant";
 import color from "@/themes/app.colors";
 import Button from "@/components/common/button";
 import axiosInstance from "@/api/axiosInstance";
 import ComplaintSkeleton from "./complaints-skelton.screen";
 import { useGetDriverRideHistories } from "@/hooks/useGetDriverData";
 import AppAlert from "@/components/modal/alert-modal/alert.modal";
+import { router } from "expo-router";
 
 export default function DriverComplaints() {
   const { recentRides } = useGetDriverRideHistories();
@@ -34,445 +37,282 @@ export default function DriverComplaints() {
 
   const [showAlert, setShowAlert] = useState(false);
   const [alertConfig, setAlertConfig] = useState({
-    title: "",
-    message: "",
-    confirmText: "OK",
-    showCancel: false,
+    title: "", message: "", confirmText: "OK", showCancel: false,
     onConfirm: () => setShowAlert(false),
     onCancel: () => setShowAlert(false),
   });
 
-  const confirmAction = (title, message, confirmText = "Yes") =>
-    new Promise((resolve) => {
-      setAlertConfig({
-        title,
-        message,
-        confirmText,
-        showCancel: true,
-        onCancel: () => {
-          setShowAlert(false);
-          resolve(false);
-        },
-        onConfirm: () => {
-          setShowAlert(false);
-          resolve(true);
-        },
-      });
-      setShowAlert(true);
-    });
-
-  const showInfo = (title, message) => {
-    setAlertConfig({
-      title,
-      message,
-      confirmText: "OK",
-      showCancel: false,
-      onConfirm: () => setShowAlert(false),
-    });
-    setShowAlert(true);
-  };
-
-
-  useEffect(() => {
-    fetchComplaints();
-  }, []);
+  useEffect(() => { fetchComplaints(); }, []);
 
   const fetchComplaints = async () => {
     try {
       setLoadingComplaints(true);
       const res = await axiosInstance.get("/complaints/driver");
-      const data = res?.data?.data || [];
-      setComplaints(data);
+      setComplaints(res?.data?.data || []);
     } catch (err) {
-      console.error("Failed to fetch complaints:", err);
-      showInfo("Error", "Unable to fetch complaints. Please try again later.");
+      console.error(err);
     } finally {
-      setTimeout(() => setLoadingComplaints(false), 0);
+      setLoadingComplaints(false);
     }
+  };
+
+  const showInfo = (title, message) => {
+    setAlertConfig({ title, message, confirmText: "OK", showCancel: false, onConfirm: () => setShowAlert(false) });
+    setShowAlert(true);
   };
 
   const handleSubmit = async () => {
     if (!category || !message.trim()) {
-      showInfo("Missing Fields", "Please select a complaint type and describe your issue.");
+      showInfo("Missing Details", "Please select a category and describe the issue.");
       return;
     }
 
-    const confirmed = await confirmAction(
-      "Submit Complaint",
-      "Are you sure you want to submit this complaint?",
-      "Submit"
-    );
+    setAlertConfig({
+      title: "Submit Report?",
+      message: "Are you sure you want to submit this complaint?",
+      confirmText: "Submit",
+      showCancel: true,
+      onCancel: () => setShowAlert(false),
+      onConfirm: async () => {
+        setShowAlert(false);
+        try {
+          setSubmitting(true);
+          const payload = { category, message: message.trim() };
+          if (selectedRide?.id) payload.rideId = selectedRide.id;
 
-    if (!confirmed) return;
-
-    try {
-      setSubmitting(true);
-
-      const payload = {
-        category,
-        message: message.trim(),
-      };
-      if (selectedRide?.id) payload.rideId = selectedRide.id;
-
-      const res = await axiosInstance.post("/complaints/driver", payload);
-      const created = res?.data?.data;
-
-      if (created) {
-        setComplaints((prev) => [created, ...prev]);
-        setSelectedRide(null);
-        setCategory("");
-        setMessage("");
-        setRideModalVisible(false);
-
-        showInfo("Success", "Your complaint has been submitted.");
-      } else {
-        showInfo("Notice", "Complaint submitted, but no response received.");
-      }
-    } catch (err) {
-      console.error("Submit complaint failed:", err);
-      showInfo("Error", "Could not submit complaint. Please try again later.");
-    } finally {
-      setSubmitting(false);
-    }
+          const res = await axiosInstance.post("/complaints/driver", payload);
+          if (res?.data?.data) {
+            setComplaints((prev) => [res.data.data, ...prev]);
+            setSelectedRide(null); setCategory(""); setMessage("");
+            showInfo("Success", "Complaint submitted successfully.");
+          }
+        } catch (err) {
+          showInfo("Error", "Failed to submit complaint.");
+        } finally {
+          setSubmitting(false);
+        }
+      },
+    });
+    setShowAlert(true);
   };
-
 
   const getStatusColor = (status) => {
     switch (status) {
-      case "Resolved":
-        return "#4CAF50";
-      case "In Review":
-        return "#29B6F6";
-      case "Pending":
-        return "#FFA726";
-      case "Rejected":
-        return "#E57373";
-      default:
-        return "#999";
+      case "Resolved": return "#00E676";
+      case "In Review": return "#29B6F6";
+      case "Rejected": return "#FF5252";
+      default: return "#FFAB00"; // Pending
     }
   };
 
   if (loadingComplaints) return <ComplaintSkeleton />;
 
   return (
-    <KeyboardAvoidingView
-      style={{ flex: 1, backgroundColor: color.background }}
-      behavior={Platform.OS === "ios" ? "padding" : "height"}
-    >
-      <ScrollView
-        showsVerticalScrollIndicator={false}
-        style={{
-          flex: 1,
-          paddingHorizontal: windowWidth(25),
-          paddingTop: windowHeight(40),
-          paddingBottom: windowHeight(80),
-        }}
-      >
-        {/* HEADER */}
-        <Text
-          style={{
-            fontSize: fontSizes.FONT26,
-            fontFamily: "TT-Octosquares-Medium",
-            color: color.primaryText,
-            textAlign: "center",
-            marginBottom: 12,
-          }}
-        >
-          Raise a Complaint
-        </Text>
+    <View style={styles.mainContainer}>
+      <LinearGradient colors={[color.bgDark, color.subPrimary]} style={StyleSheet.absoluteFill} />
 
-        <Text
-          style={{
-            fontSize: fontSizes.FONT14,
-            fontFamily: "TT-Octosquares-Medium",
-            color: color.primaryGray,
-            textAlign: "center",
-            marginBottom: 20,
-          }}
-        >
-          Report ride, customer, or payment-related issues. Our support team will get back to you soon.
-        </Text>
+      <SafeAreaView style={{ flex: 1 }}>
+        <KeyboardAvoidingView behavior={Platform.OS === "ios" ? "padding" : "height"} style={{ flex: 1 }}>
+          <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
 
-        {/* FORM CARD */}
-        <LinearGradient
-          colors={[color.darkPrimary, color.bgDark]}
-          start={{ x: 0, y: 0 }}
-          end={{ x: 1, y: 1 }}
-          style={{
-            borderRadius: 18,
-            padding: 18,
-            marginBottom: 30,
-          }}
-        >
-          {/* Related Ride (optional) */}
-          <Text
-            style={{
-              color: color.primaryText,
-              fontSize: fontSizes.FONT18,
-              fontFamily: "TT-Octosquares-Medium",
-              marginBottom: 10,
-            }}
-          >
-            Related Ride (optional)
-          </Text>
+            {/* HEADER */}
+            <View style={styles.header}>
+              <TouchableOpacity onPress={() => router.back()} style={styles.backButton}>
+                <Ionicons name="arrow-back" size={24} color="#fff" />
+              </TouchableOpacity>
+              <Text style={styles.pageTitle}>Support & Issues</Text>
+            </View>
 
-          <TouchableOpacity
-            onPress={() => setRideModalVisible(true)}
-            activeOpacity={0.85}
-            style={{
-              backgroundColor: "rgba(255,255,255,0.03)",
-              borderRadius: 12,
-              paddingVertical: 12,
-              paddingHorizontal: 15,
-              borderWidth: 1,
-              borderColor: "rgba(255,255,255,0.06)",
-              flexDirection: "row",
-              justifyContent: "space-between",
-              alignItems: "center",
-              marginBottom: 18,
-            }}
-          >
-            <Text
-              style={{
-                color: selectedRide ? color.primaryText : "#777",
-                fontFamily: "TT-Octosquares-Medium",
-                fontSize: fontSizes.FONT15,
-              }}
-            >
-              {selectedRide
-                ? `${selectedRide.currentLocationName || "Pickup"} → ${selectedRide.destinationLocationName || "Drop"}`
-                : "Select a recent ride (optional)"}
-            </Text>
-            <Ionicons name="chevron-down-outline" size={18} color={color.primaryText} />
-          </TouchableOpacity>
+            {/* FORM CARD */}
+            <View style={styles.formCard}>
+              <Text style={styles.cardTitle}>Report an Issue</Text>
 
-          {/* Category */}
-          <Text
-            style={{
-              color: color.primaryText,
-              fontSize: fontSizes.FONT18,
-              fontFamily: "TT-Octosquares-Medium",
-              marginBottom: 10,
-            }}
-          >
-            Complaint Type
-          </Text>
-
-          <ScrollView horizontal showsHorizontalScrollIndicator={false} style={{ marginBottom: 18 }}>
-            {["Ride Issue", "Payment Issue", "Customer Behavior", "App Issue", "Other"].map((item) => (
+              {/* RIDE SELECTOR */}
               <TouchableOpacity
-                key={item}
-                onPress={() => setCategory(item)}
-                style={{
-                  paddingVertical: 8,
-                  paddingHorizontal: 16,
-                  borderRadius: 20,
-                  backgroundColor: category === item ? color.buttonBg : "rgba(255,255,255,0.06)",
-                  marginRight: 10,
-                  borderWidth: 1,
-                  borderColor: category === item ? color.primary : "rgba(255,255,255,0.08)",
-                }}
-                activeOpacity={0.85}
+                onPress={() => setRideModalVisible(true)}
+                style={styles.inputField}
               >
-                <Text
-                  style={{
-                    color: category === item ? color.primary : color.primaryText,
-                    fontFamily: "TT-Octosquares-Medium",
-                    fontSize: fontSizes.FONT14,
-                  }}
-                >
-                  {item}
+                <Text style={[styles.inputText, !selectedRide && { color: '#666' }]}>
+                  {selectedRide
+                    ? `${selectedRide.currentLocationName} → ${selectedRide.destinationLocationName}`
+                    : "Select Related Ride (Optional)"}
                 </Text>
+                <Ionicons name="chevron-down" size={20} color="#666" />
               </TouchableOpacity>
-            ))}
-          </ScrollView>
 
-          {/* Message */}
-          <Text
-            style={{
-              color: color.primaryText,
-              fontSize: fontSizes.FONT18,
-              fontFamily: "TT-Octosquares-Medium",
-              marginBottom: 10,
-            }}
-          >
-            Describe Your Issue
-          </Text>
-
-          <TextInput
-            style={{
-              backgroundColor: "rgba(255,255,255,0.03)",
-              borderRadius: 12,
-              padding: 12,
-              fontSize: fontSizes.FONT16,
-              color: color.primaryText,
-              minHeight: 110,
-              textAlignVertical: "top",
-              borderWidth: 1,
-              borderColor: "rgba(255,255,255,0.06)",
-              fontFamily: "TT-Octosquares-Medium",
-            }}
-            placeholder="Type your message here..."
-            placeholderTextColor="#999"
-            multiline
-            value={message}
-            onChangeText={setMessage}
-          />
-
-          <View style={{ marginTop: 18 }}>
-            <Button
-              title={submitting ? <ActivityIndicator color={color.primary} /> : "Submit Complaint"}
-              onPress={handleSubmit}
-              disabled={submitting}
-            />
-          </View>
-        </LinearGradient>
-
-        {/* Complaints header */}
-        <Text
-          style={{
-            fontSize: fontSizes.FONT22,
-            fontFamily: "TT-Octosquares-Medium",
-            color: color.primaryText,
-            marginBottom: 12,
-          }}
-        >
-          Your Complaints
-        </Text>
-
-        {/* Complaint List */}
-        {complaints.length === 0 ? (
-          <Text
-            style={{
-              fontSize: fontSizes.FONT16,
-              color: "#aaa",
-              fontFamily: "TT-Octosquares-Medium",
-              textAlign: "center",
-              marginTop: 24,
-            }}
-          >
-            No complaints registered yet.
-          </Text>
-        ) : (
-          <FlatList
-            data={complaints}
-            keyExtractor={(item) => item._id || item.id}
-            scrollEnabled={false}
-            renderItem={({ item }) => (
-              <View
-                style={{
-                  backgroundColor: color.subPrimary,
-                  borderRadius: 14,
-                  padding: 14,
-                  marginBottom: 14,
-                  borderLeftWidth: 4,
-                  borderLeftColor: getStatusColor(item.status),
-                  shadowColor: "#000",
-                  shadowOpacity: 0.06,
-                  shadowRadius: 6,
-                  elevation: 2,
-                }}
-              >
-                <View style={{ flexDirection: "row", justifyContent: "space-between", alignItems: "center" }}>
-                  <Text style={{ fontSize: fontSizes.FONT16, color: color.primaryText, fontFamily: "TT-Octosquares-Medium" }}>
-                    {item.category}
-                  </Text>
-                  <Text style={{ color: getStatusColor(item.status), fontSize: fontSizes.FONT13, fontFamily: "TT-Octosquares-Medium" }}>
-                    {item.status || "Pending"}
-                  </Text>
-                </View>
-
-                {item.ride && (
-                  <Text
-                    style={{
-                      color: "#999",
-                      fontSize: fontSizes.FONT13,
-                      marginTop: 6,
-                      fontFamily: "TT-Octosquares-Medium",
-                    }}
-                  >
-                    Ride: {item.ride.currentLocationName || "Pickup"} → {item.ride.destinationLocationName || "Drop"}
-                  </Text>
-                )}
-
-                <Text
-                  style={{
-                    color: "#aaa",
-                    fontSize: fontSizes.FONT14,
-                    marginVertical: 8,
-                    fontFamily: "TT-Octosquares-Medium",
-                  }}
-                  numberOfLines={2}
-                >
-                  {item.message}
-                </Text>
-
-                <View style={{ flexDirection: "row", alignItems: "center" }}>
-                  <Ionicons name="time-outline" size={14} color="#999" style={{ marginRight: 6 }} />
-                  <Text style={{ color: "#999", fontSize: fontSizes.FONT13, fontFamily: "TT-Octosquares-Medium" }}>
-                    {new Date(item.createdAt).toLocaleDateString()}
-                  </Text>
-                </View>
-              </View>
-            )}
-          />
-        )}
-      </ScrollView>
-
-      {/* RIDE SELECTION MODAL */}
-      <Modal visible={rideModalVisible} transparent animationType="fade" onRequestClose={() => setRideModalVisible(false)}>
-        <View style={{ flex: 1, backgroundColor: "rgba(0,0,0,0.6)", justifyContent: "center", alignItems: "center", paddingHorizontal: 20 }}>
-          <View style={{ backgroundColor: color.subPrimary, width: "100%", borderRadius: 14, padding: 14, maxHeight: "72%" }}>
-            <View style={{ flexDirection: "row", justifyContent: "space-between", alignItems: "center", marginBottom: 10 }}>
-              <Text style={{ fontSize: fontSizes.FONT18, color: color.primaryText, fontFamily: "TT-Octosquares-Medium" }}>
-                Select a Ride
-              </Text>
-              <TouchableOpacity onPress={() => { setSelectedRide(null); setRideModalVisible(false); }}>
-                <Text style={{ color: color.primaryText, fontFamily: "TT-Octosquares-Medium" }}>Clear</Text>
-              </TouchableOpacity>
-            </View>
-
-            <ScrollView>
-              {recentRides?.length > 0 ? (
-                recentRides.map((ride) => (
+              {/* CATEGORY CHIPS */}
+              <Text style={styles.label}>Issue Type</Text>
+              <View style={styles.chipContainer}>
+                {["Ride Issue", "Payment Issue", "Customer Behaviour", "App Issue", "Other"].map((item) => (
                   <TouchableOpacity
-                    key={ride._id}
-                    onPress={() => {
-                      setSelectedRide(ride);
-                      setRideModalVisible(false);
-                    }}
-                    style={{ paddingVertical: 12, borderBottomWidth: 1, borderColor: "rgba(255,255,255,0.06)" }}
+                    key={item}
+                    onPress={() => setCategory(item)}
+                    style={[styles.chip, category === item && styles.activeChip]}
                   >
-                    <Text style={{ color: color.primaryText, fontFamily: "TT-Octosquares-Medium", fontSize: fontSizes.FONT15 }}>
-                      {ride.currentLocationName} → {ride.destinationLocationName}
-                    </Text>
-                    <Text style={{ color: "#aaa", fontSize: fontSizes.FONT13, marginTop: 4, fontFamily: "TT-Octosquares-Medium" }}>
-                      ₹{ride.totalFare} • {new Date(ride.createdAt).toLocaleDateString()}
-                    </Text>
+                    <Text style={[styles.chipText, category === item && styles.activeChipText]}>{item}</Text>
                   </TouchableOpacity>
-                ))
-              ) : (
-                <Text style={{ color: "#aaa", textAlign: "center", marginVertical: 20, fontFamily: "TT-Octosquares-Medium" }}>
-                  No recent rides found.
-                </Text>
-              )}
-            </ScrollView>
+                ))}
+              </View>
 
-            <View style={{ marginTop: 12 }}>
-              <Button title="Close" onPress={() => setRideModalVisible(false)} />
+              {/* MESSAGE INPUT */}
+              <Text style={styles.label}>Description</Text>
+              <TextInput
+                style={styles.textArea}
+                placeholder="Describe what happened..."
+                placeholderTextColor="#666"
+                multiline
+                value={message}
+                onChangeText={setMessage}
+              />
+
+              {/* SUBMIT BUTTON */}
+              <TouchableOpacity
+                style={styles.submitButton}
+                onPress={handleSubmit}
+                disabled={submitting}
+              >
+                {submitting ? <ActivityIndicator color="#000" /> : <Text style={styles.submitText}>Submit Report</Text>}
+              </TouchableOpacity>
+            </View>
+
+            {/* HISTORY SECTION */}
+            <Text style={styles.sectionTitle}>Previous Reports</Text>
+
+            {complaints.length === 0 ? (
+              <View style={styles.emptyState}>
+                <Feather name="inbox" size={40} color="#333" />
+                <Text style={styles.emptyText}>No reports found</Text>
+              </View>
+            ) : (
+              <FlatList
+                data={complaints}
+                keyExtractor={(item) => item._id || item.id}
+                scrollEnabled={false}
+                renderItem={({ item }) => (
+                  <View style={styles.complaintItem}>
+                    <View style={styles.complaintHeader}>
+                      <Text style={styles.complaintCategory}>{item.category}</Text>
+                      <View style={[styles.statusBadge, { backgroundColor: `${getStatusColor(item.status)}20` }]}>
+                        <Text style={[styles.statusText, { color: getStatusColor(item.status) }]}>{item.status || "Pending"}</Text>
+                      </View>
+                    </View>
+
+                    <Text style={styles.complaintMessage} numberOfLines={2}>{item.message}</Text>
+
+                    {item.ride &&
+                      <View style={styles.modalRow}>
+                        <Text style={styles.modalLoc} numberOfLines={1}>{item.ride.currentLocationName}</Text>
+                        <Ionicons name="arrow-forward" size={14} color="#666" />
+                        <Text style={styles.modalLoc} numberOfLines={1}>{item.ride.destinationLocationName}</Text>
+                      </View>
+                    }
+
+                    <View style={styles.complaintFooter}>
+                      <Text style={styles.complaintDate}>{new Date(item.createdAt).toLocaleDateString()}</Text>
+                    </View>
+                  </View>
+                )}
+              />
+            )}
+
+          </ScrollView>
+        </KeyboardAvoidingView>
+
+        {/* RIDE MODAL */}
+        <Modal visible={rideModalVisible} transparent animationType="fade" onRequestClose={() => setRideModalVisible(false)}>
+          <View style={styles.modalOverlay}>
+            <View style={styles.modalContent}>
+              <View style={styles.modalHeader}>
+                <Text style={styles.modalTitle}>Select Recent Ride</Text>
+                <TouchableOpacity onPress={() => setRideModalVisible(false)}><Ionicons name="close" size={24} color="#fff" /></TouchableOpacity>
+              </View>
+              <FlatList
+                data={recentRides}
+                keyExtractor={item => item._id}
+                renderItem={({ item }) => (
+                  <TouchableOpacity
+                    style={styles.modalItem}
+                    onPress={() => { setSelectedRide(item); setRideModalVisible(false); }}
+                  >
+                    <View style={styles.modalRow}>
+                      <Text style={styles.modalLoc} numberOfLines={1}>{item.currentLocationName}</Text>
+                      <Ionicons name="arrow-forward" size={14} color="#666" />
+                      <Text style={styles.modalLoc} numberOfLines={1}>{item.destinationLocationName}</Text>
+                    </View>
+                    <Text style={styles.modalSub}>₹{item.totalFare} • {new Date(item.createdAt).toLocaleDateString()}</Text>
+                  </TouchableOpacity>
+                )}
+                ListEmptyComponent={<Text style={styles.emptyText}>No recent rides found.</Text>}
+              />
             </View>
           </View>
-        </View>
-      </Modal>
-      <AppAlert
-        visible={showAlert}
-        title={alertConfig.title}
-        message={alertConfig.message}
-        confirmText={alertConfig.confirmText}
-        showCancel={alertConfig.showCancel}
-        onConfirm={alertConfig.onConfirm}
-        onCancel={alertConfig.onCancel}
-      />
-    </KeyboardAvoidingView>
+        </Modal>
+
+        <AppAlert
+          visible={showAlert}
+          title={alertConfig.title}
+          message={alertConfig.message}
+          confirmText={alertConfig.confirmText}
+          showCancel={alertConfig.showCancel}
+          onConfirm={alertConfig.onConfirm}
+          onCancel={alertConfig.onCancel}
+        />
+      </SafeAreaView>
+    </View>
   );
 }
+
+const styles = StyleSheet.create({
+  mainContainer: { flex: 1, backgroundColor: "#050505" },
+  scrollContent: { padding: 20, paddingBottom: 50 },
+
+  // Header
+  header: { flexDirection: 'row', alignItems: 'center', marginBottom: 25, gap: 15 },
+  backButton: { width: 40, height: 40, borderRadius: 12, backgroundColor: 'rgba(255,255,255,0.1)', alignItems: 'center', justifyContent: 'center' },
+  pageTitle: { fontSize: 24, color: "#fff", fontFamily: "TT-Octosquares-Medium" },
+
+  // Form Card
+  formCard: { backgroundColor: 'rgba(255,255,255,0.03)', borderRadius: 20, padding: 20, borderWidth: 1, borderColor: 'rgba(255,255,255,0.05)', marginBottom: 30 },
+  cardTitle: { fontSize: 18, color: '#fff', fontFamily: "TT-Octosquares-Medium", marginBottom: 20 },
+
+  label: { fontSize: 12, color: '#888', marginBottom: 10, marginTop: 15, fontFamily: "TT-Octosquares-Medium" },
+
+  inputField: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', backgroundColor: 'rgba(255,255,255,0.05)', padding: 15, borderRadius: 12, borderWidth: 1, borderColor: 'rgba(255,255,255,0.05)' },
+  inputText: { color: '#fff', fontSize: 14, fontFamily: "TT-Octosquares-Medium", flex: 1 },
+
+  chipContainer: { flexDirection: 'row', flexWrap: 'wrap', gap: 10 },
+  chip: { paddingVertical: 8, paddingHorizontal: 16, borderRadius: 20, backgroundColor: 'rgba(255,255,255,0.05)', borderWidth: 1, borderColor: 'transparent' },
+  activeChip: { backgroundColor: color.buttonBg, borderColor: color.primary },
+  chipText: { color: '#888', fontSize: 12, fontFamily: "TT-Octosquares-Medium" },
+  activeChipText: { color: color.primary },
+
+  textArea: { backgroundColor: 'rgba(255,255,255,0.05)', borderRadius: 12, padding: 15, minHeight: 120, color: '#fff', textAlignVertical: 'top', fontFamily: "TT-Octosquares-Medium" },
+
+  submitButton: { backgroundColor: color.buttonBg, paddingVertical: 16, borderRadius: 14, alignItems: 'center', marginTop: 25 },
+  submitText: { color: '#000', fontSize: 16, fontFamily: "TT-Octosquares-Medium" },
+
+  // History List
+  sectionTitle: { fontSize: 18, color: '#fff', fontFamily: "TT-Octosquares-Medium", marginBottom: 15 },
+  complaintItem: { backgroundColor: 'rgba(255,255,255,0.03)', padding: 16, borderRadius: 16, marginBottom: 12, borderWidth: 1, borderColor: 'rgba(255,255,255,0.03)' },
+  complaintHeader: { flexDirection: 'row', justifyContent: 'space-between', marginBottom: 8 },
+  complaintCategory: { color: '#fff', fontSize: 14, fontFamily: "TT-Octosquares-Medium" },
+  statusBadge: { paddingHorizontal: 8, paddingVertical: 4, borderRadius: 6 },
+  statusText: { fontSize: 10, fontFamily: "TT-Octosquares-Medium" },
+  complaintMessage: { color: color.primaryGray, fontSize: 13, lineHeight: 18, marginBottom: 10, fontFamily: "TT-Octosquares-Medium" },
+  complaintFooter: { flexDirection: 'row', alignItems: 'center', gap: 10, fontFamily: "TT-Octosquares-Medium" },
+  complaintDate: { color: color.primaryGray, fontSize: 11, fontFamily: "TT-Octosquares-Medium" },
+  rideTag: { color: color.primaryText, fontSize: 11, fontFamily: "TT-Octosquares-Medium" },
+
+  emptyState: { alignItems: 'center', padding: 40 },
+  emptyText: { color: '#444', marginTop: 10, fontFamily: "TT-Octosquares-Medium" },
+
+  // Modal
+  modalOverlay: { flex: 1, backgroundColor: 'rgba(0,0,0,0.8)', justifyContent: 'center', padding: 20 },
+  modalContent: { backgroundColor: '#151515', borderRadius: 20, padding: 20, maxHeight: '60%' },
+  modalHeader: { flexDirection: 'row', justifyContent: 'space-between', marginBottom: 15 },
+  modalTitle: { color: '#fff', fontSize: 18, fontFamily: "TT-Octosquares-Medium" },
+  modalItem: { paddingVertical: 15, borderBottomWidth: 1, borderBottomColor: 'rgba(255,255,255,0.05)' },
+  modalRow: { flexDirection: 'row', alignItems: 'center', gap: 8, marginBottom: 4 },
+  modalLoc: { color: '#fff', fontSize: 14, flex: 1, fontFamily: "TT-Octosquares-Medium" },
+  modalSub: { color: '#666', fontSize: 12, fontFamily: "TT-Octosquares-Medium" },
+});
