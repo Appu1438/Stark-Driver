@@ -46,7 +46,7 @@ export const EarningsModal = ({ visible, onClose, item }) => {
 
         {/* Platform Fee (15% Total) */}
         <View style={styles.row}>
-          <Text style={styles.label}>Total Deductions (15%) From Wallet</Text>
+          <Text style={styles.label}>Total Deductions From Wallet</Text>
           <Text style={[styles.value, { color: "#ff6f6f" }]}>
             - ₹ {item.platformFee.toLocaleString("en-IN")}
           </Text>
@@ -55,7 +55,7 @@ export const EarningsModal = ({ visible, onClose, item }) => {
         {/* Breakdown */}
         <View style={{ marginTop: 10, marginBottom: 10 }}>
           <View style={styles.row}>
-            <Text style={styles.label}>Govt Taxes (5%)</Text>
+            <Text style={styles.label}>Govt Taxes </Text>
             <Text style={[styles.value, { color: "#ff6f6f" }]}>
               - ₹ {parts.govtTax.toLocaleString("en-IN")}
             </Text>
@@ -69,7 +69,7 @@ export const EarningsModal = ({ visible, onClose, item }) => {
           </View> */}
 
           <View style={styles.row}>
-            <Text style={styles.label}>Platform Fee (10%)</Text>
+            <Text style={styles.label}>Platform Fee </Text>
             <Text style={[styles.value, { color: "#ff6f6f" }]}>
               - ₹ {parts.platform.toLocaleString("en-IN")}
             </Text>
