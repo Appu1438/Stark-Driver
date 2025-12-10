@@ -20,6 +20,11 @@ import AppAlert from "@/components/modal/alert-modal/alert.modal";
 import color from "../../themes/app.colors";
 import { SafeAreaView } from "react-native-safe-area-context";
 
+import {
+  widthPercentageToDP as wp,
+  heightPercentageToDP as hp,
+} from "react-native-responsive-screen";
+
 export default function PaymentPage() {
   const { driver } = useGetDriverData();
   const [amount, setAmount] = useState("");
@@ -44,82 +49,101 @@ export default function PaymentPage() {
       </View>
     );
 
-  // 🔥 GENERATE BRIGHT CHECKOUT HTML
   const generateCheckoutHtml = (gross, orderId) => {
-    // Changed b_rgb to ffffff (white) to match bright background
-const logoUrl = "https://res.cloudinary.com/starkcab/image/upload/w_256,h_256,c_pad,b_rgb:000,q_auto/v1765043362/App%20Logos/FullLogo_p0evhu.png";
-    return `
-      <html>
-        <head>
-          <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-          <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600&display=swap" rel="stylesheet">
-          <style>
-            body {
-              margin: 0;
-              padding: 0;
-              height: 100vh;
-              display: flex;
-              flex-direction: column;
-              justify-content: center;
-              align-items: center;
-              background-color: #ffffff; /* Bright Background */
-              font-family: 'Inter', sans-serif;
-            }
-            .loader {
-              width: 40px;
-              height: 40px;
-              border: 3px solid #f3f3f3;
-              border-top: 3px solid #333; /* Dark loader for contrast */
-              border-radius: 50%;
-              animation: spin 1s linear infinite;
-              margin-bottom: 15px;
-            }
-            .text {
-              color: #333;
-              font-size: 14px;
-              font-weight: 600;
-            }
-            @keyframes spin {
-              0% { transform: rotate(0deg); }
-              100% { transform: rotate(360deg); }
-            }
-          </style>
-        </head>
-        <body>
-          <div class="loader"></div>
-          <div class="text">Initializing Secure Payment...</div>
+    const logoUrl =
+      "https://res.cloudinary.com/starkcab/image/upload/w_256,h_256,c_pad,b_rgb:000,q_auto/v1765043362/App%20Logos/FullLogo_p0evhu.png";
 
-          <script src="https://checkout.razorpay.com/v1/checkout.js"></script>
-          <script>
-            var options = {
-              key: "${process.env.EXPO_PUBLIC_RAZORPAY_KEY_ID}",
-              amount: "${gross * 100}",
-              currency: "INR",
-              name: "STARK PAYMENTS",
-              description: "Wallet Recharge",
-              image: "${logoUrl}",
-              order_id: "${orderId}",
-              prefill: {
-                name: "${driver?.name}",
-                email: "${driver?.email}",
-                contact: "${driver?.phone_number}"
-              },
-              theme: { color: "${color.primary}" },
-              handler: function (response) {
-                window.ReactNativeWebView.postMessage(JSON.stringify({ event: "success", payload: response }));
-              },
-              modal: {
-                ondismiss: function () {
-                  window.ReactNativeWebView.postMessage(JSON.stringify({ event: "cancel" }));
-                }
+    return `
+    <html>
+      <head>
+        <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no" />
+        <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600&display=swap" rel="stylesheet" />
+
+        <style>
+          body {
+            margin: 0;
+            padding: 0;
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            background-color: #ffffff;
+            font-family: 'Inter', sans-serif;
+          }
+
+          .loader {
+            width: 40px;
+            height: 40px;
+            border: 3px solid #f3f3f3;
+            border-top: 3px solid #333;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin-bottom: 15px;
+          }
+
+          .text {
+            color: #333;
+            font-size: 14px;
+            font-weight: 600;
+          }
+
+          @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+          }
+        </style>
+      </head>
+
+      <body>
+        <div class="loader"></div>
+        <div class="text">Initializing Secure Payment...</div>
+
+        <!-- Razorpay Script -->
+        <script src="https://checkout.razorpay.com/v1/checkout.js"></script>
+
+        <script>
+          var options = {
+            key: "${process.env.EXPO_PUBLIC_RAZORPAY_KEY_ID}",
+            amount: "${gross * 100}",
+            currency: "INR",
+            name: "STARK PAYMENTS",
+            description: "Wallet Recharge",
+            image: "${logoUrl}",
+            order_id: "${orderId}",
+
+            prefill: {
+              name: "${driver?.name}",
+              email: "${driver?.email}",
+              contact: "${driver?.phone_number}"
+            },
+
+            theme: { color: "${color.primary}" },
+
+            handler: function (response) {
+              window.ReactNativeWebView.postMessage(
+                JSON.stringify({ event: "success", payload: response })
+              );
+            },
+
+            modal: {
+              ondismiss: function () {
+                window.ReactNativeWebView.postMessage(
+                  JSON.stringify({ event: "cancel" })
+                );
               }
-            };
-            
-            setTimeout(() => { var rzp = new Razorpay(options); rzp.open(); }, 500);
-          </script>
-        </body>
-      </html>
-    `;
+            }
+          };
+
+          // Delay Razorpay opening for smooth initialization
+          setTimeout(() => {
+            var rzp = new Razorpay(options);
+            rzp.open();
+          }, 500);
+        </script>
+      </body>
+    </html>
+  `;
   };
 
   const handlePayment = async () => {
@@ -146,8 +170,8 @@ const logoUrl = "https://res.cloudinary.com/starkcab/image/upload/w_256,h_256,c_
       const html = generateCheckoutHtml(grossAmount, orderId);
       setCheckoutHtml(html);
     } catch (err) {
-      setAlertTitle("Error");
-      setAlertMessage("Could not initialize payment.");
+      setAlertTitle("Information");
+      setAlertMessage(err?.response?.data?.message || "Could not initialize payment.");
       setAlertVisible(true);
     }
     setLoading(false);
@@ -177,13 +201,12 @@ const logoUrl = "https://res.cloudinary.com/starkcab/image/upload/w_256,h_256,c_
     setAlertVisible(true);
   };
 
-  // 🟢 Show Bright White Screen while WebView loads
   if (checkoutHtml) {
     return (
-      <SafeAreaView style={{ flex: 1}}>
+      <SafeAreaView style={{ flex: 1 }}>
         <WebView
           source={{ html: checkoutHtml }}
-          style={{ flex: 1, backgroundColor: "#ffffff" }}
+          style={{ flex: 1, backgroundColor: "#fff" }}
           javaScriptEnabled
           onMessage={handleWebViewMessage}
         />
@@ -191,10 +214,9 @@ const logoUrl = "https://res.cloudinary.com/starkcab/image/upload/w_256,h_256,c_
     );
   }
 
-  // 🟢 MAIN PAYMENT UI (Dark Theme)
   return (
-    <View style={styles.mainContainer}>
-      <StatusBar barStyle="light-content" />
+    <SafeAreaView style={styles.mainContainer}>
+
       <LinearGradient
         colors={[color.bgDark, color.subPrimary]}
         style={styles.backgroundGradient}
@@ -202,17 +224,19 @@ const logoUrl = "https://res.cloudinary.com/starkcab/image/upload/w_256,h_256,c_
 
       <KeyboardAvoidingView
         behavior={Platform.OS === "ios" ? "padding" : "height"}
-        style={styles.keyboardView}
+        style={{ flex: 1 }}
       >
-        <ScrollView contentContainerStyle={styles.scrollContent}>
-
+        <ScrollView
+          contentContainerStyle={styles.scrollContent}
+          showsVerticalScrollIndicator={false}
+        >
           {/* HEADER */}
           <View style={styles.headerContainer}>
             <Text style={styles.pageTitle}>Add Funds</Text>
             <Text style={styles.pageSubtitle}>Secure Wallet Recharge</Text>
           </View>
 
-          {/* MAIN CARD */}
+          {/* CARD */}
           <View style={styles.inputCard}>
             <Text style={styles.currencyLabel}>Amount to add</Text>
 
@@ -229,11 +253,10 @@ const logoUrl = "https://res.cloudinary.com/starkcab/image/upload/w_256,h_256,c_
               />
             </View>
 
-            {/* SEPARATOR */}
             <View style={styles.separator} />
 
-            {/* QUICK ACTIONS */}
             <Text style={styles.quickLabel}>Quick Select</Text>
+
             <View style={styles.quickGrid}>
               {[250, 500, 1000, 2000].map((amt) => (
                 <TouchableOpacity
@@ -243,7 +266,6 @@ const logoUrl = "https://res.cloudinary.com/starkcab/image/upload/w_256,h_256,c_
                     amount == amt && styles.chipActive,
                   ]}
                   onPress={() => setAmount(String(amt))}
-                  activeOpacity={0.7}
                 >
                   <Text
                     style={[
@@ -257,27 +279,26 @@ const logoUrl = "https://res.cloudinary.com/starkcab/image/upload/w_256,h_256,c_
               ))}
             </View>
 
-            {/* ⚠️ FEE & GST NOTE */}
             <View style={styles.noteContainer}>
               <Text style={styles.noteText}>
                 * Additional 2% Commission & 18% GST applicable.
               </Text>
             </View>
-
           </View>
 
-          {/* ACTION BUTTON */}
+          {/* BUTTON */}
           <View style={styles.footerContainer}>
             <TouchableOpacity
               onPress={handlePayment}
               disabled={loading}
-              activeOpacity={0.8}
               style={styles.buttonShadow}
             >
               <LinearGradient
-                colors={loading ? ["#333", "#444"] : [color.primary, "rgba(0,255,200,0.1)"]}
-                start={{ x: 0, y: 0 }}
-                end={{ x: 1, y: 0 }}
+                colors={
+                  loading
+                    ? ["#333", "#444"]
+                    : [color.primary, "rgba(0,255,200,0.1)"]
+                }
                 style={styles.payButton}
               >
                 {loading ? (
@@ -304,7 +325,7 @@ const logoUrl = "https://res.cloudinary.com/starkcab/image/upload/w_256,h_256,c_
         onConfirm={handleAlertConfirm}
         onCancel={handleAlertConfirm}
       />
-    </View>
+    </SafeAreaView>
   );
 }
 
@@ -313,166 +334,177 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: color.bgDark,
   },
+
   backgroundGradient: {
     ...StyleSheet.absoluteFillObject,
   },
+
   centerContainer: {
     flex: 1,
     backgroundColor: color.bgDark,
     justifyContent: "center",
     alignItems: "center",
   },
-  keyboardView: {
-    flex: 1,
-  },
+
   scrollContent: {
-    flexGrow: 1,
-    paddingHorizontal: 20,
-    justifyContent: "center",
+    paddingHorizontal: wp(5),
+    paddingTop: hp(2),
+    paddingBottom: hp(5),
   },
 
-  // Header
   headerContainer: {
-    marginBottom: 40,
+    marginBottom: hp(4),
     alignItems: "center",
   },
+
   pageTitle: {
-    fontSize: 28,
+    fontSize: hp(3.5),
     fontFamily: "TT-Octosquares-Medium",
     color: "#fff",
-    marginBottom: 5,
-    textShadowColor: "rgba(0, 255, 255, 0.3)",
-    textShadowOffset: { width: 0, height: 0 },
-    textShadowRadius: 10,
   },
+
   pageSubtitle: {
-    fontSize: 14,
+    fontSize: hp(1.7),
     color: "#888",
     fontFamily: "TT-Octosquares-Medium",
   },
 
-  // Card
   inputCard: {
     backgroundColor: "rgba(255,255,255,0.03)",
-    borderRadius: 24,
-    padding: 25,
+    borderRadius: wp(6),
+    padding: wp(5),
     borderWidth: 1,
     borderColor: "rgba(255,255,255,0.08)",
   },
+
   currencyLabel: {
     color: "#666",
-    fontSize: 12,
-    textTransform: "uppercase",
-    letterSpacing: 1,
-    marginBottom: 10,
+    fontSize: hp(1.4),
     textAlign: "center",
+    marginBottom: hp(1.5),
     fontFamily: "TT-Octosquares-Medium",
+
   },
+
   inputWrapper: {
     flexDirection: "row",
     justifyContent: "center",
     alignItems: "center",
-    marginBottom: 20,
+    marginBottom: hp(2.5),
   },
+
   currencySymbol: {
-    fontSize: 40,
+    fontSize: hp(6),
     color: color.primaryText,
-    marginRight: 5,
+    marginRight: wp(2),
     fontFamily: "TT-Octosquares-Medium",
+
   },
+
   hugeInput: {
-    fontSize: 48,
+    fontSize: hp(6.5),
     color: "#fff",
-    fontFamily: "TT-Octosquares-Medium",
-    minWidth: 100,
     textAlign: "center",
+    minWidth: wp(30),
+    fontFamily: "TT-Octosquares-Medium",
+
   },
+
   separator: {
     height: 1,
     backgroundColor: "rgba(255,255,255,0.1)",
-    marginVertical: 20,
+    marginVertical: hp(2),
   },
 
-  // Quick Select
   quickLabel: {
     color: "#888",
-    fontSize: 12,
-    marginBottom: 15,
+    fontSize: hp(1.6),
+    marginBottom: hp(1.5),
     fontFamily: "TT-Octosquares-Medium",
+
   },
+
   quickGrid: {
     flexDirection: "row",
     flexWrap: "wrap",
     justifyContent: "space-between",
-    gap: 12,
+    gap: wp(2.5),
+    fontFamily: "TT-Octosquares-Medium",
+
   },
+
   chip: {
     width: "48%",
-    paddingVertical: 14,
+    paddingVertical: hp(1.8),
     backgroundColor: "rgba(255,255,255,0.05)",
-    borderRadius: 12,
+    borderRadius: wp(3),
     alignItems: "center",
-    borderWidth: 1,
-    borderColor: "transparent",
+    fontFamily: "TT-Octosquares-Medium",
+
   },
+
   chipActive: {
     backgroundColor: "rgba(0,255,200,0.1)",
     borderColor: color.primaryText,
+    borderWidth: 1,
   },
+
   chipText: {
     color: "#aaa",
-    fontSize: 16,
+    fontSize: hp(2),
     fontFamily: "TT-Octosquares-Medium",
+
   },
+
   chipTextActive: {
     color: color.primaryText,
   },
 
-  // ⚠️ NOTE STYLES
   noteContainer: {
-    marginTop: 20,
-    paddingTop: 15,
+    marginTop: hp(2),
+    paddingTop: hp(1.5),
     borderTopWidth: 1,
     borderTopColor: "rgba(255,255,255,0.05)",
     alignItems: "center",
   },
+
   noteText: {
-    color: "#777", // Subtle gray
-    fontSize: 11,
-    fontFamily: "TT-Octosquares-Medium",
+    color: "#777",
+    fontSize: hp(1.5),
     textAlign: "center",
-    letterSpacing: 0.5,
+    fontFamily: "TT-Octosquares-Medium",
+
   },
 
-  // Footer / Button
   footerContainer: {
-    marginTop: 40,
+    marginTop: hp(4),
     alignItems: "center",
   },
+
   buttonShadow: {
     width: "100%",
-    shadowColor: color.primary,
-    shadowOffset: { width: 0, height: 10 },
-    shadowOpacity: 0.3,
-    shadowRadius: 20,
-    elevation: 10,
+    elevation: 8,
   },
+
   payButton: {
     width: "100%",
-    paddingVertical: 18,
-    borderRadius: 16,
+    paddingVertical: hp(2.2),
+    borderRadius: wp(4),
     alignItems: "center",
-    justifyContent: "center",
   },
+
   payButtonText: {
     color: color.primaryText,
-    fontSize: 18,
+    fontSize: hp(2.2),
     fontFamily: "TT-Octosquares-Medium",
+
   },
+
   footerNote: {
-    marginTop: 20,
+    marginTop: hp(2),
     color: "#555",
-    fontSize: 12,
-    fontFamily: 'TT-Octosquares-Medium'
+    fontSize: hp(1.7),
+    fontFamily: "TT-Octosquares-Medium",
+
   },
 });

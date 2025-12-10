@@ -612,347 +612,241 @@ export default function RideDetailsScreen() {
       </View>
 
 
-      {/* Ride Details Card */}
+      {/* --- BOTTOM SHEET CARD --- */}
       <View style={styles.cardContainer}>
+        {/* Drag Handle for visual affordance */}
+        <View style={styles.cardHandle} />
+
         <ScrollView
-          style={styles.scrollContainer}
+          contentContainerStyle={styles.scrollContent}
           showsVerticalScrollIndicator={false}
         >
-          {/* Status Indicator */}
-          <View style={styles.statusIndicator}>
-            <View
-              style={[
-                styles.statusDot,
-                { backgroundColor: getStatusColor(orderStatus) },
-              ]}
-            />
-            <Text style={styles.statusText}>{getStatusText(orderStatus)}</Text>
-          </View>
-
-          {/* Passenger Info */}
-          <View style={styles.section}>
-            <Text style={styles.sectionTitle}>Passenger</Text>
-
-            <View style={styles.passengerInfo}>
-              <View style={styles.passengerDetails}>
-
-                {/* Passenger Name */}
-                <Text style={styles.passengerName}>{ride.userId.name}</Text>
-
-
-
-                {/* Call Passenger Button */}
-                {ride.status === "Arrived" ? (
-                  <TouchableOpacity
-                    style={styles.callButton}
-                    onPress={callPassenger}
-                  >
-                    <FontAwesome name="phone" size={14} color={color.primary} />
-                    <Text style={styles.callButtonText}> Call Passenger</Text>
-                  </TouchableOpacity>
-                ) : (
-                  < View style={{ flexDirection: "row", alignItems: "center", marginTop: 4 }}>
-                    {/* <FontAwesome name="star" size={14} color="#FFD700" /> */}
-                    {renderStars(ride?.userId?.ratings ? ride.userId.ratings.toFixed(1) : 0)}
-                  </View>
-                )}
-
+          {/* --- HEADER: STATUS & EARNINGS --- */}
+          <View style={styles.headerRow}>
+            <View>
+              <View style={[styles.statusBadge, { backgroundColor: getStatusColor(orderStatus) }]}>
+                <Text style={styles.statusText}>{getStatusText(orderStatus)}</Text>
               </View>
+              <Text style={styles.tripIdLabel}>ID : {ride?.id?.slice(-6).toUpperCase()}</Text>
+            </View>
+
+            {/* Driver Focus: Show Earnings Big */}
+            <View style={styles.earningBox}>
+              <Text style={styles.earningLabel}>EST. EARNING</Text>
+              <Text style={styles.earningValue}>₹{ride?.driverEarnings || "0"}</Text>
             </View>
           </View>
 
-          {/* Navigation */}
-          <View style={styles.section}>
-            <Text style={styles.sectionTitle}>Navigation</Text>
-            <View style={styles.buttonRow}>
+          {/* --- CARD 1: PASSENGER & ACTIONS --- */}
+          <View style={styles.passengerCard}>
+            <View style={styles.passengerHeader}>
+              <View style={styles.passengerInfo}>
+                <Text style={styles.passengerName}>{ride.userId.name}</Text>
+                <View style={styles.ratingPill}>
+                  <FontAwesome name="star" size={12} color="#FFD700" />
+                  <Text style={styles.ratingText}>
+                    {ride?.userId?.ratings ? ride.userId.ratings.toFixed(1) : "New"}
+                  </Text>
+                </View>
+              </View>
+
+              {/* Call Button - High Visibility */}
+              {ride.status === "Arrived" || ride.status === "Booked" || ride.status === "Processing" ? (
+                <TouchableOpacity style={styles.callBtn} onPress={callPassenger}>
+                  <FontAwesome name="phone" size={20} color={color.primary} style={{marginTop:2.5}} />
+                </TouchableOpacity>
+              ) : null}
+            </View>
+
+            {/* Navigation Grid */}
+            <View style={styles.navGrid}>
               <TouchableOpacity
-                style={[styles.navButton, { marginRight: 8 }]}
-                onPress={() => {
-                  openNavigation(ride?.currentLocation)
-                }
-                }
+                style={[styles.navItem, styles.navItemLeft]}
+                onPress={() => openNavigation(ride?.currentLocation)}
               >
-                <MaterialIcons name="directions" size={20} color={color.primary} />
-                <Text style={styles.navButtonText}>Pickup</Text>
+                <MaterialIcons name="navigation" size={18} color={color.primaryText} />
+                <View>
+                  <Text style={styles.navLabel}>Navigate to</Text>
+                  <Text style={styles.navTitle}>Pickup</Text>
+                </View>
               </TouchableOpacity>
+
+              <View style={styles.navDivider} />
+
               <TouchableOpacity
-                style={styles.navButton}
+                style={[styles.navItem, styles.navItemRight]}
                 onPress={() => openNavigation(ride?.destinationLocation)}
               >
-                <MaterialIcons name="directions" size={20} color={color.primary} />
-                <Text style={styles.navButtonText}>Destination</Text>
+                <MaterialIcons name="flag" size={18} color={color.primaryText} />
+                <View>
+                  <Text style={styles.navLabel}>Navigate to</Text>
+                  <Text style={styles.navTitle}>Drop-off</Text>
+                </View>
               </TouchableOpacity>
             </View>
           </View>
 
-          {/* Trip Details */}
-          <View style={styles.section}>
-            <Text style={styles.sectionTitle}>Trip Details</Text>
-            {renderTripDetail("Pickup", "location-pin", ride?.currentLocationName || "Current location")}
-            {renderTripDetail("Destination", "flag", ride?.destinationLocationName || "Destination")}
-            {renderTripDetail(
-              "Vehicle",
-              "directions-car",
-              `${ride?.driverId?.vehicle_type} • ${ride?.driverId?.vehicle_color}`
-            )}
-          </View>
+          {/* --- CARD 2: ROUTE TIMELINE --- */}
+          <View style={styles.sectionContainer}>
+            <Text style={styles.sectionTitle}>TRIP ROUTE</Text>
+            <View style={styles.timelineContainer}>
+              {/* Vertical Connector Line */}
+              <View style={styles.timelineLine} />
 
-          {/* Fare Breakdown */}
-          {/* Fare Breakdown */}
-          <View style={styles.fareContainer}>
-            <Text style={styles.sectionTitle}>
-              {ride.status === "Cancelled" ? "FARE DETAILS (BEFORE CANCELLATION)" : "FARE BREAKDOWN"}
-            </Text>
-
-            {renderFareRow("Planned Distance", `${ride?.distance} km`)}
-            {renderFareRow("Total Fare", `₹${ride?.totalFare}`)}
-            <View style={{ height: 1, backgroundColor: "#EAEAEA", marginVertical: 8 }} />
-            {renderFareRow("Driver Earnings (Planned)", `₹${ride?.driverEarnings}`)}
-            {renderFareRow("Platform Share", `₹${ride?.platformShare}`)}
-
-            {/* If ride was cancelled, show cancellation details */}
-            {ride.status === "Cancelled" && ride.cancelDetails && (
-              <>
-                <View style={{ height: 1, backgroundColor: "#CFCFCF", marginVertical: 12 }} />
-                <Text style={[styles.sectionTitle, { color: "red" }]}>CANCELLATION DETAILS</Text>
-
-                {renderTripDetail(
-                  "Cancelled At",
-                  "cancel",
-                  new Date(ride.cancelDetails.cancelledAt).toLocaleString()
-                )}
-
-                {renderTripDetail(
-                  "Cancelled Location",
-                  "location-off",
-                  ride.cancelDetails.cancelledLocationName ||
-                  `${ride.cancelDetails.cancelledLocationName}`
-                )}
-
-                {renderFareRow("Travelled Distance", `${ride.cancelDetails.travelledDistance} km`)}
-                {renderFareRow("Fare for Travelled Distance", `₹${ride.cancelDetails.totalFare}`)}
-                {renderFareRow("Driver Earnings", `₹${ride.cancelDetails.driverEarnings}`)}
-                {renderFareRow("Platform Share", `₹${ride.cancelDetails.platformShare}`)}
-                {renderFareRow("Refunded to Wallet", `₹${ride.cancelDetails.refundedAmount}`)}
-
-                {ride.cancelDetails.cancelledBy && (
-                  renderFareRow(
-                    "Cancelled By",
-                    ride.cancelDetails.cancelledBy === "user" ? "Passenger" : "Driver"
-                  )
-                )}
-              </>
-            )}
-          </View>
-
-          {ride.status === "Completed" && ride.rating && (
-            <View style={styles.section}>
-              <Text style={styles.sectionTitle}>Ratings Summary</Text>
-
-              <View
-                style={{
-                  flexDirection: "row",
-                  justifyContent: "space-around",
-                  alignItems: "center",
-                  marginTop: 12,
-                }}
-              >
-                {/* User → Driver Rating */}
-                <View style={{ alignItems: "center" }}>
-                  <Ionicons name="person-circle-outline" size={26} color={color.primaryGray} />
-                  <Text
-                    style={{
-                      fontSize: fontSizes.FONT14,
-                      color: color.primaryText,
-                      fontFamily: "TT-Octosquares-Medium",
-                      marginTop: 5,
-                    }}
-                  >
-                    For Passenger
-                  </Text>
-                  <View style={{ flexDirection: "row", marginTop: 5 }}>
-                    {renderStars(ride.userRating || 0)}
-
-                  </View>
+              {/* Pickup */}
+              <View style={styles.timelineRow}>
+                <View style={[styles.timelineDot, { borderColor: color.primary }]} />
+                <View style={styles.timelineContent}>
+                  <Text style={styles.timelineLabel}>Pickup Location</Text>
+                  <Text style={styles.timelineAddress}>{ride?.currentLocationName || "Current location"}</Text>
                 </View>
+              </View>
 
-                {/* Divider */}
-                <View
-                  style={{
-                    height: 50,
-                    width: 1,
-                    backgroundColor: color.border,
-                    opacity: 0.6,
-                  }}
-                />
-
-                {/* Driver → User Rating */}
-                <View style={{ alignItems: "center" }}>
-                  <Ionicons name="id-card-outline" size={26} color={color.primaryGray} />
-                  <Text
-                    style={{
-                      fontSize: fontSizes.FONT14,
-                      color: color.primaryText,
-                      fontFamily: "TT-Octosquares-Medium",
-                      marginTop: 5,
-                    }}
-                  >
-                    For You
-                  </Text>
-                  <View style={{ flexDirection: "row", marginTop: 5 }}>
-                    {renderStars(ride.driverRating || 0)}
-                  </View>
-                </View>
-
-                {/* Divider */}
-                <View
-                  style={{
-                    height: 50,
-                    width: 1,
-                    backgroundColor: color.border,
-                    opacity: 0.6,
-                  }}
-                />
-
-                {/* Overall Ride Rating */}
-                <View style={{ alignItems: "center" }}>
-                  <Ionicons name="podium-outline" size={26} color={color.primaryGray} />
-                  <Text
-                    style={{
-                      fontSize: fontSizes.FONT14,
-                      color: color.primaryText,
-                      fontFamily: "TT-Octosquares-Medium",
-                      marginTop: 5,
-                    }}
-                  >
-                    Ride Avg
-                  </Text>
-                  <View style={{ flexDirection: "row", marginTop: 5 }}>
-                    {renderStars(ride.rating || 0)}
-                  </View>
+              {/* Drop */}
+              <View style={[styles.timelineRow, { marginTop: 24 }]}>
+                <View style={[styles.timelineDot, { borderColor: '#FF5252' }]} />
+                <View style={styles.timelineContent}>
+                  <Text style={styles.timelineLabel}>Destination</Text>
+                  <Text style={styles.timelineAddress}>{ride?.destinationLocationName || "Destination"}</Text>
                 </View>
               </View>
             </View>
-          )}
+          </View>
 
-          {ride.status === "Completed" && !ride.userRating && (
-            <View style={styles.ratingContainer}>
-              <Text style={styles.ratingTitle}>Rate Your User</Text>
+          {/* --- CARD 3: FINANCIALS (Receipt Style) --- */}
+          <View style={styles.receiptCard}>
+            <Text style={styles.receiptTitle}>
+              {ride.status === "Cancelled" ? "CANCELLATION LEDGER" : "PAYMENT BREAKDOWN"}
+            </Text>
 
-              <View style={styles.starContainer}>
-                {[1, 2, 3, 4, 5].map((star) => (
-                  <TouchableOpacity
-                    key={star}
-                    onPress={() => {
-                      !ride.userRating && setRating(star)
-                      console.log(star)
-                    }
-                    } // Disable edit if already rated
-                    disabled={!!ride.userRating || submitted} // disable if rated or after submission
-                  >
-                    <MaterialIcons
-                      name={
-                        star <= (ride.userRating || rating)
-                          ? "star"
-                          : "star-border"
-                      }
-                      size={25}
-                      color={star <= (ride.userRating || rating) ? "#FFD700" : "#B0B0B0"}
-                      style={{ marginHorizontal: 10, marginBottom: 5 }}
-                    />
-                  </TouchableOpacity>
-                ))}
+            {/* Regular Fare Details */}
+            {renderFareRow("Total Trip Fare", `₹${ride?.totalFare}`)}
+            {renderFareRow("Platform Fee", `- ₹${ride?.platformShare}`)}
+            <View style={styles.receiptDivider} />
+            {renderFareRow("Net Earnings", `₹${ride?.driverEarnings}`, true)}
+
+            {/* Cancellation Specifics */}
+            {ride.status === "Cancelled" && ride.cancelDetails && (
+              <View style={styles.cancelSection}>
+                <View style={styles.cancelBadge}>
+                  <Text style={styles.cancelBadgeText}>CANCELLED BY {ride.cancelDetails.cancelledBy === "user" ? "PASSENGER" : "YOU"}</Text>
+                </View>
+
+                {renderFareRow("Time", new Date(ride.cancelDetails.cancelledAt).toLocaleTimeString())}
+                {renderFareRow("Location", ride.cancelDetails.cancelledLocationName.slice(0,25) || "Unknown")}
+                {renderFareRow("Travelled", `${ride.cancelDetails.travelledDistance} km`)}
+                <View style={styles.receiptDivider} />
+                {renderFareRow("Cancellation Payout", `₹${ride.cancelDetails.totalFare}`, true)}
               </View>
+            )}
+          </View>
 
-              {ride.userRating || submitted ? (
-                <Text style={styles.thankYouText}>
-                  Thank you for your feedback!
-                </Text>
+          {/* --- CARD 4: RATINGS (Conditional) --- */}
+          {ride.status === "Completed" && (
+            <View style={styles.sectionContainer}>
+              {ride.userRating ? (
+                <View style={styles.ratingSummaryCard}>
+                  <View style={styles.ratingSummaryCol}>
+                    <Text style={styles.ratingHead}>They Rated You</Text>
+                    <Text style={styles.ratingScore}>★ {ride.driverRating || "-"}</Text>
+                  </View>
+                  <View style={styles.verticalLine} />
+                  <View style={styles.ratingSummaryCol}>
+                    <Text style={styles.ratingHead}>You Rated Them</Text>
+                    <Text style={styles.ratingScore}>★ {ride.userRating || "-"}</Text>
+                  </View>
+                </View>
               ) : (
-                <Button
-                  onPress={handleUserRating}
-                  style={[styles.actionButton, styles.supportButton]}
-                  title={isSubmitting ? <ActivityIndicator color={color.primary} /> : "Submit Rating"}
-                  disabled={isSubmitting}
-                />
+                <View style={styles.ratingInputContainer}>
+                  <Text style={styles.ratingTitle}>Rate Passenger</Text>
+                  <View style={styles.starRow}>
+                    {[1, 2, 3, 4, 5].map((star) => (
+                      <TouchableOpacity
+                        key={star}
+                        onPress={() => !ride.userRating && setRating(star)}
+                        disabled={!!ride.userRating || submitted}
+                      >
+                        <MaterialIcons
+                          name={star <= (ride.userRating || rating) ? "star" : "star-border"}
+                          size={32}
+                          color={star <= (ride.userRating || rating) ? "#FFD700" : "#E0E0E0"}
+                          style={{ marginHorizontal: 8 }}
+                        />
+                      </TouchableOpacity>
+                    ))}
+                  </View>
+                  {/* {!submitted && ( */}
+                    <TouchableOpacity
+                      onPress={handleUserRating}
+                      disabled={isSubmitting}
+                      style={styles.submitRatingBtn}
+                    >
+                      {isSubmitting ? <ActivityIndicator color={color.primary} /> : <Text style={styles.submitRatingText}>Submit Feedback</Text>}
+                    </TouchableOpacity>
+                  {/* )} */}
+                </View>
               )}
             </View>
           )}
 
         </ScrollView>
 
-        {/* Action Button */}
-        {
-          ride.status !== "Completed" && ride.status !== "Cancelled" ? (
-            <View style={styles.actionButtonContainer}>
-              <Button
-                title={isStatusChanging ? <ActivityIndicator color={color.primary} /> : getActionButtonTitle(orderStatus)}
-                height={48}
-                backgroundColor={color.buttonBg}
-                textColor={color.primary}
-                onPress={handleSubmit}
-                disabled={ride.status === "Completed" || isStatusChanging}
-              />
-            </View>
+        {/* --- FOOTER: SLIDE/ACTION BUTTON --- */}
+        <View style={styles.footerContainer}>
+          {ride.status !== "Completed" && ride.status !== "Cancelled" ? (
+            <Button
+              title={isStatusChanging ? <ActivityIndicator color={color.primary} /> : getActionButtonTitle(orderStatus)}
+              height={54}
+              backgroundColor={color.buttonBg} // Brand Color
+              textColor={color.primary}
+              onPress={handleSubmit}
+              disabled={isStatusChanging}
+              style={styles.mainActionBtn}
+            />
           ) : (
-            <View style={styles.actionButtonContainer}>
-              {/* 📞 Contact Support Button */}
-              <Button
-                onPress={() => router.push('/(routes)/profile/help-support')}
-                style={[styles.actionButton, styles.supportButton]}
-                title={"Contact Support"}
-              />
-            </View>
-          )
-        }
-      </View >
+            <Button
+              onPress={() => router.push('/(routes)/profile/help-support')}
+              style={styles.supportBtn}
+              title="Report Issue / Support"
+            />
+          )}
+        </View>
 
-      {/* OTP Modal */}
-      {
-        showOtpModal && (
-          <Modal transparent visible animationType="slide">
-            <View style={styles.modalContainer}>
-              <View style={styles.modalBox}>
-                <Text style={styles.modalTitle}>Enter OTP to start ride</Text>
+        {/* --- OTP MODAL (Kept Functional logic same) --- */}
+        {showOtpModal && (
+          <Modal transparent visible animationType="fade">
+            <View style={styles.modalBackdrop}>
+              <View style={styles.otpCard}>
+                <Text style={styles.otpTitle}>Start Ride</Text>
+                <Text style={styles.otpSubtitle}>Ask passenger for the 4-digit PIN</Text>
 
                 <TextInput
-                  style={styles.input}
+                  style={styles.otpInput}
                   value={otpInput}
                   onChangeText={setOtpInput}
-                  keyboardType="numeric"
+                  keyboardType="number-pad"
                   maxLength={4}
+                  placeholder="••••"
+                  placeholderTextColor="#555"
+                  autoFocus
                 />
 
-                <View style={styles.buttonRow}>
-                  <Button
-                    title={
-                      isVerifyingOtp ? (
-                        <ActivityIndicator color={color.primary} />
-                      ) : (
-                        "Verify OTP"
-                      )
-                    }
-                    onPress={() => {
-                      if (!isVerifyingOtp) handleOtpVerify(otpInput);
-                    }}
-                    width={"45%"}
-                    disabled={isVerifyingOtp}
-                  />
-
-                  <Button
-                    title="Cancel"
-                    onPress={() => {
-                      if (!isVerifyingOtp) setShowOtpModal(false);
-                    }}
-                    width={"45%"}
-                    disabled={isVerifyingOtp}
-                  />
+                <View style={styles.otpBtnRow}>
+                  <TouchableOpacity onPress={() => setShowOtpModal(false)} style={styles.otpCancelBtn}>
+                    <Text style={styles.otpCancelText}>Cancel</Text>
+                  </TouchableOpacity>
+                  <TouchableOpacity
+                    onPress={() => !isVerifyingOtp && handleOtpVerify(otpInput)}
+                    style={styles.otpConfirmBtn}
+                  >
+                    {isVerifyingOtp ? <ActivityIndicator color="#000" /> : <Text style={styles.otpConfirmText}>Verify</Text>}
+                  </TouchableOpacity>
                 </View>
               </View>
             </View>
           </Modal>
-        )
-      }
+        )}
+      </View>
 
       <AppAlert
         visible={showAlert}

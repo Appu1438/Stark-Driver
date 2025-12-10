@@ -1,45 +1,62 @@
+import React, { useState, useRef } from "react";
 import {
   View,
   Text,
   ScrollView,
   KeyboardAvoidingView,
   Platform,
-  Pressable,
   Image,
-  ActivityIndicator
+  ActivityIndicator,
+  StyleSheet,
+  TouchableOpacity,
+  StatusBar,
+  TextInput
 } from "react-native";
-import React, { useState } from "react";
-import { windowHeight, windowWidth } from "@/themes/app.constant";
-import ProgressBar from "@/components/common/progress.bar";
-import { styles } from "./styles";
-import { useTheme } from "@react-navigation/native";
-import TitleView from "@/components/signup/title.view";
-import Input from "@/components/common/input";
-import SelectInput from "@/components/common/select-input";
-import { countryNameItems } from "@/configs/country--name-list";
-import Button from "@/components/common/button";
-import color from "@/themes/app.colors";
 import { router } from "expo-router";
 import * as ImagePicker from "expo-image-picker";
+import DateTimePicker from "@react-native-community/datetimepicker";
+import { MaterialIcons, Ionicons, FontAwesome5 } from "@expo/vector-icons";
+
+// Internal Utils
+import { windowHeight } from "@/themes/app.constant";
+import color from "@/themes/app.colors";
 import { uploadToCloudinary } from "@/utils/uploads/uploadToCloudinary";
 import AppAlert from "@/components/modal/alert-modal/alert.modal";
+import { SafeAreaView } from "react-native-safe-area-context";
+
+const COUNTRY_CODE = "+91";
 
 export default function SignupScreen() {
-  const { colors } = useTheme();
-
-  const [emailFormatWarning, setEmailFormatWarning] = useState("");
+  // --- State Management ---
+  const scrollViewRef = useRef(null);
+  const [currentStep, setCurrentStep] = useState(0);
   const [uploadingImage, setUploadingImage] = useState(false);
-
-  // 🚨 AppAlert handler
   const [showAlert, setShowAlert] = useState(false);
-  const [alertConfig, setAlertConfig] = useState({
-    title: "",
-    message: "",
-    confirmText: "OK",
-    showCancel: false,
-    onConfirm: () => setShowAlert(false),
-    onCancel: () => setShowAlert(false)
+  const [alertConfig, setAlertConfig] = useState({});
+
+  // Date Picker State
+  const [showDatePicker, setShowDatePicker] = useState(false);
+  const [date, setDate] = useState(new Date());
+  const [formattedDob, setFormattedDob] = useState("");
+
+  const [formData, setFormData] = useState({
+    name: "",
+    gender: "",
+    dob: "",
+    profilePic: null,
+    phoneNumber: "",
+    email: "",
+    address: "",
+    city: "",
+    country: "India",
+    countryCode: "IN",
+    aadhar: "",
   });
+
+  // --- Handlers ---
+  const handleChange = (key, value) => {
+    setFormData((prev) => ({ ...prev, [key]: value }));
+  };
 
   const openAlert = (title, message) => {
     setAlertConfig({
@@ -47,307 +64,461 @@ export default function SignupScreen() {
       message,
       confirmText: "OK",
       showCancel: false,
-      onConfirm: () => setShowAlert(false)
+      onConfirm: () => setShowAlert(false),
     });
     setShowAlert(true);
   };
 
-  const [formData, setFormData] = useState({
-    name: "",
-    phoneNumber: "",
-    email: "",
-    country: "",
-    countryCode: "",
-    dob: "",
-    gender: "",
-    address: "",
-    city: "",
-    aadhar: "",
-    profilePicture: null
-  });
+  // 📅 Date Picker Handler
+  const onDateChange = (event, selectedDate) => {
+    const currentDate = selectedDate || date;
+    setShowDatePicker(Platform.OS === 'ios');
+    setDate(currentDate);
 
-  const handleChange = (key, value) => {
-    setFormData((prevData) => ({
-      ...prevData,
-      [key]: value
-    }));
+    if (selectedDate) {
+      const day = String(currentDate.getDate()).padStart(2, '0');
+      const month = String(currentDate.getMonth() + 1).padStart(2, '0');
+      const year = currentDate.getFullYear();
+      const dobString = `${day}-${month}-${year}`;
+
+      setFormattedDob(dobString);
+      handleChange("dob", dobString);
+
+      if (Platform.OS === 'android') {
+        setShowDatePicker(false);
+      }
+    }
   };
 
-  // 📸 Pick Image + Upload to Cloudinary
+  // Image Picker
   const pickProfileImage = async () => {
-    const { status } =
-      await ImagePicker.requestMediaLibraryPermissionsAsync();
-    if (status !== "granted") {
-      openAlert("Permission Required", "Please enable storage permission.");
-      return;
-    }
+    const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
+    if (status !== "granted") return openAlert("Permission", "Storage permission needed.");
 
     let result = await ImagePicker.launchImageLibraryAsync({
       mediaTypes: ImagePicker.MediaType,
       allowsEditing: true,
       aspect: [1, 1],
-      quality: 0.7,
-      base64: true
+      quality: 0.6,
+      base64: true,
     });
 
-    if (result.canceled) return;
-
-    const file = result.assets[0];
-
-    setUploadingImage(true); // Loader ON
-    const cloudUrl = await uploadToCloudinary(file);
-    setUploadingImage(false); // Loader OFF
-
-    if (cloudUrl) {
-      handleChange("profilePicture", cloudUrl);
-    } else {
-      openAlert("Upload Failed", "Unable to upload image. Try again.");
+    if (!result.canceled) {
+      setUploadingImage(true);
+      handleChange('profilePic', result.assets[0])
+      // const cloudUrl = await uploadToCloudinary(result.assets[0]);
+      setUploadingImage(false);
+      // if (cloudUrl) handleChange("profilePicture", cloudUrl);
+      // else openAlert("Error", "Image upload failed.");
     }
   };
 
-  const gotoDocument = () => {
-    const {
-      name,
-      phoneNumber,
-      email,
-      countryCode,
-      dob,
-      gender,
-      address,
-      city,
-      aadhar,
-      profilePicture
-    } = formData;
+  // Validation & Navigation
+  const handleNext = () => {
+    if (currentStep === 0) {
+      if (!formData.profilePic) return openAlert("Profile Picture", "Please upload a photo.");
+      if (!formData.name.trim()) return openAlert("Name", "Enter your full name.");
+      if (!formData.gender) return openAlert("Gender", "Select your gender.");
+      if (!formData.dob) return openAlert("DOB", "Select your Date of Birth.");
+      setCurrentStep(1);
+    } else if (currentStep === 1) {
+      if (!formData.phoneNumber) return openAlert("Phone", "Enter phone number.");
+      if (!formData.email) return openAlert("Email", "Enter email address.");
+      setCurrentStep(2);
+    } else {
+      handleSubmit();
+    }
+    scrollViewRef.current?.scrollTo({ y: 0, animated: true });
+  };
 
-    if (!countryCode)
-      return openAlert("Missing Country", "Please select your country.");
+  const handleBack = () => {
+    if (currentStep > 0) setCurrentStep(currentStep - 1);
+    else router.back();
+  };
 
-    if (!name.trim())
-      return openAlert("Missing Name", "Please enter your full name.");
+  const handleSubmit = () => {
+    if (!formData.address) return openAlert("Address", "Enter your address.");
+    if (!formData.city) return openAlert("City", "Enter your city.");
+    if (!formData.aadhar) return openAlert("Aadhar", "Enter Aadhar number.");
 
-    if (!profilePicture)
-      return openAlert("Profile Missing", "Please upload your profile picture.");
-
-    if (!phoneNumber.trim())
-      return openAlert("Missing Phone", "Please enter your phone number.");
-
-    if (!email.trim())
-      return openAlert("Missing Email", "Please enter your email address.");
-
-    if (emailFormatWarning)
-      return openAlert("Invalid Email", "Please enter a valid email.");
-
-    if (!dob.trim())
-      return openAlert("Missing DOB", "Please enter your date of birth.");
-
-    if (!gender.trim())
-      return openAlert("Missing Gender", "Please select your gender.");
-
-    if (!address.trim())
-      return openAlert("Missing Address", "Please enter your full address.");
-
-    if (!city.trim())
-      return openAlert("Missing City", "Please enter your city.");
-
-    if (!aadhar.trim())
-      return openAlert("Missing Aadhar", "Please enter your Aadhar number.");
-
-    const phone_number = `+${countryCode}${phoneNumber}`;
-
-    const selectedCountry = countryNameItems.find(
-      (item) => item.value === countryCode
-    );
-
-    const driverData = {
-      name,
-      country: selectedCountry?.label,
-      phone_number,
-      email,
-      dob,
-      gender,
-      address,
-      city,
-      aadhar,
-      profilePic: profilePicture
+    const finalData = {
+      ...formData,
+      phone_number: `${COUNTRY_CODE}${formData.phoneNumber}`,
+      profilePic: formData.profilePic.base64,
     };
 
     router.push({
       pathname: "/(routes)/document-verification",
-      params: driverData
+      params: finalData,
     });
   };
 
-  return (
-    <>
-      <KeyboardAvoidingView
-        style={{ flex: 1 }}
-        behavior={Platform.OS === "ios" ? "padding" : "height"}
-      >
-        <ScrollView
-          style={{ flex: 1 }}
-          contentContainerStyle={{ flexGrow: 1 }}
-          keyboardShouldPersistTaps="handled"
-        >
-          <View>
-            <Text
-              style={{
-                fontFamily: "TT-Octosquares-Medium",
-                fontSize: windowHeight(22),
-                paddingTop: windowHeight(50),
-                textAlign: "center",
-                color: color.lightGray
-              }}
-            >
-              Stark Driver
-            </Text>
+  // --- Render Steps ---
 
-            <View style={{ padding: windowWidth(20) }}>
-              <ProgressBar fill={1} />
-              <View
-                style={[styles.subView, { backgroundColor: colors.background }]}
-              >
-                <View className={styles.space}>
-                  <TitleView
-                    title={"Create your account"}
-                    subTitle={"Explore your life by joining Ride Wave"}
-                  />
-
-                  {/* Country */}
-                  <SelectInput
-                    placeholder="Select your country"
-                    value={formData.countryCode}
-                    onValueChange={(val) => handleChange("countryCode", val)}
-                    items={countryNameItems}
-                    showWarning={false}
-                  />
-
-                  {/* Name */}
-                  <Input
-                    title="Name"
-                    placeholder="Enter your name"
-                    value={formData.name}
-                    onChangeText={(text) => handleChange("name", text)}
-                  />
-
-                  {/* Upload Photo */}
-                  <View style={{ alignItems: "center", marginVertical: 20 }}>
-                    <Pressable
-                      onPress={pickProfileImage}
-                      style={{
-                        width: 120,
-                        height: 120,
-                        borderRadius: 60,
-                        backgroundColor: color.border,
-                        justifyContent: "center",
-                        alignItems: "center",
-                        overflow: "hidden"
-                      }}
-                    >
-                      {uploadingImage ? (
-                        <ActivityIndicator size="large" color={color.primaryGray} />
-                      ) : formData.profilePicture ? (
-                        <Image
-                          source={{ uri: formData.profilePicture }}
-                          style={{ width: "100%", height: "100%" }}
-                        />
-                      ) : (
-                        <Text style={{ color: color.lightGray }}>
-                          Upload Photo
-                        </Text>
-                      )}
-                    </Pressable>
-                  </View>
-
-                  {/* Phone */}
-                  <Input
-                    title="Phone Number"
-                    placeholder="Without country code"
-                    keyboardType="phone-pad"
-                    value={formData.phoneNumber}
-                    onChangeText={(text) => handleChange("phoneNumber", text)}
-                  />
-
-                  {/* Email */}
-                  <Input
-                    title="Email Address"
-                    placeholder="Enter your email address"
-                    keyboardType="email-address"
-                    value={formData.email}
-                    onChangeText={(text) => handleChange("email", text)}
-                    emailFormatWarning={emailFormatWarning}
-                  />
-
-                  {/* DOB */}
-                  <Input
-                    title="Date of Birth"
-                    placeholder="DD-MM-YYYY"
-                    value={formData.dob}
-                    onChangeText={(text) => handleChange("dob", text)}
-                  />
-
-                  {/* Gender */}
-                  <SelectInput
-                    title="Gender"
-                    placeholder="Select gender"
-                    value={formData.gender}
-                    onValueChange={(val) => handleChange("gender", val)}
-                    items={[
-                      { label: "Male", value: "Male" },
-                      { label: "Female", value: "Female" },
-                      { label: "Other", value: "Other" }
-                    ]}
-                  />
-
-                  {/* Address */}
-                  <Input
-                    title="Address"
-                    placeholder="Enter your address with zip code"
-                    value={formData.address}
-                    onChangeText={(text) => handleChange("address", text)}
-                  />
-
-                  {/* City */}
-                  <Input
-                    title="City"
-                    placeholder="Enter your city"
-                    value={formData.city}
-                    onChangeText={(text) => handleChange("city", text)}
-                  />
-
-                  {/* Aadhar */}
-                  <Input
-                    title="Aadhar Number"
-                    placeholder="Enter your Aadhar number"
-                    value={formData.aadhar}
-                    onChangeText={(text) => handleChange("aadhar", text)}
-                  />
-                </View>
-
-                <View style={styles.margin}>
-                  <Button
-                    onPress={gotoDocument}
-                    height={windowHeight(30)}
-                    title={"Next"}
-                    backgroundColor={color.buttonBg}
-                    textColor={color.primary}
-                  />
-                </View>
-              </View>
+  // Step 1: Identity
+  const renderIdentityStep = () => (
+    <View style={styles.stepContainer}>
+      {/* Image Upload */}
+      <View style={styles.avatarContainer}>
+        <TouchableOpacity onPress={pickProfileImage} style={styles.avatarWrapper}>
+          {uploadingImage ? (
+            <ActivityIndicator color={color.buttonBg} size="large" />
+          ) : formData.profilePic ? (
+            <Image source={{ uri: formData.profilePic.uri }} style={styles.avatarImage} />
+          ) : (
+            <View style={styles.avatarPlaceholder}>
+              <FontAwesome5 name="camera" size={24} color={color.primaryText} style={{ opacity: 0.5 }} />
+              <Text style={styles.avatarText}>Upload</Text>
             </View>
+          )}
+          <View style={styles.editBadge}>
+            <MaterialIcons name="edit" size={12} color={color.primary} />
           </View>
+        </TouchableOpacity>
+      </View>
+
+      <CustomInput label="Full Name" placeholder="e.g. John Doe" value={formData.name} onChangeText={t => handleChange('name', t)} icon="person" />
+
+      {/* 📅 Date Picker UI */}
+      <View style={styles.inputGroup}>
+        <Text style={styles.label}>Date of Birth</Text>
+        <TouchableOpacity onPress={() => setShowDatePicker(true)} style={styles.inputWrapper}>
+          <MaterialIcons name="calendar-today" size={20} color={color.primaryText} style={{ marginRight: 10, opacity: 0.7 }} />
+          <Text style={[styles.input, !formattedDob && { color: color.lightGray }]}>
+            {formattedDob || "Select Date"}
+          </Text>
+        </TouchableOpacity>
+
+        {showDatePicker && (
+          <DateTimePicker
+            testID="dateTimePicker"
+            value={date}
+            mode="date"
+            display={Platform.OS === 'ios' ? 'spinner' : 'default'}
+            onChange={onDateChange}
+            maximumDate={new Date()}
+            themeVariant="dark" // Forces dark theme on iOS
+          />
+        )}
+      </View>
+
+      {/* Gender Selection */}
+      <Text style={styles.label}>Gender</Text>
+      <View style={styles.genderRow}>
+        {["Male", "Female", "Other"].map((g) => (
+          <TouchableOpacity
+            key={g}
+            style={[styles.genderChip, formData.gender === g && styles.genderChipSelected]}
+            onPress={() => handleChange("gender", g)}
+          >
+            <Text style={[styles.genderText, formData.gender === g && styles.genderTextSelected]}>{g}</Text>
+          </TouchableOpacity>
+        ))}
+      </View>
+    </View>
+  );
+
+  // Step 2: Contact
+  const renderContactStep = () => (
+    <View style={styles.stepContainer}>
+      <View style={styles.infoBox}>
+        <MaterialIcons name="security" size={20} color={color.buttonBg} />
+        <Text style={styles.infoText}>We use this info to verify your identity.</Text>
+      </View>
+
+      <CustomInput label="Phone Number" placeholder="9876543210" value={formData.phoneNumber} onChangeText={t => handleChange('phoneNumber', t)} keyboardType="phone-pad" prefix="+91" icon="phone" />
+      <CustomInput label="Email Address" placeholder="john@example.com" value={formData.email} onChangeText={t => handleChange('email', t)} keyboardType="email-address" icon="email" />
+    </View>
+  );
+
+  // Step 3: Location
+  const renderLocationStep = () => (
+    <View style={styles.stepContainer}>
+      <CustomInput label="Street Address" placeholder="House No, Street, Area , Pincode" value={formData.address} onChangeText={t => handleChange('address', t)} icon="home" />
+      <CustomInput label="City" placeholder="e.g. Mumbai" value={formData.city} onChangeText={t => handleChange('city', t)} icon="location-city" />
+      <View style={styles.divider} />
+      <CustomInput label="Aadhar Number" placeholder="12 Digit ID" value={formData.aadhar} onChangeText={t => handleChange('aadhar', t)} keyboardType="numeric" icon="credit-card" />
+      <View style={styles.infoBox}>
+        <Text style={styles.infoText}>Ensure the Aadhar matches documents uploaded next.</Text>
+      </View>
+    </View>
+  );
+
+  return (
+    <SafeAreaView style={styles.safeArea}>
+      <KeyboardAvoidingView behavior={Platform.OS === "ios" ? "padding" : "height"} style={{ flex: 1 }}>
+
+        {/* Header */}
+        <View style={styles.header}>
+          <TouchableOpacity onPress={handleBack} style={styles.backBtn}>
+            <Ionicons name="arrow-back" size={24} color={color.primaryText} />
+          </TouchableOpacity>
+          <View style={styles.progressBarBg}>
+            <View style={[styles.progressBarFill, { width: `${((currentStep + 1) / 3) * 100}%` }]} />
+          </View>
+          <Text style={styles.stepIndicator}>{currentStep + 1}/3</Text>
+        </View>
+
+        <ScrollView ref={scrollViewRef} contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
+          <Text style={styles.pageTitle}>
+            {currentStep === 0 ? "Let's start with basics" : currentStep === 1 ? "Contact Details" : "Location & Legal"}
+          </Text>
+          <Text style={styles.pageSubtitle}>
+            {currentStep === 0 ? "Tell us a bit about yourself." : currentStep === 1 ? "How can we reach you?" : "Where are you based?"}
+          </Text>
+
+          {currentStep === 0 && renderIdentityStep()}
+          {currentStep === 1 && renderContactStep()}
+          {currentStep === 2 && renderLocationStep()}
         </ScrollView>
+
+        {/* Footer Actions */}
+        <View style={styles.footer}>
+          <TouchableOpacity style={styles.nextButton} onPress={handleNext}>
+            <Text style={styles.nextButtonText}>{currentStep === 2 ? "Upload Documents" : "Continue"}</Text>
+            <Ionicons name="arrow-forward" size={20} color={color.primary} />
+          </TouchableOpacity>
+        </View>
+
       </KeyboardAvoidingView>
 
-      {/* 🔔 AppAlert Modal */}
-      <AppAlert
-        visible={showAlert}
-        title={alertConfig.title}
-        message={alertConfig.message}
-        confirmText={alertConfig.confirmText}
-        showCancel={alertConfig.showCancel}
-        onConfirm={alertConfig.onConfirm}
-        onCancel={alertConfig.onCancel}
-      />
-    </>
+      <AppAlert visible={showAlert} {...alertConfig} />
+    </SafeAreaView>
   );
 }
+
+// --- Reusable Component ---
+const CustomInput = ({ label, placeholder, value, onChangeText, icon, keyboardType, prefix }) => (
+  <View style={styles.inputGroup}>
+    <Text style={styles.label}>{label}</Text>
+    <View style={styles.inputWrapper}>
+      {icon && <MaterialIcons name={icon} size={20} color={color.primaryText} style={{ marginRight: 10, opacity: 0.7 }} />}
+      {prefix && <Text style={styles.prefix}>{prefix}</Text>}
+      <TextInput
+        style={styles.input}
+        placeholder={placeholder}
+        placeholderTextColor={color.lightGray || "#666"}
+        value={value}
+        onChangeText={onChangeText}
+        keyboardType={keyboardType}
+      />
+    </View>
+  </View>
+);
+
+// --- Styles ---
+const styles = StyleSheet.create({
+  safeArea: {
+    flex: 1,
+    // Background handled by parent container or transparent
+  },
+  header: {
+    flexDirection: "row",
+    alignItems: "center",
+    paddingHorizontal: 20,
+    paddingVertical: 15,
+  },
+  backBtn: {
+    padding: 5,
+  },
+  progressBarBg: {
+    flex: 1,
+    height: 4,
+    backgroundColor: color.border || "rgba(255,255,255,0.1)",
+    borderRadius: 2,
+    marginHorizontal: 15,
+  },
+  progressBarFill: {
+    height: "100%",
+    backgroundColor: color.buttonBg,
+    borderRadius: 2,
+  },
+  stepIndicator: {
+    fontFamily: "TT-Octosquares-Medium",
+    fontSize: 14,
+    color: color.primaryText,
+    opacity: 0.7,
+  },
+  scrollContent: {
+    paddingHorizontal: 24,
+    paddingBottom: 100,
+  },
+  pageTitle: {
+    fontFamily: "TT-Octosquares-Medium",
+    fontSize: 24,
+    color: color.primaryText,
+    marginBottom: 8,
+    marginTop: 10,
+  },
+  pageSubtitle: {
+    fontSize: 14,
+    color: color.primaryText,
+    opacity: 0.6,
+    marginBottom: 30,
+    lineHeight: 20,
+    fontFamily: "TT-Octosquares-Medium",
+  },
+  stepContainer: {
+    gap: 0,
+  },
+
+  // Avatar
+  avatarContainer: {
+    alignItems: "center",
+    marginBottom: 30,
+  },
+  avatarWrapper: {
+    width: 100,
+    height: 100,
+    borderRadius: 50,
+    borderWidth: 1,
+    borderColor: color.border || "rgba(255,255,255,0.2)",
+    justifyContent: "center",
+    alignItems: "center",
+    backgroundColor: "transparent",
+  },
+  avatarImage: {
+    width: 100,
+    height: 100,
+    borderRadius: 50,
+  },
+  avatarPlaceholder: {
+    alignItems: "center",
+  },
+  avatarText: {
+    fontSize: 10,
+    color: color.primaryText,
+    marginTop: 4,
+    opacity: 0.5,
+    fontFamily: "TT-Octosquares-Medium",
+  },
+  editBadge: {
+    position: "absolute",
+    bottom: 0,
+    right: 0,
+    backgroundColor: color.buttonBg,
+    width: 28,
+    height: 28,
+    borderRadius: 14,
+    justifyContent: "center",
+    alignItems: "center",
+  },
+
+  // Input
+  inputGroup: {
+    marginBottom: 20,
+  },
+  label: {
+    fontSize: 13,
+    color: color.primaryText,
+    marginBottom: 8,
+    marginLeft: 4,
+    fontFamily: "TT-Octosquares-Medium",
+    opacity: 0.8
+  },
+  inputWrapper: {
+    flexDirection: "row",
+    alignItems: "center",
+    borderWidth: 1,
+    borderColor: color.border || "rgba(255,255,255,0.2)",
+    borderRadius: 12,
+    paddingHorizontal: 15,
+    height: 52,
+    backgroundColor: "transparent",
+  },
+  input: {
+    flex: 1,
+    fontSize: 16,
+    color: color.primaryText,
+    fontFamily: "TT-Octosquares-Medium",
+    paddingVertical: 10,
+  },
+  prefix: {
+    fontSize: 16,
+    color: color.primaryText,
+    marginRight: 10,
+    fontFamily: "TT-Octosquares-Medium",
+  },
+
+  // Gender
+  genderRow: {
+    flexDirection: "row",
+    gap: 12,
+    marginTop: 5,
+  },
+  genderChip: {
+    flex: 1,
+    borderWidth: 1,
+    borderColor: color.border || "rgba(255,255,255,0.2)",
+    paddingVertical: 12,
+    borderRadius: 10,
+    alignItems: "center",
+    backgroundColor: "transparent",
+  },
+  genderChipSelected: {
+    backgroundColor: color.buttonBg,
+    borderColor: color.buttonBg,
+  },
+  genderText: {
+    color: color.primaryText,
+    fontFamily: "TT-Octosquares-Medium",
+    opacity: 0.7
+  },
+  genderTextSelected: {
+    color: color.primary, // Dark Text for selected state
+    opacity: 1
+  },
+
+  // Info Box
+  infoBox: {
+    backgroundColor: "rgba(255, 255, 255, 0.05)",
+    borderWidth: 1,
+    borderColor: "rgba(255, 255, 255, 0.1)",
+    padding: 12,
+    borderRadius: 8,
+    flexDirection: "row",
+    gap: 10,
+    alignItems: "center",
+    marginBottom: 25,
+  },
+  infoText: {
+    fontSize: 12,
+    color: color.primaryText,
+    flex: 1,
+    lineHeight: 18,
+    fontFamily: "TT-Octosquares-Medium",
+    opacity: 0.8
+  },
+  divider: {
+    height: 1,
+    backgroundColor: color.border || "rgba(255,255,255,0.1)",
+    marginVertical: 10,
+    marginBottom: 25,
+  },
+
+  // Footer
+  footer: {
+    position: "absolute",
+    bottom: 0,
+    left: 0,
+    right: 0,
+    paddingVertical: 15,
+    paddingHorizontal: 24,
+    // Optional: Add a subtle gradient or solid dark background if main bg is image
+    // backgroundColor: color.bgDark, 
+  },
+  nextButton: {
+    backgroundColor: color.buttonBg,
+    flexDirection: "row",
+    justifyContent: "center",
+    alignItems: "center",
+    paddingVertical: 16,
+    borderRadius: 14,
+    gap: 10,
+  },
+  nextButtonText: {
+    color: color.primary,
+    fontSize: 16,
+    fontFamily: "TT-Octosquares-Medium",
+  },
+});

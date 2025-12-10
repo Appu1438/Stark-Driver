@@ -1,5 +1,5 @@
 export const uploadToCloudinary = async (photo) => {
-  console.log(photo);
+  // console.log(photo);
 
   const cloudName = "starkcab";
   const uploadPreset = "starkcab"; // <--- FIXED
@@ -11,7 +11,7 @@ export const uploadToCloudinary = async (photo) => {
     const response = await fetch(cloudinaryUploadEndpoint, {
       method: "POST",
       body: JSON.stringify({
-        file: `data:image/jpeg;base64,${photo.base64}`,
+        file: `data:image/jpeg;base64,${photo}`,
         upload_preset: uploadPreset,
         folder: "drivers_profile",  // optional
       }),

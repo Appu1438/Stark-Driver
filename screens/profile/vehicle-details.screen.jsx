@@ -34,6 +34,8 @@ export default function VehicleDetails() {
     // Choose vehicle image based on type
     const getVehicleImage = (type) => {
         switch (type?.toLowerCase()) {
+            case "auto":
+                return require("@/assets/images/vehicles/auto.png");
             case "suv":
                 return require("@/assets/images/vehicles/suv.png");
             case "sedan":

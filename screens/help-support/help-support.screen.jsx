@@ -81,7 +81,7 @@ export default function DriverHelpAndSupport() {
   ];
 
   // Filter FAQs based on search
-  const filteredFaq = faqData.filter(item => 
+  const filteredFaq = faqData.filter(item =>
     item.question.toLowerCase().includes(searchQuery.toLowerCase())
   );
 
@@ -92,20 +92,20 @@ export default function DriverHelpAndSupport() {
 
   return (
     <View style={styles.mainContainer}>
-      <LinearGradient colors={[color.bgDark ,color.subPrimary]} style={StyleSheet.absoluteFill} />
+      <LinearGradient colors={[color.bgDark, color.subPrimary]} style={StyleSheet.absoluteFill} />
 
       <SafeAreaView style={{ flex: 1 }}>
         <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
-          
+
           {/* HEADER */}
           <View style={styles.header}>
-             <TouchableOpacity onPress={() => router.back()} style={styles.backButton}>
-                 <Ionicons name="arrow-back" size={24} color="#fff" />
-             </TouchableOpacity>
-             <View>
-                <Text style={styles.pageTitle}>Help Center</Text>
-                <Text style={styles.pageSubtitle}>24/7 Driver Support</Text>
-             </View>
+            <TouchableOpacity onPress={() => router.back()} style={styles.backButton}>
+              <Ionicons name="arrow-back" size={24} color="#fff" />
+            </TouchableOpacity>
+            <View>
+              <Text style={styles.pageTitle}>Help Center</Text>
+              <Text style={styles.pageSubtitle}>24/7 Driver Support</Text>
+            </View>
           </View>
 
           {/* SEARCH BAR */}
@@ -130,27 +130,27 @@ export default function DriverHelpAndSupport() {
             <Text style={styles.contactSubtitle}>Our support team is available 24/7</Text>
 
             <View style={styles.contactRow}>
-                <TouchableOpacity style={styles.contactButton} onPress={handleCallSupport}>
-                    <View style={[styles.iconBox, {backgroundColor: 'rgba(0, 230, 118, 0.1)'}]}>
-                        <Ionicons name="call" size={22} color="#00E676" />
-                    </View>
-                    <View>
-                        <Text style={styles.buttonLabel}>Call Us</Text>
-                        <Text style={styles.buttonSub}>0477-2233377</Text>
-                    </View>
-                </TouchableOpacity>
+              <TouchableOpacity style={styles.contactButton} onPress={handleCallSupport}>
+                <View style={[styles.iconBox, { backgroundColor: 'rgba(0, 230, 118, 0.1)' }]}>
+                  <Ionicons name="call" size={22} color="#00E676" />
+                </View>
+                <View>
+                  <Text style={styles.buttonLabel}>Call Us</Text>
+                  <Text style={styles.buttonSub}>0477-2233377</Text>
+                </View>
+              </TouchableOpacity>
 
-                <View style={styles.verticalDivider} />
+              <View style={styles.verticalDivider} />
 
-                <TouchableOpacity style={styles.contactButton} onPress={handleEmailSupport}>
-                    <View style={[styles.iconBox, {backgroundColor: 'rgba(41, 182, 246, 0.1)'}]}>
-                        <Ionicons name="mail" size={22} color="#29B6F6" />
-                    </View>
-                    <View>
-                        <Text style={styles.buttonLabel}>Email Us</Text>
-                        <Text style={styles.buttonSub}>starkopc@...</Text>
-                    </View>
-                </TouchableOpacity>
+              <TouchableOpacity style={styles.contactButton} onPress={handleEmailSupport}>
+                <View style={[styles.iconBox, { backgroundColor: 'rgba(41, 182, 246, 0.1)' }]}>
+                  <Ionicons name="mail" size={22} color="#29B6F6" />
+                </View>
+                <View>
+                  <Text style={styles.buttonLabel}>Email Us</Text>
+                  <Text style={styles.buttonSub}>starkopc@...</Text>
+                </View>
+              </TouchableOpacity>
             </View>
           </LinearGradient>
 
@@ -158,43 +158,43 @@ export default function DriverHelpAndSupport() {
           <Text style={styles.sectionTitle}>Frequently Asked Questions</Text>
 
           {filteredFaq.length === 0 ? (
-             <View style={styles.emptyState}>
-                 <Text style={styles.emptyText}>No results found</Text>
-             </View>
+            <View style={styles.emptyState}>
+              <Text style={styles.emptyText}>No results found</Text>
+            </View>
           ) : (
-             filteredFaq.map((faq) => (
-                <TouchableOpacity
-                  key={faq.id}
-                  onPress={() => toggleExpand(faq.id)}
-                  activeOpacity={0.9}
-                  style={[styles.faqItem, expanded === faq.id && styles.faqItemActive]}
-                >
-                  <View style={styles.questionRow}>
-                    <View style={styles.faqIconBox}>
-                        <Ionicons name={faq.icon} size={18} color={expanded === faq.id ? color.primaryText : "#888"} />
-                    </View>
-                    <Text style={[styles.questionText, expanded === faq.id && {color: color.primaryText}]}>
-                      {faq.question}
-                    </Text>
-                    <Ionicons
-                      name={expanded === faq.id ? "remove" : "add"}
-                      size={20}
-                      color={expanded === faq.id ? color.primaryText : "#666"}
-                    />
+            filteredFaq.map((faq) => (
+              <TouchableOpacity
+                key={faq.id}
+                onPress={() => toggleExpand(faq.id)}
+                activeOpacity={0.9}
+                style={[styles.faqItem, expanded === faq.id && styles.faqItemActive]}
+              >
+                <View style={styles.questionRow}>
+                  <View style={styles.faqIconBox}>
+                    <Ionicons name={faq.icon} size={18} color={expanded === faq.id ? color.primaryText : "#888"} />
                   </View>
-    
-                  {expanded === faq.id && (
-                    <View style={styles.answerContainer}>
-                        <Text style={styles.answerText}>{faq.answer}</Text>
-                    </View>
-                  )}
-                </TouchableOpacity>
-              ))
+                  <Text style={[styles.questionText, expanded === faq.id && { color: color.primaryText }]}>
+                    {faq.question}
+                  </Text>
+                  <Ionicons
+                    name={expanded === faq.id ? "remove" : "add"}
+                    size={20}
+                    color={expanded === faq.id ? color.primaryText : "#666"}
+                  />
+                </View>
+
+                {expanded === faq.id && (
+                  <View style={styles.answerContainer}>
+                    <Text style={styles.answerText}>{faq.answer}</Text>
+                  </View>
+                )}
+              </TouchableOpacity>
+            ))
           )}
 
           {/* FOOTER */}
-          <View style={{marginTop: 10}}>
-             <FooterNote />
+          <View style={{ marginTop: 10 }}>
+            <FooterNote />
           </View>
 
         </ScrollView>
@@ -236,12 +236,12 @@ const styles = StyleSheet.create({
     borderColor: 'rgba(255,255,255,0.08)',
   },
   contactTitle: { fontSize: 18, color: '#fff', fontFamily: "TT-Octosquares-Medium", marginBottom: 4 },
-  contactSubtitle: { fontSize: 12, color: '#888', marginBottom: 20 ,fontFamily: "TT-Octosquares-Medium"},
+  contactSubtitle: { fontSize: 12, color: '#888', marginBottom: 20, fontFamily: "TT-Octosquares-Medium" },
   contactRow: { flexDirection: 'row', justifyContent: 'space-between' },
   contactButton: { flexDirection: 'row', alignItems: 'center', flex: 1, gap: 10 },
   iconBox: { width: 40, height: 40, borderRadius: 12, alignItems: 'center', justifyContent: 'center' },
   buttonLabel: { color: '#fff', fontFamily: "TT-Octosquares-Medium", fontSize: 13 },
-  buttonSub: { color: '#666', fontSize: 10,fontFamily: "TT-Octosquares-Medium" },
+  buttonSub: { color: '#666', fontSize: windowWidth(11), fontFamily: "TT-Octosquares-Medium" },
   verticalDivider: { width: 1, backgroundColor: 'rgba(255,255,255,0.1)', marginHorizontal: 10 },
 
   // FAQ
@@ -266,7 +266,7 @@ const styles = StyleSheet.create({
     gap: 12
   },
   faqIconBox: {
-    width: 32, height: 32, borderRadius: 10, backgroundColor: 'rgba(255,255,255,0.05)', alignItems:'center', justifyContent:'center'
+    width: 32, height: 32, borderRadius: 10, backgroundColor: 'rgba(255,255,255,0.05)', alignItems: 'center', justifyContent: 'center'
   },
   questionText: {
     flex: 1,
@@ -286,7 +286,7 @@ const styles = StyleSheet.create({
     lineHeight: 20,
     fontFamily: "TT-Octosquares-Medium",
   },
-  
+
   emptyState: { padding: 20, alignItems: 'center' },
   emptyText: { color: '#666', fontFamily: "TT-Octosquares-Medium" }
 });

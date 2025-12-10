@@ -57,47 +57,52 @@ export default function TermsConditions() {
                         />
 
                         <Section
-                            title="7. Safety & Conduct"
+                            title="7. Additional Charges (Tolls, Parking & Waiting Time)"
+                            content={`• Drivers are required to collect any toll charges, parking fees, state entry taxes, or government-imposed fees directly from the rider.\n• These charges are not included in the estimated fare shown in the App and must be paid by the rider whenever applicable.\n• For round trips or scenarios where the rider requests waiting time, drivers may charge an additional waiting fee based on the time spent.\n• Drivers must inform riders politely before applying waiting charges or any additional extra fees.\n• The Company is not responsible for disputes related to tolls, parking, or waiting charges. Drivers are responsible for ensuring clear communication with the rider.`}
+                        />
+
+                        <Section
+                            title="8. Safety & Conduct"
                             content={`Drivers must:\n• Drive responsibly and follow all local traffic rules.\n• Ensure their vehicle is clean, well-maintained, and roadworthy.\n• Treat riders with respect and maintain professional behavior.\n• Avoid harassment, discrimination, or inappropriate communication at all times.`}
                         />
 
                         <Section
-                            title="8. Use of the App"
+                            title="9. Use of the App"
                             content={`The App must be used only for lawful purposes. Manipulation of GPS, fake location usage, or any software tampering will result in permanent account suspension and possible legal action.`}
                         />
 
                         <Section
-                            title="9. Ratings & Feedback"
+                            title="10. Ratings & Feedback"
                             content={`Both riders and drivers can rate each other after every trip. Feedback helps maintain quality standards. Misuse of the rating system or attempts to unfairly influence ratings are not permitted.`}
                         />
 
                         <Section
-                            title="10. Data & Privacy"
+                            title="11. Data & Privacy"
                             content={`We collect necessary driver and vehicle information, including location data, to ensure safe and efficient operations. This data is stored securely and not shared with third parties unless required by law or for platform operations.`}
                         />
 
                         <Section
-                            title="11. Vehicle & Document Verification"
+                            title="12. Vehicle & Document Verification"
                             content={`Drivers must maintain valid and up-to-date documents, including license, insurance, and vehicle fitness certificate. Expired or invalid documents will automatically restrict access to driver features until renewed.`}
                         />
 
                         <Section
-                            title="12. Suspension & Termination"
+                            title="13. Suspension & Termination"
                             content={`The Company reserves the right to suspend or permanently terminate accounts for:\n• Repeated ride cancellations or poor ratings.\n• Fraudulent activities, fake trips, or off-app payments.\n• Violations of these Terms or company policies.\n• Misconduct or unsafe driving.`}
                         />
 
                         <Section
-                            title="13. Liability Limitation"
+                            title="14. Liability Limitation"
                             content={`The Company provides the App as a connecting platform and is not liable for accidents, delays, damages, or losses arising from driver actions or third-party causes. Drivers are solely responsible for vehicle and passenger safety during trips.`}
                         />
 
                         <Section
-                            title="14. Policy Updates"
+                            title="15. Policy Updates"
                             content={`These Terms & Conditions may be updated periodically to align with new regulations or operational changes. Continued use of the App implies acceptance of the latest version.`}
                         />
 
                         <Section
-                            title="15. Support & Queries"
+                            title="16. Support & Queries"
                             content={`For any queries, complaints, or clarifications, please contact support through the in-app “Help & Support” section.`}
                         />
                     </View>

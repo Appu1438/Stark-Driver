@@ -1,6 +1,5 @@
 import { View, Text, ScrollView, StyleSheet, TouchableOpacity } from "react-native";
 import React from "react";
-import { fontSizes } from "@/themes/app.constant";
 import color from "@/themes/app.colors";
 import FooterNote from "@/components/common/footer-note";
 import { Ionicons } from "@expo/vector-icons";
@@ -11,14 +10,14 @@ import { SafeAreaView } from "react-native-safe-area-context";
 export default function WalletAndPayments() {
   return (
     <View style={styles.mainContainer}>
-      <LinearGradient 
-        colors={[color.bgDark, color.subPrimary]} 
-        style={StyleSheet.absoluteFill} 
+      <LinearGradient
+        colors={[color.bgDark, color.subPrimary]}
+        style={StyleSheet.absoluteFill}
       />
 
       <SafeAreaView style={{ flex: 1 }}>
         <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
-          
+
           {/* HEADER */}
           <View style={styles.header}>
             <TouchableOpacity onPress={() => router.back()} style={styles.backButton}>
@@ -29,6 +28,7 @@ export default function WalletAndPayments() {
 
           {/* CONTENT CARD */}
           <View style={styles.contentCard}>
+
             <Section
               title="1. Introduction"
               content={`This Wallet & Payments Policy outlines how drivers earn, recharge, and manage their in-app wallet balance while using the Stark Driver platform. By using the app, drivers agree to comply with this policy and the terms of service.`}
@@ -51,7 +51,7 @@ export default function WalletAndPayments() {
 
             <Section
               title="5. Wallet Recharge"
-              content={`• Drivers can recharge their wallet using secure online payment options available in the app (e.g., UPI, credit/debit cards, net banking, etc.).\n• The recharge amount will be instantly reflected in the wallet once the transaction is successful.\n• Recharges are non-transferable and non-refundable except in cases of failed or duplicate transactions.`}
+              content={`• Drivers can recharge their wallet using secure online payment options available in the app.\n• The recharge amount will be instantly reflected in the wallet once the transaction is successful.\n• Recharges are non-transferable and non-refundable except in cases of failed or duplicate transactions.`}
             />
 
             <Section
@@ -61,38 +61,45 @@ export default function WalletAndPayments() {
 
             <Section
               title="7. Commissions & Deductions"
-              content={`• The platform charges a commission or service fee per completed ride, deducted automatically from the driver’s wallet.\n• Commission rates may vary based on trip distance, demand, and driver performance.\n• Drivers will always be able to view transaction details and commission breakdowns inside the wallet transaction history.`}
+              content={`• The platform charges a commission or service fee per completed ride, deducted automatically from the driver’s wallet.\n• Commission rates may vary based on trip distance, demand, and driver performance.\n• Drivers can view transaction details and commission breakdowns inside the wallet history.`}
+            />
+
+            {/* ✅ NEW SECTION ADDED HERE */}
+            <Section
+              title="8. Tolls, Parking Fees & Waiting Charges"
+              content={`• Any applicable tolls, parking fees, state entry taxes, or government-imposed charges must be collected directly from the rider.\n• These charges are not included in the fare estimate shown in the app and must be paid by the rider whenever applicable.\n• For round-trip rides or when the rider requests waiting time, drivers may apply an additional waiting fee based on the duration spent.\n• Drivers must inform riders politely before applying waiting charges or additional fees.\n• Stark OPC Pvt. Ltd. is not responsible for disputes related to tolls, parking, or waiting fees. Clear communication between the driver and rider is required.`}
             />
 
             <Section
-              title="8. Bonuses & Incentives"
+              title="9. Bonuses & Incentives"
               content={`• Promotional bonuses or incentives (if offered) will be credited directly to the driver wallet.\n• Incentives are subject to eligibility criteria such as ride count, rating, or location-based campaigns.`}
             />
 
             <Section
-              title="9. Refunds & Failed Transactions"
-              content={`• In case of a failed recharge or double deduction, drivers can raise a support ticket from the “Help & Support” section.\n• Refunds, if approved, will be credited back to the original payment method within 5–7 business days.`}
+              title="10. Refunds & Failed Transactions"
+              content={`• In case of a failed recharge or duplicate deduction, drivers can raise a support ticket through the in-app Help section.\n• Refunds, if approved, will be credited back to the original payment method within 5–7 business days.`}
             />
 
             <Section
-              title="10. Wallet Misuse or Fraud"
-              content={`• Any misuse, unauthorized wallet manipulation, or fraudulent payment activity will result in immediate suspension of the driver account.\n• Stark OPC Pvt. Ltd. reserves the right to recover any financial loss caused by fraudulent activity and report such incidents to relevant authorities.`}
+              title="11. Wallet Misuse or Fraud"
+              content={`• Any misuse, unauthorized manipulation, or fraudulent wallet activity will result in account suspension.\n• The company reserves the right to recover losses caused by fraudulent activity and may report such incidents to legal authorities.`}
             />
 
             <Section
-              title="11. Transparency & Record Keeping"
-              content={`• Drivers can access detailed transaction records including all earnings, deductions, and wallet top-ups within the app.\n• Transaction summaries are updated in real time for full transparency.`}
+              title="12. Transparency & Record Keeping"
+              content={`• Drivers can access complete transaction records including earnings, deductions, and top-ups.\n• Wallet transaction summaries are updated in real time for transparency and clarity.`}
             />
 
             <Section
-              title="12. Policy Updates"
-              content={`This policy may be updated periodically to reflect operational or regulatory changes. Drivers are encouraged to review it regularly. Continued use of the platform constitutes acceptance of the latest version.`}
+              title="13. Policy Updates"
+              content={`This policy may be updated periodically to reflect operational or regulatory changes. Continued use of the platform implies acceptance of the latest version.`}
             />
 
             <Section
-              title="13. Contact & Support"
-              content={`For any wallet or payment-related assistance, please contact support through the in-app “Help & Support” section.`}
+              title="14. Contact & Support"
+              content={`For wallet or payment-related issues, drivers can reach customer support through the in-app Help & Support section.`}
             />
+
           </View>
 
           <FooterNote />
@@ -115,17 +122,24 @@ const styles = StyleSheet.create({
   scrollContent: { padding: 20, paddingBottom: 50 },
 
   // Header
-  header: { flexDirection: 'row', alignItems: 'center', marginBottom: 25, gap: 15 },
-  backButton: { width: 40, height: 40, borderRadius: 12, backgroundColor: 'rgba(255,255,255,0.1)', alignItems: 'center', justifyContent: 'center' },
+  header: { flexDirection: "row", alignItems: "center", marginBottom: 25, gap: 15 },
+  backButton: {
+    width: 40,
+    height: 40,
+    borderRadius: 12,
+    backgroundColor: "rgba(255,255,255,0.1)",
+    alignItems: "center",
+    justifyContent: "center",
+  },
   pageTitle: { fontSize: 24, color: "#fff", fontFamily: "TT-Octosquares-Medium" },
 
   // Content Card
   contentCard: {
-    backgroundColor: 'rgba(255,255,255,0.03)',
+    backgroundColor: "rgba(255,255,255,0.03)",
     borderRadius: 20,
     padding: 20,
     borderWidth: 1,
-    borderColor: 'rgba(255,255,255,0.05)',
+    borderColor: "rgba(255,255,255,0.05)",
     marginBottom: 30,
   },
 
@@ -140,9 +154,9 @@ const styles = StyleSheet.create({
   sectionContent: {
     fontSize: 14,
     lineHeight: 24,
-    color: '#ccc',
+    color: "#ccc",
     fontFamily: "TT-Octosquares-Medium",
-    textAlign: 'justify',
+    textAlign: "justify",
     opacity: 0.9,
   },
 });

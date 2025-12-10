@@ -65,7 +65,7 @@ export default function Header({ isOn, toggleSwitch, loading, driver }) {
         {/* LOADING INDICATOR REPLACES SWITCH ONLY */}
         <View style={styles.loaderContainer}>
           {loading ? (
-            <ActivityIndicator size="small" color={color.primary} />
+            <ActivityIndicator size="small" color={color.primaryGray} />
           ) : (
             <SwitchToggle
               switchOn={isOn}

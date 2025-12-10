@@ -15,7 +15,7 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: color.bgDark, // Use a light background for the whole page
-    marginBottom:25
+    marginBottom: 25
   },
 
   centered: {
@@ -43,179 +43,231 @@ const styles = StyleSheet.create({
     flex: 1,
   },
 
-  // --- Details Card (The Bottom Sheet) ---
   cardContainer: {
     flex: 1,
-    backgroundColor: color.subPrimary,
-    borderTopLeftRadius: 30, // Larger, smoother curve
-    borderTopRightRadius: 30,
-    marginTop: -50, // More aggressive overlap for a modern look
-    paddingHorizontal: windowWidth(24), // Increased horizontal padding
-    paddingTop: 16,
-
-    // Elevated shadow for a floating card effect
-    ...Platform.select({
-      ios: {
-        shadowColor: color.subPrimary,
-        shadowOffset: { width: 0, height: -4 },
-        shadowOpacity: 0.1,
-        shadowRadius: 10,
-      },
-      android: {
-        elevation: 15,
-      }
-    })
+    marginTop: -75, // Pull up over map
+    backgroundColor: color.subPrimary, // e.g. Very Light Gray or White
+    borderTopLeftRadius: 32,
+    borderTopRightRadius: 32,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: -10 },
+    shadowOpacity: 0.1,
+    shadowRadius: 20,
+    elevation: 15,
   },
-  scrollContainer: {
-    flex: 1,
-    paddingTop: 8, // Added small padding at the top of the scroll area
+  cardHandle: {
+    width: 48,
+    height: 5,
+    backgroundColor: '#E0E0E0',
+    borderRadius: 3,
+    alignSelf: 'center',
+    marginTop: 12,
+    marginBottom: 8,
+  },
+  scrollContent: {
+    paddingHorizontal: 24,
+    paddingTop: 10,
+    paddingBottom: 100, // Space for footer
   },
 
-  // --- Status Indicator (Header) ---
-  statusIndicator: {
+  // --- Header: Status & Earnings ---
+  headerRow: {
     flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center', // Center the status for better prominence
-    paddingVertical: 12,
-    marginBottom: 20,
-    // backgroundColor: color.primary, // Use a contrasting background for the status bar
-    borderRadius: 12,
-    borderWidth: 2,
-    borderColor: color.border
+    justifyContent: 'space-between',
+    alignItems: 'flex-start',
+    marginBottom: 24,
   },
-  statusDot: {
-    width: 12, // Slightly larger dot
-    height: 12,
-    borderRadius: 6,
-    marginRight: 10,
+  statusBadge: {
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: 8,
+    alignSelf: 'flex-start',
+    marginBottom: 4,
   },
   statusText: {
-    fontSize: fontSizes.FONT16,
-    fontFamily: FONT_MEDIUM,
+    fontFamily: 'TT-Octosquares-Medium',
+    fontSize: 12,
     color: color.primaryText,
-    fontWeight: '600', // Ensure status text is strong
-  },
-
-  // --- Section Styling (General) ---
-  section: {
-    paddingVertical: 12,
-    borderBottomWidth: 1, // Use a clean line to separate sections
-    borderBottomColor: SEPARATOR_COLOR,
-    marginBottom: 0, // Removed bottom margin, separation is via the border
-  },
-  sectionTitle: {
-    fontSize: fontSizes.FONT12,
-    fontFamily: FONT_MEDIUM,
-    color: color.primaryText,
-    marginBottom: 10, // Reduced space after title
     textTransform: 'uppercase',
-    letterSpacing: 1, // Increased letter spacing for labels
+  },
+  tripIdLabel: {
+    fontFamily: 'TT-Octosquares-Medium',
+    fontSize: 10,
+    color: color.lightGray,
+    marginLeft: 2,
+  },
+  earningBox: {
+    alignItems: 'flex-end',
+  },
+  earningLabel: {
+    fontFamily: 'TT-Octosquares-Medium',
+    fontSize: 10,
+    color: color.lightGray,
+    marginBottom: 2,
+    letterSpacing: 0.5,
+  },
+  earningValue: {
+    fontFamily: 'TT-Octosquares-Medium',
+    fontSize: 20,
+    color: color.buttonBg, // Use brand color for money
   },
 
-  // --- Passenger Info ---
-  passengerInfo: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    paddingVertical: 8,
+  // --- Card 1: Passenger & Actions ---
+  passengerCard: {
+    // backgroundColor: '#fff',
+    borderRadius: 20,
+    padding: 16,
+    marginBottom: 24,
+    borderWidth: 1,
+    borderColor: '#F0F0F0',
   },
-  // avatar: {
-  //   width: 50, // Slightly larger avatar
-  //   height: 50,
-  //   borderRadius: 25,
-  //   // backgroundColor: PRIMARY_COLOR,
-  //   justifyContent: 'center',
-  //   alignItems: 'center',
-  //   marginRight: 16,
-  // },
-  passengerDetails: {
-    flex: 1,
+  passengerHeader: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
+    marginBottom: 20,
+    borderBottomWidth: 1,
+    borderBottomColor: '#F5F5F5',
+    paddingBottom: 16,
+  },
+  passengerInfo: {
+    flex: 1,
   },
   passengerName: {
-    fontSize: fontSizes.FONT17,
-    fontFamily: FONT_MEDIUM,
-    color: color.lightGray,
+    fontFamily: 'TT-Octosquares-Medium',
+    fontSize: 18,
+    color: color.primaryText,
+    marginBottom: 6,
   },
-  callButton: {
+  ratingPill: {
     flexDirection: 'row',
-    backgroundColor: color.buttonBg,
-    paddingVertical: 8,
-    paddingHorizontal: 16,
-    borderRadius: 20, // Pill shape
     alignItems: 'center',
+    backgroundColor: '#FFF9C4', // Light yellow
+    alignSelf: 'flex-start',
+    paddingHorizontal: 8,
+    paddingVertical: 3,
+    borderRadius: 12,
   },
-  callButtonText: {
-    color: color.primary,
-    fontSize: fontSizes.FONT13,
-    fontFamily: FONT_MEDIUM,
-    marginLeft: 6,
+  ratingText: {
+    fontFamily: 'TT-Octosquares-Medium',
+    fontSize: 11,
+    color: '#FBC02D',
+    marginLeft: 4,
   },
-
-  // --- Navigation Buttons ---
-  buttonRow: {
-    flexDirection: 'row',
-    marginBottom: 8,
-    marginTop: 4,
-    justifyContent: 'space-around',
-    gap: 10
-  },
-  navButton: {
-    flex: 1,
-    flexDirection: 'row',
+  callBtn: {
+    width: 40,
+    height: 40,
+    borderRadius: 22,
+    backgroundColor: color.buttonBg, // Brand color
     alignItems: 'center',
     justifyContent: 'center',
-    paddingVertical: 14, // Increased vertical padding
-    borderRadius: 12,
-    backgroundColor: color.buttonBg,
-    // Small lift for primary actions
-    shadowColor: color.subPrimary,
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.2,
-    shadowRadius: 5,
-    elevation: 3,
-  },
-  navButtonText: {
-    color: color.primary,
-    fontSize: fontSizes.FONT15,
-    fontFamily: FONT_MEDIUM,
-    marginLeft: 8,
   },
 
-  // --- Trip Details ---
-  detailItem: {
+  // Navigation Grid inside Passenger Card
+  navGrid: {
     flexDirection: 'row',
-    alignItems: 'center', // Align items to center
-    marginBottom: 18, // Consistent vertical space
-    paddingHorizontal: 8, // slight padding for inner card feel
+    alignItems: 'center',
   },
-  detailTextContainer: {
+  navItem: {
     flex: 1,
-    marginLeft: 18,
-    paddingVertical: 4, // Added small padding for internal spacing
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 10,
   },
-  detailLabel: {
-    fontSize: fontSizes.FONT12,
-    color: color.primaryText,
-    marginBottom: 2,
-    fontFamily: FONT_REGULAR, // Regular weight for labels
+  navItemLeft: {
+    paddingRight: 10,
   },
-  detailText: {
-    fontSize: fontSizes.FONT15,
+  navItemRight: {
+    paddingLeft: 10,
+  },
+  navDivider: {
+    width: 1,
+    height: 30,
+    backgroundColor: '#E0E0E0',
+    marginHorizontal: 5,
+  },
+  navLabel: {
+    fontSize: 9,
+    color: color.lightGray,
+    fontFamily: 'TT-Octosquares-Medium',
+    textTransform: 'uppercase',
+  },
+  navTitle: {
+    fontSize: 13,
     color: color.primaryText,
-    fontFamily: FONT_MEDIUM, // Medium weight for content
+    fontFamily: 'TT-Octosquares-Medium',
   },
 
-  // --- Fare Breakdown (Use a separate card background) ---
-  fareContainer: {
-    padding: 16,
-    // backgroundColor: color.primary,
-    borderRadius: 12,
-    marginTop: 12, // Space it out from the previous section
-    marginBottom: 24, // Consistent spacing at the end of the scrollable area
-    borderWidth: 2,
-    borderColor: color.border
+  // --- Card 2: Route Timeline ---
+  sectionContainer: {
+    marginBottom: 24,
+  },
+  sectionTitle: {
+    fontSize: 11,
+    fontFamily: 'TT-Octosquares-Medium',
+    color: color.lightGray,
+    letterSpacing: 1,
+    marginBottom: 16,
+    paddingLeft: 4,
+  },
+  timelineContainer: {
+    paddingLeft: 8,
+  },
+  timelineLine: {
+    position: 'absolute',
+    left: 15,
+    top: 15,
+    bottom: 30,
+    width: 2,
+    backgroundColor: '#E0E0E0',
+    zIndex: -1,
+  },
+  timelineRow: {
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+  },
+  timelineDot: {
+    width: 16,
+    height: 16,
+    borderRadius: 8,
+    borderWidth: 3,
+    backgroundColor: '#fff',
+    marginRight: 16,
+    marginTop: 2,
+  },
+  timelineContent: {
+    flex: 1,
+  },
+  timelineLabel: {
+    fontSize: 11,
+    color: color.lightGray,
+    fontFamily: 'TT-Octosquares-Medium',
+    marginBottom: 2,
+  },
+  timelineAddress: {
+    fontSize: 15,
+    color: color.primaryText,
+    fontFamily: 'TT-Octosquares-Medium',
+    lineHeight: 20,
+  },
+
+  // --- Card 3: Receipt / Financials ---
+  receiptCard: {
+    // backgroundColor: '#FAFAFA', // Light gray ledger look
+    borderRadius: 16,
+    padding: 20,
+    marginBottom: 24,
+    borderWidth: 1,
+    borderColor: '#E0E0E0',
+    borderStyle: 'dashed', // Gives it a receipt feel
+  },
+  receiptTitle: {
+    fontSize: 11,
+    fontFamily: 'TT-Octosquares-Medium',
+    color: color.lightGray,
+    textAlign: 'center',
+    marginBottom: 16,
+    letterSpacing: 1,
   },
   fareRow: {
     flexDirection: 'row',
@@ -223,121 +275,184 @@ const styles = StyleSheet.create({
     marginBottom: 10,
   },
   fareLabel: {
-    fontSize: fontSizes.FONT14,
-    color: color.primaryText,
-    fontFamily: FONT_REGULAR,
-  },
-  fareValue: {
     fontSize: fontSizes.FONT15,
     color: color.primaryText,
-    fontFamily: FONT_MEDIUM,
+    fontFamily: 'TT-Octosquares-Medium',
+    opacity: 0.8,
   },
-
-  // --- Action Button (Bottom Fixed Area) ---
-  actionButtonContainer: {
-    paddingHorizontal: windowWidth(24),
-    paddingBottom: 30, // Increased bottom padding for safety area
-    paddingTop: 16,
-    backgroundColor: color.subPrimary, // Ensure it stands out on white background
-    borderTopWidth: 1,
-    borderTopColor: SEPARATOR_COLOR,
-  },
-
-  // --- Modal Styles ---
-  modalContainer: {
-    flex: 1,
-    backgroundColor: "rgba(0,0,0,0.7)",
-    justifyContent: "center",
-    alignItems: "center",
-  },
-  modalBox: {
-    width: "85%", // Slightly wider box
-    backgroundColor: color.subPrimary,
-    borderRadius: 20,
-    paddingVertical: 35, // More vertical padding
-    paddingHorizontal: 25,
-    alignItems: "center",
-    elevation: 12,
-    shadowColor: color.primary,
-    shadowOffset: { width: 0, height: 6 },
-    shadowOpacity: 0.3,
-    shadowRadius: 10,
-  },
-  modalTitle: {
-    fontFamily: FONT_MEDIUM,
-    fontSize: fontSizes.FONT17,
+  fareValue: {
+    fontSize: fontSizes.FONT14,
     color: color.primaryText,
-    marginBottom: 8,
+    fontFamily: 'TT-Octosquares-Medium',
   },
-  input: {
-    fontFamily: FONT_MEDIUM,
-    width: "70%",
-    height: 52, // Taller input field
-    borderWidth: 2,
-    borderColor: color.border, // Primary color border
-    borderRadius: 12,
-    marginTop: 18,
-    marginBottom: 25,
-    textAlign: "center",
-    fontSize: fontSizes.FONT20, // Larger font for OTP
-    letterSpacing: 10,
-    fontWeight: "700",
-    color: color.primaryText, // OTP text color
+  receiptDivider: {
+    height: 1,
+    backgroundColor: '#E0E0E0',
+    borderStyle: 'dashed',
+    borderWidth: 1,
+    borderColor: '#E0E0E0',
+    marginVertical: 12,
   },
-  modalButtonRow: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    width: "100%",
+  cancelSection: {
+    marginTop: 8,
   },
-  ratingContainer: {
+  cancelBadge: {
+    backgroundColor: '#FFEBEE',
+    paddingVertical: 4,
+    paddingHorizontal: 8,
+    borderRadius: 4,
+    alignSelf: 'center',
+    marginBottom: 12,
+  },
+  cancelBadgeText: {
+    color: '#D32F2F',
+    fontSize: 10,
+    fontFamily: 'TT-Octosquares-Medium',
+  },
+
+  // --- Ratings ---
+  ratingSummaryCard: {
+    flexDirection: 'row',
+    // backgroundColor: '#fff',
+    borderRadius: 16,
+    padding: 16,
+    borderWidth: 1,
+    borderColor: '#E0E0E0',
+    justifyContent: 'space-around',
+  },
+  ratingSummaryCol: {
+    alignItems: 'center',
+  },
+  ratingHead: {
+    fontSize: 10,
+    color: color.lightGray,
+    marginBottom: 4,
+    fontFamily: 'TT-Octosquares-Medium',
+  },
+  ratingScore: {
+    fontSize: 18,
+    color: color.primaryText,
+    fontFamily: 'TT-Octosquares-Medium',
+  },
+  verticalLine: {
+    width: 1,
+    backgroundColor: '#E0E0E0',
+    height: '100%',
+  },
+  ratingInputContainer: {
+    backgroundColor: '#fff',
     borderRadius: 16,
     padding: 20,
-    marginBottom: 24,
-    borderWidth: 2,
-    borderColor: color.border,
     alignItems: 'center',
-    justifyContent: 'center',
-    marginTop:10
+    shadowColor: "#000",
+    shadowOpacity: 0.05,
+    elevation: 2,
   },
   ratingTitle: {
-    fontSize: fontSizes.FONT16,
-    marginBottom: 8,
-    color: color.primaryText,
-    fontFamily: 'TT-Octosquares-Medium'
+    fontFamily: 'TT-Octosquares-Medium',
+    fontSize: 16,
+    marginBottom: 12,
   },
-  starContainer: {
-    flexDirection: "row",
-    justifyContent: "center",
-    marginVertical: 8,
+  starRow: {
+    flexDirection: 'row',
+    marginBottom: 20,
   },
-  submitButton: {
-    marginTop: 12,
-    backgroundColor: "#f73939",
+  submitRatingBtn: {
+    backgroundColor: color.buttonBg,
     paddingVertical: 10,
     paddingHorizontal: 24,
-    borderRadius: 8,
+    borderRadius: 20,
   },
-  submitButtonText: {
-    color: "#fff",
-    fontWeight: "600",
-    fontSize: 16,
+  submitRatingText: {
+    color: color.primary,
+    fontFamily: 'TT-Octosquares-Medium',
   },
-  thankYouText: {
-    fontSize: fontSizes.FONT16,
-    marginBottom: 8,
-    color: color.primaryGray,
-    fontFamily: 'TT-Octosquares-Medium'
-  },
-  ratingSummary: {
-    flexDirection: "row",
-    justifyContent: "space-around",
-    alignItems: "center",
-    marginTop: 12,
-    paddingVertical: 12,
-    borderRadius: 15,
+
+  // --- Footer Actions ---
+  footerContainer: {
+    position: 'absolute',
+    bottom: 0,
+    left: 0,
+    right: 0,
     backgroundColor: color.subPrimary,
-    borderWidth: 1,
-    borderColor: color.border,
+    paddingHorizontal: 24,
+    paddingTop: 16,
+    paddingBottom: Platform.OS === 'ios' ? 34 : 20,
+    borderTopWidth: 1,
+    borderTopColor: '#F0F0F0',
+  },
+  supportBtn: {
+    backgroundColor: '#E0E0E0',
+    borderRadius: 12,
+    height: 50,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+
+  // --- OTP Modal (Modernized) ---
+  modalBackdrop: {
+    flex: 1,
+    backgroundColor: "rgba(0,0,0,0.6)", // Darker backdrop
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  otpCard: {
+    width: "80%",
+    backgroundColor: "#fff",
+    borderRadius: 24,
+    padding: 30,
+    alignItems: "center",
+  },
+  otpTitle: {
+    fontSize: 20,
+    fontFamily: 'TT-Octosquares-Medium',
+    color: color.primaryText,
+    marginBottom: 8,
+  },
+  otpSubtitle: {
+    fontSize: 13,
+    color: color.lightGray,
+    fontFamily: 'TT-Octosquares-Medium',
+    marginBottom: 24,
+    textAlign: 'center',
+  },
+  otpInput: {
+    width: "100%",
+    fontSize: 28,
+    fontFamily: 'TT-Octosquares-Medium',
+    textAlign: "center",
+    letterSpacing: 8,
+    borderBottomWidth: 2,
+    borderBottomColor: color.buttonBg,
+    marginBottom: 30,
+    color: color.primaryText,
+    paddingBottom: 10,
+  },
+  otpBtnRow: {
+    flexDirection: 'row',
+    width: '100%',
+    justifyContent: 'space-between',
+  },
+  otpCancelBtn: {
+    flex: 1,
+    paddingVertical: 14,
+    alignItems: 'center',
+  },
+  otpCancelText: {
+    color: color.lightGray,
+    fontFamily: 'TT-Octosquares-Medium',
+  },
+  otpConfirmBtn: {
+    flex: 1,
+    backgroundColor: color.buttonBg,
+    borderRadius: 12,
+    paddingVertical: 14,
+    alignItems: 'center',
+    marginLeft: 10,
+  },
+  otpConfirmText: {
+    color: color.primary,
+    fontFamily: 'TT-Octosquares-Medium',
   },
 
 });

@@ -9,16 +9,17 @@ import { router } from "expo-router";
 export default function RideCard({ item }) {
   const { colors } = useTheme();
 
+  // refined status colors for a neon/premium look
   const getStatusColor = (status) => {
     switch (status) {
       case "Completed":
-        return { bg: "rgba(0,255,200,0.1)", text: "#00FFC8" };
+        return { bg: "rgba(0, 255, 200, 0.08)", text: "#00FFC8", border: "rgba(0, 255, 200, 0.2)" };
       case "Ongoing":
-        return { bg: "rgba(255,215,0,0.1)", text: "#FFD700" };
+        return { bg: "rgba(255, 215, 0, 0.08)", text: "#FFD700", border: "rgba(255, 215, 0, 0.2)" };
       case "Cancelled":
-        return { bg: "rgba(255,99,99,0.1)", text: "#FF6B6B" };
+        return { bg: "rgba(255, 99, 99, 0.08)", text: "#FF6B6B", border: "rgba(255, 99, 99, 0.2)" };
       default:
-        return { bg: "rgba(255,255,255,0.08)", text: "#B0B0B0" };
+        return { bg: "rgba(255, 255, 255, 0.05)", text: "#B0B0B0", border: "rgba(255, 255, 255, 0.1)" };
     }
   };
 
@@ -27,14 +28,13 @@ export default function RideCard({ item }) {
   return (
     <TouchableOpacity
       style={[
-        styles.main,
+        styles.cardContainer,
         {
-          backgroundColor: colors.card,
-          borderColor: colors.border,
-          shadowColor: "#000",
+          backgroundColor: colors.card, // Assuming a dark card color
+          borderColor: "rgba(255,255,255,0.08)", // Subtle border
         },
       ]}
-      activeOpacity={0.9}
+      activeOpacity={0.8}
       onPress={() =>
         router.push({
           pathname: "/(routes)/ride-details",
@@ -42,69 +42,84 @@ export default function RideCard({ item }) {
         })
       }
     >
-      {/* ---------- Top Section ---------- */}
-      <View style={styles.top}>
-        <View style={styles.rowBetween}>
-          <Text style={[styles.userName, { color: colors.text }]}>
-            {item?.userId?.name}
+      {/* ================= HEADER (Driver & Price) ================= */}
+      <View style={styles.headerRow}>
+        <View>
+          <Text style={[styles.driverName, { color: colors.text }]}>
+            {item?.userId?.name || "Unknown User"}
           </Text>
-
-          {/* Status Chip */}
-          <View
-            style={[
-              styles.statusChip,
-              { backgroundColor: statusStyle.bg, borderColor: statusStyle.text },
-            ]}
-          >
-            <Text
-              style={[styles.statusText, { color: statusStyle.text }]}
-              numberOfLines={1}
-            >
-              {item.status || "Unknown"}
+          <View style={styles.ratingContainer}>
+            <Star size={14} />
+            {/* Assuming Star component takes size, if not, remove prop */}
+            <Text style={[styles.ratingText, { color: color.secondaryFont }]}>
+              {item.rating || item.ratings || "0"}
             </Text>
           </View>
         </View>
 
-        {/* Rating + Fare Row */}
-        <View style={[styles.rowBetween, { marginTop: windowHeight(8) }]}>
-          <View style={styles.rate}>
-            <Star />
-            <Text style={[styles.rating, { color: colors.text }]}>
-              {item.rating || item.ratings || 0}
-            </Text>
-            <View style={[styles.verticalBorder, { borderColor: colors.border }]} />
-            <Text style={[styles.price, { color: color.primaryText }]}>
-              ₹ {item.totalFare}
-            </Text>
-          </View>
-
-          <Text style={[styles.timing, { color: color.secondaryFont }]}>
-            {item.createdAt?.slice(0, 10)}
+        <View style={styles.priceContainer}>
+          <Text style={[styles.priceText, { color: color.primaryText }]}>
+            ₹{item.totalFare}
           </Text>
         </View>
       </View>
 
       {/* Divider */}
-      <View style={[styles.border, { borderColor: colors.border }]} />
+      <View style={styles.divider} />
 
-      {/* ---------- Bottom Section ---------- */}
-      <View style={styles.bottom}>
-        <View style={styles.leftView}>
-          <Location color={color.lightGray} />
-          <View style={[styles.verticaldot, { borderColor: color.lightGray }]} />
-          <Gps colors={color.lightGray} />
+      {/* ================= BODY (Timeline) ================= */}
+      <View style={styles.bodyContainer}>
+        {/* Left Side: Visual Timeline */}
+        <View style={styles.timelineLeft}>
+          {/* Pickup Dot */}
+          <View style={[styles.dot, { borderColor: "#4CAF50" }]}>
+            <View style={[styles.innerDot, { backgroundColor: "#4CAF50" }]} />
+          </View>
+
+          {/* Dashed Line */}
+          <View style={styles.dashedLine} />
+
+          {/* Dropoff Square */}
+          <View style={[styles.square, { borderColor: "#FF5252" }]}>
+            <View style={[styles.innerSquare, { backgroundColor: "#FF5252" }]} />
+          </View>
         </View>
 
-        <View style={styles.rightView}>
-          <Text style={[styles.pickup, { color: color.secondaryFont }]}>
-            {item.currentLocationName?.length > 50
-              ? item.currentLocationName.substring(0, 50) + "..."
-              : item.currentLocationName}
-          </Text>
-          <Text style={[styles.drop, { color: color.secondaryFont }]}>
-            {item.destinationLocationName?.length > 50
-              ? item.destinationLocationName.substring(0, 50) + "..."
-              : item.destinationLocationName}
+        {/* Right Side: Address Text */}
+        <View style={styles.timelineRight}>
+          <View style={styles.addressBox}>
+            <Text style={[styles.addressLabel, { color: color.secondaryFont }]}>Pickup</Text>
+            <Text style={[styles.addressText, { color: colors.text }]} numberOfLines={1}>
+              {item.currentLocationName || "Pickup Location"}
+            </Text>
+          </View>
+
+          <View style={[styles.addressBox, { marginTop: 18 }]}>
+            <Text style={[styles.addressLabel, { color: color.secondaryFont }]}>Drop-off</Text>
+            <Text style={[styles.addressText, { color: colors.text }]} numberOfLines={1}>
+              {item.destinationLocationName || "Destination Location"}
+            </Text>
+          </View>
+        </View>
+      </View>
+
+      {/* ================= FOOTER (Date & Status) ================= */}
+      <View style={styles.footerRow}>
+        <Text style={[styles.dateText, { color: color.secondaryFont }]}>
+          {item.createdAt ? new Date(item.createdAt).toDateString() : "Date N/A"}
+        </Text>
+
+        <View
+          style={[
+            styles.statusBadge,
+            {
+              backgroundColor: statusStyle.bg,
+              borderColor: statusStyle.border,
+            },
+          ]}
+        >
+          <Text style={[styles.statusText, { color: statusStyle.text }]}>
+            {item.status || "Unknown"}
           </Text>
         </View>
       </View>
@@ -113,96 +128,151 @@ export default function RideCard({ item }) {
 }
 
 const styles = StyleSheet.create({
-  main: {
+  cardContainer: {
     width: "100%",
     borderWidth: 1,
-    borderRadius: 12,
-    padding: windowWidth(15),
-    marginVertical: 8,
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.15,
-    shadowRadius: 4,
-    elevation: 3,
+    borderRadius: 16,
+    padding: windowWidth(16),
+    marginVertical: 10,
+    // Premium Shadow (iOS)
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.2,
+    shadowRadius: 8,
+    // Android
+    elevation: 4,
   },
-  top: {
-    paddingBottom: windowHeight(5),
-  },
-  rowBetween: {
+
+  /* --- HEADER --- */
+  headerRow: {
     flexDirection: "row",
     justifyContent: "space-between",
-    alignItems: "center",
+    alignItems: "flex-start",
+    marginBottom: 12,
   },
-  userName: {
+  driverName: {
     fontFamily: "TT-Octosquares-Medium",
     fontSize: fontSizes.FONT18,
-    maxWidth: "55%",
+    marginBottom: 4,
+    letterSpacing: 0.5,
   },
-  rate: {
+  ratingContainer: {
     flexDirection: "row",
     alignItems: "center",
+    gap: 4,
+    marginTop:5
   },
-  rating: {
-    marginHorizontal: windowWidth(5),
+  ratingText: {
     fontFamily: "TT-Octosquares-Medium",
-    fontSize: fontSizes.FONT15,
+    fontSize: fontSizes.FONT14,
   },
-  verticalBorder: {
-    borderLeftWidth: 1,
-    height: windowHeight(15),
-    marginHorizontal: windowWidth(5),
+  priceContainer: {
+    backgroundColor: "rgba(255,255,255,0.05)",
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: 8,
   },
-  price: {
+  priceText: {
     fontFamily: "TT-Octosquares-Medium",
-    fontSize: fontSizes.FONT16,
+    fontSize: fontSizes.FONT17,
   },
-  border: {
-    borderBottomWidth: 1,
-    opacity: 0.3,
-    marginVertical: windowHeight(6),
+
+  divider: {
+    height: 1,
+    backgroundColor: "rgba(255,255,255,0.08)",
+    marginVertical: 4,
   },
-  timing: {
-    fontFamily: "TT-Octosquares-Medium",
-    fontSize: fontSizes.FONT13,
-  },
-  bottom: {
+
+  /* --- BODY (Timeline) --- */
+  bodyContainer: {
     flexDirection: "row",
-    marginTop: windowHeight(6),
+    marginTop: 12,
+    marginBottom: 16,
   },
-  leftView: {
+  timelineLeft: {
     alignItems: "center",
-    marginRight: windowWidth(10),
+    marginRight: 14,
+    paddingTop: 4,
   },
-  verticaldot: {
+  dot: {
+    width: 16,
+    height: 16,
+    borderRadius: 8,
+    borderWidth: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  innerDot: {
+    width: 6,
+    height: 6,
+    borderRadius: 3,
+  },
+  dashedLine: {
+    height: 28,
+    width: 1,
     borderLeftWidth: 1,
-    height: windowHeight(20),
-    marginVertical: windowHeight(5),
+    borderColor: "rgba(255,255,255,0.2)",
+    borderStyle: "dashed",
+    marginVertical: 4,
   },
-  rightView: {
+  square: {
+    width: 16,
+    height: 16,
+    borderWidth: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    borderRadius: 4, // Soft square
+  },
+  innerSquare: {
+    width: 6,
+    height: 6,
+    borderRadius: 1,
+  },
+  timelineRight: {
     flex: 1,
     justifyContent: "space-between",
   },
-  pickup: {
-    fontSize: fontSizes.FONT16,
-    fontFamily: "TT-Octosquares-Medium",
-    marginBottom: windowHeight(8),
+  addressBox: {
+    justifyContent: "center",
   },
-  drop: {
-    fontSize: fontSizes.FONT16,
+  addressLabel: {
+    fontSize: 10,
+    textTransform: 'uppercase',
+    letterSpacing: 1,
+    marginBottom: 2,
+    opacity: 0.7,
     fontFamily: "TT-Octosquares-Medium",
+  },
+  addressText: {
+    fontFamily: "TT-Octosquares-Medium",
+    fontSize: fontSizes.FONT15,
+    lineHeight: 20,
   },
 
-  /* ---------- Status Chip ---------- */
-  statusChip: {
-    borderWidth: 1,
-    borderRadius: 50,
+  /* --- FOOTER --- */
+  footerRow: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    paddingTop: 12,
+    borderTopWidth: 1,
+    borderTopColor: "rgba(255,255,255,0.05)",
+  },
+  dateText: {
+    fontFamily: "TT-Octosquares-Medium",
+    fontSize: fontSizes.FONT12,
+    opacity: 0.8,
+  },
+  statusBadge: {
     paddingVertical: 4,
     paddingHorizontal: 10,
-    alignItems: "center",
-    justifyContent: "center",
+    borderRadius: 6,
+    borderWidth: 1,
   },
   statusText: {
     fontFamily: "TT-Octosquares-Medium",
-    fontSize: fontSizes.FONT13,
-    textTransform: "capitalize",
+    fontSize: 11,
+    textTransform: "uppercase",
+    letterSpacing: 0.5,
   },
 });

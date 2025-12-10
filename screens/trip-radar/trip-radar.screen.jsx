@@ -2,17 +2,10 @@ import React, { useEffect, useMemo, useRef, useState } from "react";
 import {
   View,
   Text,
-  FlatList,
   Image,
   Platform,
   StyleSheet,
-  StatusBar,
-  SafeAreaView,
-  Animated,
-  LayoutAnimation,
-  UIManager,
   TouchableOpacity,
-  RefreshControl,
   ActivityIndicator
 } from "react-native";
 import MapView, { Marker, PROVIDER_GOOGLE } from "react-native-maps";
@@ -22,51 +15,37 @@ import Button from "@/components/common/button";
 import Images from "@/utils/images";
 import color from "@/themes/app.colors";
 import { fontSizes, windowHeight, windowWidth } from "@/themes/app.constant";
-import { router } from "expo-router";
-import driverSocketService from "@/utils/socket/socketService";
 import { useTripRadar } from "@/store/useTripRadar";
-import * as GeoLocation from "expo-location";
 import { useDriverEarnings, useGetDriverData } from "@/hooks/useGetDriverData";
-import BottomSheet, { BottomSheetView } from "@gorhom/bottom-sheet";
-import { BottomSheetFlatList } from "@gorhom/bottom-sheet";
+import BottomSheet, { BottomSheetFlatList } from "@gorhom/bottom-sheet";
 import fonts from "@/themes/app.fonts";
 import { useDriverLocationStore } from "@/store/driverLocationStore";
 import getVehicleIcon from "@/utils/ride/getVehicleIcon";
-import { shallow } from "zustand/shallow";
+import { Ionicons, MaterialIcons, FontAwesome } from "@expo/vector-icons";
 
 export default function TripRadarScreen() {
   const { requests, rejectRequest, acceptRequest, loadingRejectRequests, loadingAcceptRequests } = useTripRadar();
   const isGlobalProcessing = useTripRadar((s) => s.isProcessing);
 
-
-  const { driver, loading: driverDataLoading, refetchData } = useGetDriverData();
-  const { earnings, loading: driverEarningsLoading, refetchEarnings } = useDriverEarnings();
+  const { driver, refetchData } = useGetDriverData();
+  const { earnings, refetchEarnings } = useDriverEarnings();
 
   const currentLocation = useDriverLocationStore((s) => s.currentLocation);
   const animatedLocation = useDriverLocationStore((s) => s.animatedLocation);
   const heading = useDriverLocationStore((s) => s.heading);
 
-
-
   const [refreshing, setRefreshing] = useState(false);
-  const [todaysEarnings, setTodaysEarnings] = useState('');
-  const [todaysRideCount, setTodaysRideCount] = useState('');
+  const [todaysEarnings, setTodaysEarnings] = useState('0');
+  const [todaysRideCount, setTodaysRideCount] = useState('0');
 
   useEffect(() => {
-    // Convert today to YYYY-MM-DD
     const today = new Date().toISOString().split("T")[0];
-
-    // Find today in chartData
     const todayData = earnings?.chartData?.find(item => item.label === today);
-
-    // Fallback if not found
     setTodaysEarnings(todayData?.driverEarnings ?? 0);
     setTodaysRideCount(todayData?.rideCount ?? 0);
-
   }, [earnings])
 
   const onRefresh = async () => {
-    console.log('rfrdh')
     try {
       setRefreshing(true);
       await refetchData();
@@ -78,179 +57,107 @@ export default function TripRadarScreen() {
 
   const driverLocationRef = useRef(null);
   const mapRef = useRef();
-
-  // NEW: Selected request
   const [selectedRequest, setSelectedRequest] = useState(null);
-
-  // NEW: Bottom sheet
   const sheetRef = useRef(null);
-  const snapPoints = useMemo(() => ["30%", "55%", "85%"], []);
+  const snapPoints = useMemo(() => ["35%", "60%", "90%"], []);
 
-  // Sync ref
   useEffect(() => {
     driverLocationRef.current = currentLocation;
   }, [currentLocation]);
 
-
-
-  // NEW: Auto-select first request
   useEffect(() => {
-    // if (requests.length > 0 && !selectedRequest) {
-    // console.log(requests.length)
     setSelectedRequest(requests[requests.length - 1]);
-    console.log(requests[requests.length - 1])
     setTimeout(() => centerMapOnRequest(requests[requests.length - 1]), 300);
-    // }
   }, [requests.length]);
 
-  // NEW: FOCUS MAP on selected request
   const centerMapOnRequest = (req) => {
     if (!req || !mapRef.current) return;
-
     const { currentLocation, marker } = req.data;
-
-
     mapRef.current.fitToCoordinates(
-      [
-        driverLocationRef.current,
-        currentLocation,
-        marker,
-      ],
+      [driverLocationRef.current, currentLocation, marker],
       {
-        edgePadding: { top: 120, bottom: 350, left: 60, right: 60 },
+        edgePadding: { top: 140, bottom: 350, left: 50, right: 50 },
         animated: true,
       }
     );
-
     sheetRef.current?.snapToIndex(0);
-
   };
 
-  const strokeColor = Platform.select({
-    ios: color.strokeColor,
-    android: color.strokeColor,
-  });
-
-  const lineDash = Platform.select({
-    ios: [0, 0],
-    android: undefined,
-  });
+  const lineDash = Platform.select({ ios: [0, 0], android: undefined });
 
   if (!currentLocation) {
     return (
       <View style={styles.loadingContainer}>
-        <Text style={styles.loadingText}>Locating GPS...</Text>
+        <ActivityIndicator size="large" color={color.primary} />
+        <Text style={styles.loadingText}>Acquiring GPS Signal...</Text>
       </View>
     );
   }
 
   return (
-    <View style={styles.container}
-    >
-      {requests.length == 0 && (
-        <>
+    <View style={styles.container}>
 
-          {/* ONLINE BADGE (same as yours) */}
-          <TouchableOpacity style={styles.headerOverlay} onPress={() => onRefresh()}>
-            <View style={styles.statusPill}>
-              <View
-                style={[
-                  styles.statusDot,
-                  { backgroundColor: driver?.status === "active" ? color.primaryText : color.primaryText },
-                ]}
-              />
-              <Text style={styles.statusText}>
-                {driver?.status === "active" ? "Online & Searching" : "You are Offline"}
-              </Text>
-            </View>
-          </TouchableOpacity>
+      {/* --- HUD: STATUS & EARNINGS ISLAND --- */}
+      <View style={styles.hudContainer}>
+        {/* Status Pill */}
+        <TouchableOpacity activeOpacity={0.8} onPress={onRefresh} style={styles.statusPill}>
+          <View style={[styles.statusDot, { backgroundColor: driver?.status === "active" ? "#4CAF50" : "#F44336" }]} />
+          <Text style={styles.statusText}>{driver?.status === "active" ? "Online" : "Offline"}</Text>
+        </TouchableOpacity>
 
-          {/* FLOATING TODAY'S EARNINGS CARD */}
+        {/* Vertical Divider */}
+        <View style={styles.hudDivider} />
 
-          <View style={styles.earningsCard}>
-            <View style={styles.earnRow}>
-              <Text style={styles.earnTitle}>Today's Earnings</Text>
-              <Text style={styles.earnAmount}>₹ {todaysEarnings}</Text>
-            </View>
+        {/* Earnings */}
+        <View style={styles.earningsSection}>
+          <Text style={styles.hudLabel}>TODAY</Text>
+          <Text style={styles.hudValue}>₹{todaysEarnings}</Text>
+        </View>
 
-            <View style={styles.earnRowBottom}>
-              <Text style={styles.earnSubtitle}>Completed Rides</Text>
-              <Text style={styles.earnCount}>{todaysRideCount}</Text>
-            </View>
-          </View>
-        </>
+        {/* Vertical Divider */}
+        <View style={styles.hudDivider} />
 
-      )}
+        {/* Rides */}
+        <View style={styles.earningsSection}>
+          <Text style={styles.hudLabel}>RIDES</Text>
+          <Text style={styles.hudValue}>{todaysRideCount}</Text>
+        </View>
+      </View>
 
 
-      {/* MAP */}
+      {/* --- MAP --- */}
       <MapView
         ref={mapRef}
         style={styles.map}
         customMapStyle={customMapStyle}
-        initialRegion={{
-          ...currentLocation,
-          latitudeDelta: 0.06,
-          longitudeDelta: 0.06,
-        }}
+        initialRegion={{ ...currentLocation, latitudeDelta: 0.06, longitudeDelta: 0.06 }}
         provider={PROVIDER_GOOGLE}
-        // showsUserLocation
         userInterfaceStyle="dark"
         rotateEnabled={false}
         pitchEnabled={false}
       >
         {animatedLocation && (
-          <Marker.Animated
-            coordinate={animatedLocation}
-            anchor={{ x: 0.5, y: 0.5 }}
-          >
+          <Marker.Animated coordinate={animatedLocation} anchor={{ x: 0.5, y: 0.5 }}>
             <Image
               source={getVehicleIcon(driver ? driver.vehicle_type : "Sedan")}
               style={{
-                width: 35,
-                height: 35,
+                width: windowWidth(35),
+                height: windowHeight(35),
                 resizeMode: "contain",
-                transform: [
-                  {
-                    rotate: `${driver?.vehicle_type === "Auto"
-                      ? heading + 180
-                      : heading
-                      }deg`,
-                  },
-                ],
+                transform: [{ rotate: `${driver?.vehicle_type === "Auto" ? heading + 180 : heading}deg` }],
               }}
             />
           </Marker.Animated>
         )}
+
         {selectedRequest && requests.length > 0 && (
           <>
-            {/* Pickup Marker */}
             <Marker coordinate={selectedRequest.data.currentLocation}>
-              <Image
-                source={Images.mapPickupMarker}
-                style={{
-                  width: windowWidth(35),
-                  height: windowHeight(35),
-                  tintColor: color.primaryGray,
-                }}
-                resizeMode="contain"
-              />
+              <Image source={Images.mapPickupMarker} style={styles.markerIcon} resizeMode="contain" />
             </Marker>
-
-            {/* Drop Marker */}
             <Marker coordinate={selectedRequest.data.marker}>
-              <Image
-                source={Images.mapDropMarker}
-                style={{
-                  width: windowWidth(35),
-                  height: windowHeight(35),
-                  tintColor: color.primaryGray,
-                }}
-                resizeMode="contain"
-              />
+              <Image source={Images.mapDropMarker} style={styles.markerIcon} resizeMode="contain" />
             </Marker>
-
-            {/* Route to Pickup */}
             <MapViewDirections
               origin={currentLocation}
               destination={selectedRequest.data.currentLocation}
@@ -259,54 +166,48 @@ export default function TripRadarScreen() {
               strokeColor={color.strokeColor}
               lineDashPattern={lineDash}
             />
-
-            {/* Pickup → Drop */}
             <MapViewDirections
               origin={selectedRequest.data.currentLocation}
               destination={selectedRequest.data.marker}
               apikey={process.env.EXPO_PUBLIC_GOOGLE_CLOUD_API_KEY}
               strokeWidth={4}
-              strokeColor={color.animatedStrokeColor}
+              strokeColor={color.buttonBg} // Highlight the trip route
               lineDashPattern={lineDash}
             />
           </>
         )}
       </MapView>
 
-      {/* NEW: Uber-Style Bottom Sheet */}
-      <BottomSheet ref={sheetRef} index={0} snapPoints={snapPoints} backgroundStyle={{ backgroundColor: color.subPrimary, zIndex: 0 }}>
-        <View style={{ paddingHorizontal: 16, zIndex: 0 }}>
+      {/* --- PREMIUM BOTTOM SHEET --- */}
+      <BottomSheet
+        ref={sheetRef}
+        index={0}
+        snapPoints={snapPoints}
+        handleIndicatorStyle={{ backgroundColor: '#444', width: 40 }}
+        backgroundStyle={{ backgroundColor: color.subPrimary }}
+      >
+        <View style={{ flex: 1, paddingHorizontal: 16 }}>
 
-          <View style={styles.listHeader}>
-            <Text style={styles.listTitle}>Trip Radar</Text>
-            <View style={styles.countBadge}>
-              <Text style={styles.countText}>{requests.length}</Text>
-            </View>
+          <View style={styles.sheetHeader}>
+            <Text style={styles.sheetTitle}>Trip Radar</Text>
+            {requests.length > 0 && (
+              <View style={styles.radarBadge}>
+                <View style={styles.radarPulse} />
+                <Text style={styles.radarText}>{requests.length} New</Text>
+              </View>
+            )}
           </View>
 
           <BottomSheetFlatList
-            // refreshControl={
-            //   <RefreshControl
-            //     tintColor={color.primary}
-            //     refreshing={refreshing}
-            //     onRefresh={onRefresh}
-            //   />
-            // }
             data={requests}
             keyExtractor={(item) => item.id}
             showsVerticalScrollIndicator={false}
-            contentContainerStyle={
-              requests.length > 0
-                ? { paddingHorizontal: 5, paddingBottom: 40, flexGrow: 1 }
-                : { paddingHorizontal: 5, paddingBottom: 75 }
-            }
-
+            contentContainerStyle={{ paddingBottom: 100 }}
             ListEmptyComponent={() => (
               <View style={styles.emptyContainer}>
+                <Ionicons name="scan-outline" size={48} color="#333" style={{ marginBottom: 10 }} />
                 <Text style={styles.emptySubtitle}>
-                  {driver?.status === "active"
-                    ? "Searching for passengers..."
-                    : "You are offline. Go online to receive ride requests."}
+                  {driver?.status === "active" ? "Scanning area for passengers..." : "Go Online to start receiving requests"}
                 </Text>
               </View>
             )}
@@ -315,387 +216,403 @@ export default function TripRadarScreen() {
               const isAcceptLoading = loadingAcceptRequests[item.id];
               const isRejectLoading = loadingRejectRequests[item.id];
 
+              // --- MOCK DATA FOR NAME/RATING (Replace with r.user.name if available in backend) ---
+              const userName = r.user.name || "Passenger";
+              const userRating = r.user.ratings || 'New';
 
               return (
                 <TouchableOpacity
-                  activeOpacity={0.9}
+                  activeOpacity={0.95}
                   onPress={() => {
                     setSelectedRequest(item);
                     centerMapOnRequest(item);
-                    // sheetRef.current?.snapToIndex(2); // 🔥 Expand sheet to 85%
                   }}
+                  style={styles.premiumCard}
                 >
-                  <View style={styles.card}>
-                    {/* Price + Timer */}
-                    <View style={styles.cardHeader}>
-                      <View>
-                        <Text style={styles.priceText}>₹{r?.fare?.totalFare}</Text>
-                        <Text style={styles.paymentType}>Includes taxes</Text>
+                  {/* --- CARD HEADER: USER INFO & TIMER --- */}
+                  <View style={styles.cardHeaderRow}>
+                    <View style={styles.userInfo}>
+                      <View style={styles.userAvatar}>
+                        <Ionicons name="person" size={14} color="#fff" />
                       </View>
-                      <View style={styles.timerBadge}>
-                        <Text style={styles.timerText}>⏱ {item.countdown}s</Text>
+                      <View>
+                        <Text style={styles.userName}>{userName}</Text>
+                        <View style={styles.ratingRow}>
+                          <Ionicons name="star" size={12} color="#FFD700" />
+                          <Text style={styles.ratingText}>{userRating}</Text>
+                        </View>
                       </View>
                     </View>
 
-                    {/* Pickup */}
-                    <Text style={styles.addressLabel}>
-                      PICKUP • {r.kmToPickup} km
-                    </Text>
-                    <Text style={styles.addressText} numberOfLines={1}>
-                      {r.currentLocationName}
-                    </Text>
-
-                    {/* Drop */}
-                    <Text style={[styles.addressLabel, { marginTop: 10 }]}>
-                      DROP • {r.kmPickupToDrop} km
-                    </Text>
-                    <Text style={styles.addressText} numberOfLines={1}>
-                      {r.destinationLocation}
-                    </Text>
-
-                    {/* Actions */}
-                    <View style={styles.actionRow}>
-                      <Button
-                        title={isRejectLoading ? <ActivityIndicator color={color.primary} /> : "Reject"}
-                        width="45%"
-                        disabled={isRejectLoading || isAcceptLoading || isGlobalProcessing}
-                        onPress={() => rejectRequest(item.id)}
-                      />
-                      <Button
-                        title={isAcceptLoading ? <ActivityIndicator color={color.primary} /> : "Accept"}
-                        width="45%"
-                        textColor="#000"
-                        disabled={isAcceptLoading || isRejectLoading || isGlobalProcessing}
-                        onPress={() => {
-                          acceptRequest(item.id);
-                        }}
-                      />
+                    <View style={styles.timerContainer}>
+                      <Ionicons name="time-outline" size={12} color={color.lightGreen} style={{ marginRight: 4 }} />
+                      <Text style={styles.timerText}>{item.countdown}s</Text>
                     </View>
                   </View>
+
+                  <View style={styles.cardDivider} />
+
+                  {/* --- CARD BODY: ROUTE & PRICE --- */}
+                  <View style={styles.cardBodyRow}>
+
+                    {/* VISUAL TIMELINE */}
+                    <View style={styles.timelineContainer}>
+                      {/* Pickup */}
+                      <View style={styles.timelineRow}>
+                        <View style={styles.timelineDotPickup} />
+                        <View style={styles.addressBox}>
+                          <Text style={styles.label}>PICKUP ({r.kmToPickup} km)</Text>
+                          <Text style={styles.address} numberOfLines={1}>{r.currentLocationName}</Text>
+                        </View>
+                      </View>
+
+                      {/* Connector Line */}
+                      <View style={styles.timelineLine} />
+
+                      {/* Drop */}
+                      <View style={styles.timelineRow}>
+                        <View style={styles.timelineDotDrop} />
+                        <View style={styles.addressBox}>
+                          <Text style={styles.label}>DROP ({r.kmPickupToDrop} km)</Text>
+                          <Text style={styles.address} numberOfLines={1}>{r.destinationLocation}</Text>
+                        </View>
+                      </View>
+                    </View>
+
+                    {/* PRICE BLOCK (Right Aligned) */}
+                    <View style={styles.priceContainer}>
+                      <Text style={styles.currencySymbol}>₹</Text>
+                      <Text style={styles.priceValue}>{r?.fare?.totalFare}</Text>
+                      <Text style={styles.estLabel}>Est. Earnings</Text>
+                    </View>
+                  </View>
+
+                  {/* --- CARD FOOTER: ACTIONS --- */}
+                  <View style={styles.actionGrid}>
+                    <Button
+                      title={isRejectLoading ? <ActivityIndicator color={color.primary} /> : "Ignore"}
+                      width="35%"
+                      backgroundColor="transparent"
+                      style={styles.rejectBtn}
+                      textColor={color.primaryGray}
+                      disabled={isRejectLoading || isAcceptLoading || isGlobalProcessing}
+                      onPress={() => rejectRequest(item.id)}
+                    />
+                    <Button
+                      title={isAcceptLoading ? <ActivityIndicator color={color.subPrimary} /> : "Accept Ride"}
+                      width="62%"
+                      backgroundColor={color.buttonBg}
+                      textColor={color.primary}
+                      disabled={isAcceptLoading || isRejectLoading || isGlobalProcessing}
+                      onPress={() => acceptRequest(item.id)}
+                    />
+                  </View>
+
                 </TouchableOpacity>
               );
             }}
           />
-
         </View>
       </BottomSheet>
     </View>
   );
 }
 
-// ——————————————— STYLES ———————————————
+// ——————————————— PREMIUM STYLES ———————————————
 const styles = StyleSheet.create({
-  earningsCard: {
-    position: "absolute",
-    top: 110,
-    alignSelf: "center",
-    width: "88%",
-    backgroundColor: color.subPrimary, // glass effect
-    paddingVertical: 15,
-    paddingHorizontal: 15,
-    gap: 5,
-    zIndex: 50,
-    borderRadius: 20,
-    borderWidth: 1,
-    borderColor: 'rgba(255,255,255,0.15)',
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.3,
-    shadowRadius: 4,
-    elevation: 8,
-  },
-
-  earnRow: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
-  },
-
-  earnTitle: {
-    color: color.primaryText,
-    fontSize: fonts.FONT14,
-    fontFamily: "TT-Octosquares-Medium",
-  },
-
-  earnAmount: {
-    color: color.primaryText,
-    fontSize: fontSizes.FONT14,
-    fontFamily: "TT-Octosquares-Medium",
-  },
-
-  earnRowBottom: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
-    marginTop: 6,
-  },
-
-  earnSubtitle: {
-    color: color.primaryText,
-    fontSize: fontSizes.FONT14,
-    fontFamily: "TT-Octosquares-Medium",
-  },
-
-  earnCount: {
-    color: color.primaryText,
-    fontSize: fontSizes.FONT17,
-    fontFamily: "TT-Octosquares-Medium",
-  },
-
   container: {
     flex: 1,
     backgroundColor: color.subPrimary,
   },
   loadingContainer: {
     flex: 1,
-    // backgroundColor: "#101010",
     justifyContent: "center",
-    alignItems: "center"
+    alignItems: "center",
+    backgroundColor: color.subPrimary,
   },
   loadingText: {
     fontFamily: "TT-Octosquares-Medium",
-    color: "#888",
-    fontSize: 16,
-    letterSpacing: 1
+    color: "#666",
+    marginTop: 10,
+    fontSize: 12
   },
-  // Header
-  headerOverlay: {
-    position: "absolute",
-    top: 50,
-    left: 0,
-    right: 0,
-    zIndex: 50,
+
+  // --- HUD (Heads Up Display) ---
+  hudContainer: {
+    position: 'absolute',
+    top: Platform.OS === 'ios' ? 60 : 50,
+    alignSelf: 'center',
+    width: '90%',
+    flexDirection: 'row',
+    backgroundColor: 'rgba(20, 20, 20, 0.85)', // Dark Glass
+    borderRadius: 16,
+    paddingVertical: 12,
+    paddingHorizontal: 16,
+    justifyContent: 'space-between',
     alignItems: 'center',
+    borderWidth: 1,
+    borderColor: 'rgba(255,255,255,0.08)',
+    zIndex: 50,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 10 },
+    shadowOpacity: 0.3,
+    shadowRadius: 10,
   },
   statusPill: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: color.subPrimary,
-    paddingHorizontal: 16,
-    paddingVertical: 10,
-    borderRadius: 30,
-    borderWidth: 1,
-    borderColor: 'rgba(255,255,255,0.15)',
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.3,
-    shadowRadius: 4,
-    elevation: 8,
   },
   statusDot: {
     width: 8,
     height: 8,
     borderRadius: 4,
-    marginRight: 8,
+    marginRight: 6,
   },
   statusText: {
-    color: "#fff",
+    color: '#fff',
+    fontFamily: "TT-Octosquares-Medium",
+    fontSize: 12,
+  },
+  hudDivider: {
+    width: 1,
+    height: 20,
+    backgroundColor: 'rgba(255,255,255,0.1)',
+  },
+  earningsSection: {
+    alignItems: 'center',
+  },
+  hudLabel: {
+    color: '#666',
+    fontSize: 9,
+    fontFamily: "TT-Octosquares-Medium",
+    marginBottom: 2,
+    letterSpacing: 0.5,
+  },
+  hudValue: {
+    color: '#fff',
     fontSize: 14,
     fontFamily: "TT-Octosquares-Medium",
   },
-  // Map
-  mapContainer: {
-    height: windowHeight(500),
-    width: "100%",
+
+  // --- MAP ---
+  map: { flex: 1 },
+  markerIcon: {
+    width: windowWidth(35),
+    height: windowHeight(35),
+    tintColor: color.primaryGray,
   },
-  map: {
-    flex: 1,
-  },
-  mapFadeOverlay: {
-    position: 'absolute',
-    bottom: 0,
-    left: 0,
-    right: 0,
-    height: 60,
-    backgroundColor: 'transparent',
-    // If you had LinearGradient, this would be a gradient from transparent to black
-  },
-  // Custom Markers on Map
-  customMarkerContainer: {
-    alignItems: 'center',
-  },
-  markerDot: {
-    width: 14,
-    height: 14,
-    borderRadius: 7,
-    borderWidth: 2,
-    borderColor: '#fff'
-  },
-  markerLabel: {
-    backgroundColor: '#fff',
-    paddingHorizontal: 6,
-    paddingVertical: 2,
-    borderRadius: 4,
-    marginTop: 4
-  },
-  markerText: {
-    fontSize: 10,
-    fontWeight: 'bold',
-    color: '#000'
-  },
-  // List Area
-  listContainer: {
-    flex: 1,
-    backgroundColor: color.subPrimary, // Pure black for bottom section
-    // marginTop: -200, // Overlap map slightly
-    borderTopLeftRadius: 24,
-    borderTopRightRadius: 24,
-    paddingTop: 20,
-    paddingHorizontal: 16,
-  },
-  listHeader: {
+
+  // --- BOTTOM SHEET HEADER ---
+  sheetHeader: {
     flexDirection: 'row',
     alignItems: 'center',
-    marginBottom: 16,
+    justifyContent: 'space-between',
+    marginBottom: 20,
+    marginTop: 5,
   },
-  listTitle: {
+  sheetTitle: {
     color: "#fff",
     fontSize: 20,
     fontFamily: "TT-Octosquares-Medium",
   },
-  countBadge: {
-    backgroundColor: '#333',
-    borderRadius: 12,
-    paddingHorizontal: 8,
-    paddingVertical: 2,
-    marginLeft: 10,
+  radarBadge: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: 'rgba(255, 255, 255, 0.1)',
+    paddingHorizontal: 10,
+    paddingVertical: 6,
+    borderRadius: 20,
   },
-  countText: {
-    color: '#fff',
+  radarPulse: {
+    width: 6,
+    height: 6,
+    borderRadius: 3,
+    backgroundColor: color.buttonBg,
+    marginRight: 6,
+  },
+  radarText: {
+    color: color.buttonBg,
     fontSize: 12,
     fontFamily: "TT-Octosquares-Medium",
   },
-  // Card Styling
-  card: {
-    // backgroundColor: "#181818",
+
+  // --- PREMIUM REQUEST CARD ---
+  premiumCard: {
+    backgroundColor: '#1E1E1E',
     borderRadius: 20,
     padding: 16,
     marginBottom: 16,
     borderWidth: 1,
-    borderColor: "#2A2A2A",
-    // shadowColor: "#000",
-    // shadowOffset: { width: 0, height: 4 },
-    // shadowOpacity: 0.4,
-    // shadowRadius: 8,
-    // elevation: 5,
+    borderColor: 'rgba(255,255,255,0.05)',
   },
-  cardHeader: {
+
+  // Header Row (User + Timer)
+  cardHeaderRow: {
     flexDirection: 'row',
     justifyContent: 'space-between',
-    alignItems: 'flex-start',
-    marginBottom: 12,
+    alignItems: 'center',
   },
-  priceText: {
-    color: "#fff",
-    fontSize: 24,
+  userInfo: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  userAvatar: {
+    width: 32,
+    height: 32,
+    borderRadius: 16,
+    backgroundColor: '#333',
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginRight: 10,
+  },
+  userName: {
+    color: '#fff',
     fontFamily: "TT-Octosquares-Medium",
+    fontSize: 14,
     marginBottom: 2,
   },
-  paymentType: {
-    color: "#888",
-    fontSize: 12,
-    fontFamily: "TT-Octosquares-Medium",
+  ratingRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    top: 2.5
+
   },
-  timerBadge: {
-    backgroundColor: "rgba(255, 255, 255, 0.1)",
-    paddingHorizontal: 10,
-    paddingVertical: 6,
-    borderRadius: 8,
+  ratingText: {
+    color: '#ccc',
+    fontSize: fontSizes.FONT13,
+    fontFamily: "TT-Octosquares-Medium",
+    marginLeft: 3,
+    top: 1
+  },
+  timerContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: 'rgba(0, 230, 118, 0.1)',
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    borderRadius: 6,
   },
   timerText: {
     color: color.lightGreen,
     fontFamily: "TT-Octosquares-Medium",
-    fontSize: 13,
+    fontSize: 12,
   },
-  divider: {
+
+  cardDivider: {
     height: 1,
-    backgroundColor: "#2A2A2A",
+    backgroundColor: 'rgba(255,255,255,0.05)',
     marginVertical: 12,
   },
-  // Route Vis
-  routeContainer: {
-    flexDirection: 'row',
-    marginBottom: 20,
-  },
-  timelineVisual: {
-    alignItems: 'center',
-    marginRight: 12,
-    marginTop: 4,
-  },
-  timelineDot: {
-    width: 10,
-    height: 10,
-    borderRadius: 5,
-  },
-  timelineLine: {
-    width: 1,
-    height: 34, // Adjust based on text height
-    backgroundColor: '#444',
-    marginVertical: 4,
-  },
-  timelineSquare: {
-    width: 10,
-    height: 10,
-    borderRadius: 2, // Square-ish
-  },
-  addressContent: {
-    flex: 1,
-  },
-  addressRow: {
-    justifyContent: 'center',
-    height: 20, // Fixed height to align with dots
-  },
-  addressLabel: {
-    color: color.primaryGray,
-    fontSize: 11,
-    fontFamily: "TT-Octosquares-Medium",
-    marginBottom: 2,
-    textTransform: 'uppercase',
-    letterSpacing: 0.5,
-  },
-  addressText: {
-    color: "#E0E0E0",
-    fontSize: 15,
-    fontFamily: "TT-Octosquares-Medium",
-  },
-  // Actions
-  actionRow: {
+
+  // Body Row (Timeline + Price)
+  cardBodyRow: {
     flexDirection: 'row',
     justifyContent: 'space-between',
-    gap: 12,
-    marginTop: 15
+    alignItems: 'flex-start',
+  },
+  timelineContainer: {
+    flex: 1,
+    marginRight: 10,
+  },
+  timelineRow: {
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+    height: 36, // Fixed height for consistent lines
+  },
+  timelineLine: {
+    position: 'absolute',
+    left: 4, // Center of dot
+    top: 10,
+    bottom: 0,
+    width: 1,
+    height: 32,
+    backgroundColor: '#444',
+  },
+  timelineDotPickup: {
+    width: 9,
+    height: 9,
+    borderRadius: 4.5,
+    backgroundColor: color.buttonBg,
+    marginTop: 3,
+    marginRight: 10,
+    zIndex: 2,
+  },
+  timelineDotDrop: {
+    width: 9,
+    height: 9,
+    borderRadius: 4.5,
+    borderWidth: 2,
+    borderColor: '#FF5252',
+    backgroundColor: '#1E1E1E',
+    marginTop: 3,
+    marginRight: 10,
+    zIndex: 2,
+  },
+  addressBox: {
+    flex: 1,
+  },
+  label: {
+    color: '#666',
+    fontSize: 9,
+    fontFamily: "TT-Octosquares-Medium",
+    marginBottom: 1,
+  },
+  address: {
+    color: '#E0E0E0',
+    fontSize: 13,
+    fontFamily: "TT-Octosquares-Medium",
   },
 
-  // ... existing styles
+  // Price Block
+  priceContainer: {
+    alignItems: 'flex-end',
+    justifyContent: 'center',
+    paddingLeft: 10,
+    borderLeftWidth: 1,
+    borderLeftColor: 'rgba(255,255,255,0.05)',
+  },
+  currencySymbol: {
+    color: color.buttonBg,
+    fontSize: fontSizes.FONT20,
+    fontFamily: "TT-Octosquares-Medium",
+    position: 'absolute',
+    top: 4,
+    left: 10,
+  },
+  priceValue: {
+    color: color.buttonBg,
+    fontSize: 25,
+    fontFamily: "TT-Octosquares-Medium",
+    lineHeight: 30,
+  },
+  estLabel: {
+    color: '#666',
+    fontSize: 10,
+    fontFamily: "TT-Octosquares-Medium",
+  },
 
+  // Footer Actions
+  actionGrid: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    marginTop: 16,
+  },
+  rejectBtn: {
+    borderWidth: 1,
+    borderColor: 'rgba(255,255,255,0.1)',
+    borderRadius: 12,
+  },
+
+  // Empty State
   emptyContainer: {
     alignItems: 'center',
-    justifyContent: 'center',
-    marginTop: 40, // Push it down slightly
-    paddingHorizontal: 40,
-  },
-  radarCircle: {
-    width: 80,
-    height: 80,
-    borderRadius: 40,
-    backgroundColor: '#1A1A1A', // Dark circle bg
-    justifyContent: 'center',
-    alignItems: 'center',
-    marginBottom: 20,
-    borderWidth: 1,
-    borderColor: '#333',
-  },
-  emptyTitle: {
-    color: color.primaryText,
-    fontSize: 18,
-    fontFamily: "TT-Octosquares-Medium",
-    marginBottom: 8,
+    marginTop: 50,
+    opacity: 0.6,
   },
   emptySubtitle: {
-    color: '#666',
+    color: '#888',
     fontSize: 14,
     fontFamily: "TT-Octosquares-Medium",
     textAlign: 'center',
-    lineHeight: 20,
   },
 });
