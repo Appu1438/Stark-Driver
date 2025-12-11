@@ -31,6 +31,7 @@ export default function SignupScreen() {
   const scrollViewRef = useRef(null);
   const [currentStep, setCurrentStep] = useState(0);
   const [uploadingImage, setUploadingImage] = useState(false);
+  const [movingToNext, setMovingToNext] = useState(false);
   const [showAlert, setShowAlert] = useState(false);
   const [alertConfig, setAlertConfig] = useState({});
 
@@ -141,6 +142,8 @@ export default function SignupScreen() {
     if (!formData.city) return openAlert("City", "Enter your city.");
     if (!formData.aadhar) return openAlert("Aadhar", "Enter Aadhar number.");
 
+    setMovingToNext(true)
+
     const finalData = {
       ...formData,
       phone_number: `${COUNTRY_CODE}${formData.phoneNumber}`,
@@ -151,6 +154,8 @@ export default function SignupScreen() {
       pathname: "/(routes)/document-verification",
       params: finalData,
     });
+
+    setMovingToNext(false)
   };
 
   // --- Render Steps ---
@@ -274,11 +279,24 @@ export default function SignupScreen() {
 
         {/* Footer Actions */}
         <View style={styles.footer}>
-          <TouchableOpacity style={styles.nextButton} onPress={handleNext}>
-            <Text style={styles.nextButtonText}>{currentStep === 2 ? "Upload Documents" : "Continue"}</Text>
-            <Ionicons name="arrow-forward" size={20} color={color.primary} />
+          <TouchableOpacity
+            style={[styles.nextButton, movingToNext && { opacity: 0.6 }]}
+            onPress={handleNext}
+            disabled={movingToNext}
+          >
+            {movingToNext ? (
+              <ActivityIndicator size="small" color={color.primary} />
+            ) : (
+              <>
+                <Text style={styles.nextButtonText}>
+                  {currentStep === 2 ? "Upload Documents" : "Continue"}
+                </Text>
+                <Ionicons name="arrow-forward" size={20} color={color.primary} />
+              </>
+            )}
           </TouchableOpacity>
         </View>
+
 
       </KeyboardAvoidingView>
 
