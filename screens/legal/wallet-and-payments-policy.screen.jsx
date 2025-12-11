@@ -6,6 +6,7 @@ import { Ionicons } from "@expo/vector-icons";
 import { router } from "expo-router";
 import { LinearGradient } from "expo-linear-gradient";
 import { SafeAreaView } from "react-native-safe-area-context";
+import { fontSizes } from "@/themes/app.constant";
 
 export default function WalletAndPayments() {
   return (
@@ -131,7 +132,7 @@ const styles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "center",
   },
-  pageTitle: { fontSize: 24, color: "#fff", fontFamily: "TT-Octosquares-Medium" },
+  pageTitle: { fontSize: fontSizes.FONT20, color: "#fff", fontFamily: "TT-Octosquares-Medium" },
 
   // Content Card
   contentCard: {
@@ -146,13 +147,13 @@ const styles = StyleSheet.create({
   // Section Styles
   sectionContainer: { marginBottom: 25 },
   sectionTitle: {
-    fontSize: 18,
+    fontSize: fontSizes.FONT18,
     fontFamily: "TT-Octosquares-Medium",
     color: color.primaryText,
     marginBottom: 8,
   },
   sectionContent: {
-    fontSize: 14,
+    fontSize: fontSizes.FONT14,
     lineHeight: 24,
     color: "#ccc",
     fontFamily: "TT-Octosquares-Medium",

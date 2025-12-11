@@ -117,7 +117,7 @@ const styles = StyleSheet.create({
   // Header
   header: { flexDirection: 'row', alignItems: 'center', marginBottom: 25, gap: 15 },
   backButton: { width: 40, height: 40, borderRadius: 12, backgroundColor: 'rgba(255,255,255,0.1)', alignItems: 'center', justifyContent: 'center' },
-  pageTitle: { fontSize: 24, color: "#fff", fontFamily: "TT-Octosquares-Medium" },
+  pageTitle: { fontSize: fontSizes.FONT20, color: "#fff", fontFamily: "TT-Octosquares-Medium" },
 
   // Content Card
   contentCard: {
@@ -132,13 +132,13 @@ const styles = StyleSheet.create({
   // Section Styles
   sectionContainer: { marginBottom: 25 },
   sectionTitle: {
-    fontSize: 18,
+    fontSize: fontSizes.FONT18,
     fontFamily: "TT-Octosquares-Medium",
     color: color.primaryText,
     marginBottom: 8,
   },
   sectionContent: {
-    fontSize: 14,
+    fontSize: fontSizes.FONT14,
     lineHeight: 24,
     color: '#ccc',
     fontFamily: "TT-Octosquares-Medium",

@@ -15,6 +15,7 @@ import color from "@/themes/app.colors";
 import axiosInstance from "@/api/axiosInstance";
 import { useDriverLocationStore } from "@/store/driverLocationStore";
 import { SafeAreaView } from "react-native-safe-area-context";
+import { fontSizes, windowWidth } from "@/themes/app.constant";
 
 // ---------------------------------------------
 // ⭐ DARK THEME SKELETON
@@ -192,10 +193,10 @@ export default function FareDetails() {
                 </View>
                 <View>
                   <Text style={styles.gridLabel}>Minimum Fare</Text>
-                  <Text style={[styles.gridLabel, { fontSize: 10, color: '#666' }]}>Short trips protection</Text>
+                  <Text style={[styles.gridLabel, { fontSize: fontSizes.FONT10, color: '#666' }]}>Short trips protection</Text>
                 </View>
               </View>
-              <Text style={[styles.gridValue, { fontSize: 22 }]}>₹{fare.minFare}</Text>
+              <Text style={[styles.gridValue, { fontSize: fontSizes.FONT20 }]}>₹{fare.minFare}</Text>
             </View>
 
           </View>
@@ -244,12 +245,12 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   pageTitle: {
-    fontSize: 24,
+    fontSize: fontSizes.FONT20,
     color: "#fff",
     fontFamily: "TT-Octosquares-Medium",
   },
   pageSubtitle: {
-    fontSize: 13,
+    fontSize: fontSizes.FONT13,
     color: "#888",
     fontFamily: "TT-Octosquares-Medium",
     textTransform: "capitalize",
@@ -283,19 +284,19 @@ const styles = StyleSheet.create({
   },
   heroLabel: {
     color: color.primaryGray,
-    fontSize: 12,
+    fontSize: fontSizes.FONT12,
     fontFamily: "TT-Octosquares-Medium",
     letterSpacing: 1.5,
   },
   heroValue: {
-    fontSize: 42,
+    fontSize: windowWidth(40),
     color: "#fff",
     fontFamily: "TT-Octosquares-Medium",
     marginBottom: 5,
   },
   heroSubText: {
     color: "rgba(255,255,255,0.6)",
-    fontSize: 12,
+    fontSize: fontSizes.FONT12,
     fontFamily: "TT-Octosquares-Medium",
   },
 
@@ -324,13 +325,13 @@ const styles = StyleSheet.create({
     marginBottom: 10,
   },
   gridValue: {
-    fontSize: 20,
+    fontSize: fontSizes.FONT20,
     color: "#fff",
     fontFamily: "TT-Octosquares-Medium",
     marginBottom: 4,
   },
   gridLabel: {
-    fontSize: 12,
+    fontSize: fontSizes.FONT12,
     color: "#888",
     fontFamily: "TT-Octosquares-Medium",
   },
@@ -346,7 +347,7 @@ const styles = StyleSheet.create({
   },
   infoText: {
     flex: 1,
-    fontSize: 12,
+    fontSize: fontSizes.FONT12,
     color: "#666",
     lineHeight: 18,
     fontFamily: "TT-Octosquares-Medium",

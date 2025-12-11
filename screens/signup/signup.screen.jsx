@@ -18,7 +18,7 @@ import DateTimePicker from "@react-native-community/datetimepicker";
 import { MaterialIcons, Ionicons, FontAwesome5 } from "@expo/vector-icons";
 
 // Internal Utils
-import { windowHeight } from "@/themes/app.constant";
+import { fontSizes, windowHeight } from "@/themes/app.constant";
 import color from "@/themes/app.colors";
 import { uploadToCloudinary } from "@/utils/uploads/uploadToCloudinary";
 import AppAlert from "@/components/modal/alert-modal/alert.modal";
@@ -335,7 +335,7 @@ const styles = StyleSheet.create({
   },
   stepIndicator: {
     fontFamily: "TT-Octosquares-Medium",
-    fontSize: 14,
+    fontSize: fontSizes.FONT14,
     color: color.primaryText,
     opacity: 0.7,
   },
@@ -345,13 +345,13 @@ const styles = StyleSheet.create({
   },
   pageTitle: {
     fontFamily: "TT-Octosquares-Medium",
-    fontSize: 24,
+    fontSize: fontSizes.FONT20,
     color: color.primaryText,
     marginBottom: 8,
     marginTop: 10,
   },
   pageSubtitle: {
-    fontSize: 14,
+    fontSize: fontSizes.FONT14,
     color: color.primaryText,
     opacity: 0.6,
     marginBottom: 30,
@@ -386,7 +386,7 @@ const styles = StyleSheet.create({
     alignItems: "center",
   },
   avatarText: {
-    fontSize: 10,
+    fontSize: fontSizes.FONT12,
     color: color.primaryText,
     marginTop: 4,
     opacity: 0.5,
@@ -409,7 +409,7 @@ const styles = StyleSheet.create({
     marginBottom: 20,
   },
   label: {
-    fontSize: 13,
+    fontSize: fontSizes.FONT14,
     color: color.primaryText,
     marginBottom: 8,
     marginLeft: 4,
@@ -428,13 +428,13 @@ const styles = StyleSheet.create({
   },
   input: {
     flex: 1,
-    fontSize: 16,
+    fontSize: fontSizes.FONT16,
     color: color.primaryText,
     fontFamily: "TT-Octosquares-Medium",
     paddingVertical: 10,
   },
   prefix: {
-    fontSize: 16,
+    fontSize: fontSizes.FONT16,
     color: color.primaryText,
     marginRight: 10,
     fontFamily: "TT-Octosquares-Medium",
@@ -482,7 +482,7 @@ const styles = StyleSheet.create({
     marginBottom: 25,
   },
   infoText: {
-    fontSize: 12,
+    fontSize: fontSizes.FONT12,
     color: color.primaryText,
     flex: 1,
     lineHeight: 18,
@@ -518,7 +518,7 @@ const styles = StyleSheet.create({
   },
   nextButtonText: {
     color: color.primary,
-    fontSize: 16,
+    fontSize: fontSizes.FONT16,
     fontFamily: "TT-Octosquares-Medium",
   },
 });

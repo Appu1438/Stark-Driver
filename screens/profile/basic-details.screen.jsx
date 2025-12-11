@@ -5,6 +5,7 @@ import { LinearGradient } from "expo-linear-gradient";
 import { Ionicons, MaterialCommunityIcons } from "@expo/vector-icons";
 import color from "@/themes/app.colors";
 import { SafeAreaView } from "react-native-safe-area-context";
+import { fontSizes } from "@/themes/app.constant";
 
 export default function BasicDetails() {
     const params = useLocalSearchParams();
@@ -163,12 +164,12 @@ const styles = StyleSheet.create({
         justifyContent: 'center',
     },
     pageTitle: {
-        fontSize: 24,
+        fontSize: fontSizes.FONT20,
         color: "#fff",
         fontFamily: "TT-Octosquares-Medium",
     },
     pageSubtitle: {
-        fontSize: 13,
+        fontSize: fontSizes.FONT14,
         color: "#888",
         fontFamily: "TT-Octosquares-Medium",
     },
@@ -204,7 +205,7 @@ const styles = StyleSheet.create({
         flex: 1,
     },
     label: {
-        fontSize: 12,
+        fontSize: fontSizes.FONT12,
         color: "#666",
         fontFamily: "TT-Octosquares-Medium",
         marginBottom: 4,
@@ -212,7 +213,7 @@ const styles = StyleSheet.create({
         letterSpacing: 0.5,
     },
     value: {
-        fontSize: 16,
+        fontSize: fontSizes.FONT16,
         color: "#fff",
         fontFamily: "TT-Octosquares-Medium",
     },
@@ -231,7 +232,7 @@ const styles = StyleSheet.create({
     },
     verifiedText: {
         flex: 1,
-        fontSize: 13,
+        fontSize: fontSizes.FONT13,
         color: "#ccc",
         lineHeight: 18,
         fontFamily: "TT-Octosquares-Medium",

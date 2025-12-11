@@ -5,6 +5,7 @@ import { LinearGradient } from "expo-linear-gradient";
 import { Ionicons, MaterialCommunityIcons, FontAwesome5 } from "@expo/vector-icons";
 import color from "@/themes/app.colors";
 import { SafeAreaView } from "react-native-safe-area-context";
+import { fontSizes } from "@/themes/app.constant";
 
 export default function DocumentDetails() {
   const params = useLocalSearchParams();
@@ -151,12 +152,12 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   pageTitle: {
-    fontSize: 24,
+    fontSize: fontSizes.FONT20,
     color: "#fff",
     fontFamily: "TT-Octosquares-Medium",
   },
   pageSubtitle: {
-    fontSize: 13,
+    fontSize: fontSizes.FONT13,
     color: "#888",
     fontFamily: "TT-Octosquares-Medium",
   },
@@ -184,12 +185,12 @@ const styles = StyleSheet.create({
     marginRight: 12,
   },
   cardTitle: {
-    fontSize: 16,
+    fontSize: fontSizes.FONT16,
     color: "#fff",
     fontFamily: "TT-Octosquares-Medium",
   },
   cardSubtitle: {
-    fontSize: 11,
+    fontSize: fontSizes.FONT12,
     color: "#666",
     fontFamily: "TT-Octosquares-Medium",
     marginTop: 2,
@@ -207,7 +208,7 @@ const styles = StyleSheet.create({
     alignItems: "center",
   },
   label: {
-    fontSize: 11,
+    fontSize: fontSizes.FONT12,
     color: "#666",
     textTransform: "uppercase",
     letterSpacing: 0.5,
@@ -215,7 +216,7 @@ const styles = StyleSheet.create({
     marginBottom: 4,
   },
   value: {
-    fontSize: 15,
+    fontSize: fontSizes.FONT15,
     color: "#e0e0e0",
     fontFamily: "TT-Octosquares-Medium",
     letterSpacing: 0.5,
@@ -237,7 +238,7 @@ const styles = StyleSheet.create({
     borderColor: "rgba(255, 82, 82, 0.3)",
   },
   statusText: {
-    fontSize: 10,
+    fontSize: fontSizes.FONT10,
     fontFamily: "TT-Octosquares-Medium",
   },
   textActive: { color: "#00E676" },
@@ -257,7 +258,7 @@ const styles = StyleSheet.create({
   },
   infoText: {
     flex: 1,
-    fontSize: 13,
+    fontSize: fontSizes.FONT13,
     color: "#ccc",
     lineHeight: 18,
     fontFamily: "TT-Octosquares-Medium",

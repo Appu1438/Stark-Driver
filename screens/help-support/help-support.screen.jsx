@@ -210,8 +210,8 @@ const styles = StyleSheet.create({
   // Header
   header: { flexDirection: 'row', alignItems: 'center', marginBottom: 25, gap: 15 },
   backButton: { width: 40, height: 40, borderRadius: 12, backgroundColor: 'rgba(255,255,255,0.1)', alignItems: 'center', justifyContent: 'center' },
-  pageTitle: { fontSize: 24, color: "#fff", fontFamily: "TT-Octosquares-Medium" },
-  pageSubtitle: { fontSize: 13, color: "#888", fontFamily: "TT-Octosquares-Medium" },
+  pageTitle: { fontSize: fontSizes.FONT20, color: "#fff", fontFamily: "TT-Octosquares-Medium" },
+  pageSubtitle: { fontSize: fontSizes.FONT13, color: "#888", fontFamily: "TT-Octosquares-Medium" },
 
   // Search
   searchContainer: {
@@ -235,17 +235,17 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: 'rgba(255,255,255,0.08)',
   },
-  contactTitle: { fontSize: 18, color: '#fff', fontFamily: "TT-Octosquares-Medium", marginBottom: 4 },
-  contactSubtitle: { fontSize: 12, color: '#888', marginBottom: 20, fontFamily: "TT-Octosquares-Medium" },
+  contactTitle: { fontSize: fontSizes.FONT18, color: '#fff', fontFamily: "TT-Octosquares-Medium", marginBottom: 4 },
+  contactSubtitle: { fontSize: fontSizes.FONT12, color: '#888', marginBottom: 20, fontFamily: "TT-Octosquares-Medium" },
   contactRow: { flexDirection: 'row', justifyContent: 'space-between' },
   contactButton: { flexDirection: 'row', alignItems: 'center', flex: 1, gap: 10 },
   iconBox: { width: 40, height: 40, borderRadius: 12, alignItems: 'center', justifyContent: 'center' },
-  buttonLabel: { color: '#fff', fontFamily: "TT-Octosquares-Medium", fontSize: 13 },
-  buttonSub: { color: '#666', fontSize: windowWidth(11), fontFamily: "TT-Octosquares-Medium" },
+  buttonLabel: { color: '#fff', fontFamily: "TT-Octosquares-Medium", fontSize: fontSizes.FONT13 },
+  buttonSub: { color: '#666', fontSize: fontSizes.FONT11, fontFamily: "TT-Octosquares-Medium" },
   verticalDivider: { width: 1, backgroundColor: 'rgba(255,255,255,0.1)', marginHorizontal: 10 },
 
   // FAQ
-  sectionTitle: { fontSize: 18, color: '#fff', fontFamily: "TT-Octosquares-Medium", marginBottom: 15 },
+  sectionTitle: { fontSize: fontSizes.FONT18, color: '#fff', fontFamily: "TT-Octosquares-Medium", marginBottom: 15 },
   faqItem: {
     backgroundColor: 'rgba(255,255,255,0.03)',
     borderRadius: 14,
@@ -270,7 +270,7 @@ const styles = StyleSheet.create({
   },
   questionText: {
     flex: 1,
-    fontSize: 14,
+    fontSize: fontSizes.FONT14,
     color: '#eee',
     fontFamily: "TT-Octosquares-Medium",
     lineHeight: 20,
@@ -282,7 +282,7 @@ const styles = StyleSheet.create({
   },
   answerText: {
     color: '#aaa',
-    fontSize: 13,
+    fontSize: fontSizes.FONT13,
     lineHeight: 20,
     fontFamily: "TT-Octosquares-Medium",
   },

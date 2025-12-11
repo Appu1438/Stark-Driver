@@ -25,7 +25,7 @@ const styles = StyleSheet.create({
   },
   loadingText: {
     color: color.lightGray,
-    fontSize: 18,
+    fontSize: fontSizes.FONT18,
     fontFamily: 'TT-Octosquares-Medium',  // 👈 custom font
     textAlign: "center",
     letterSpacing: 1,                     // makes it more clean
@@ -65,7 +65,7 @@ const styles = StyleSheet.create({
     marginBottom: 8,
   },
   scrollContent: {
-    paddingHorizontal: 24,
+    paddingHorizontal: 15,
     paddingTop: 10,
     paddingBottom: 100, // Space for footer
   },
@@ -86,13 +86,13 @@ const styles = StyleSheet.create({
   },
   statusText: {
     fontFamily: 'TT-Octosquares-Medium',
-    fontSize: 12,
+    fontSize: fontSizes.FONT13,
     color: color.primaryText,
     textTransform: 'uppercase',
   },
   tripIdLabel: {
     fontFamily: 'TT-Octosquares-Medium',
-    fontSize: 10,
+    fontSize: fontSizes.FONT10,
     color: color.lightGray,
     marginLeft: 2,
   },
@@ -101,14 +101,14 @@ const styles = StyleSheet.create({
   },
   earningLabel: {
     fontFamily: 'TT-Octosquares-Medium',
-    fontSize: 10,
+    fontSize: fontSizes.FONT10,
     color: color.lightGray,
     marginBottom: 2,
     letterSpacing: 0.5,
   },
   earningValue: {
     fontFamily: 'TT-Octosquares-Medium',
-    fontSize: 20,
+    fontSize: fontSizes.FONT20,
     color: color.buttonBg, // Use brand color for money
   },
 
@@ -135,7 +135,7 @@ const styles = StyleSheet.create({
   },
   passengerName: {
     fontFamily: 'TT-Octosquares-Medium',
-    fontSize: 18,
+    fontSize: fontSizes.FONT18,
     color: color.primaryText,
     marginBottom: 6,
   },
@@ -150,7 +150,7 @@ const styles = StyleSheet.create({
   },
   ratingText: {
     fontFamily: 'TT-Octosquares-Medium',
-    fontSize: 11,
+    fontSize: fontSizes.FONT11,
     color: '#FBC02D',
     marginLeft: 4,
   },
@@ -187,13 +187,13 @@ const styles = StyleSheet.create({
     marginHorizontal: 5,
   },
   navLabel: {
-    fontSize: 9,
+    fontSize: fontSizes.FONT10,
     color: color.lightGray,
     fontFamily: 'TT-Octosquares-Medium',
     textTransform: 'uppercase',
   },
   navTitle: {
-    fontSize: 13,
+    fontSize: fontSizes.FONT13,
     color: color.primaryText,
     fontFamily: 'TT-Octosquares-Medium',
   },
@@ -203,7 +203,7 @@ const styles = StyleSheet.create({
     marginBottom: 24,
   },
   sectionTitle: {
-    fontSize: 11,
+    fontSize: fontSizes.FONT11,
     fontFamily: 'TT-Octosquares-Medium',
     color: color.lightGray,
     letterSpacing: 1,
@@ -239,13 +239,13 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   timelineLabel: {
-    fontSize: 11,
+    fontSize: fontSizes.FONT11,
     color: color.lightGray,
     fontFamily: 'TT-Octosquares-Medium',
     marginBottom: 2,
   },
   timelineAddress: {
-    fontSize: 15,
+    fontSize: fontSizes.FONT15,
     color: color.primaryText,
     fontFamily: 'TT-Octosquares-Medium',
     lineHeight: 20,
@@ -262,7 +262,7 @@ const styles = StyleSheet.create({
     borderStyle: 'dashed', // Gives it a receipt feel
   },
   receiptTitle: {
-    fontSize: 11,
+    fontSize: fontSizes.FONT11,
     fontFamily: 'TT-Octosquares-Medium',
     color: color.lightGray,
     textAlign: 'center',
@@ -306,7 +306,7 @@ const styles = StyleSheet.create({
   },
   cancelBadgeText: {
     color: '#D32F2F',
-    fontSize: 10,
+    fontSize: fontSizes.FONT10,
     fontFamily: 'TT-Octosquares-Medium',
   },
 
@@ -324,13 +324,13 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   ratingHead: {
-    fontSize: 10,
+    fontSize: fontSizes.FONT10,
     color: color.lightGray,
     marginBottom: 4,
     fontFamily: 'TT-Octosquares-Medium',
   },
   ratingScore: {
-    fontSize: 18,
+    fontSize: fontSizes.FONT18,
     color: color.primaryText,
     fontFamily: 'TT-Octosquares-Medium',
   },
@@ -350,7 +350,7 @@ const styles = StyleSheet.create({
   },
   ratingTitle: {
     fontFamily: 'TT-Octosquares-Medium',
-    fontSize: 16,
+    fontSize: fontSizes.FONT16,
     marginBottom: 12,
   },
   starRow: {
@@ -398,19 +398,19 @@ const styles = StyleSheet.create({
   },
   otpCard: {
     width: "80%",
-    backgroundColor: "#fff",
+    backgroundColor: color.subPrimary,
     borderRadius: 24,
     padding: 30,
     alignItems: "center",
   },
   otpTitle: {
-    fontSize: 20,
+    fontSize: fontSizes.FONT20,
     fontFamily: 'TT-Octosquares-Medium',
     color: color.primaryText,
     marginBottom: 8,
   },
   otpSubtitle: {
-    fontSize: 13,
+    fontSize: fontSizes.FONT13,
     color: color.lightGray,
     fontFamily: 'TT-Octosquares-Medium',
     marginBottom: 24,
@@ -418,7 +418,7 @@ const styles = StyleSheet.create({
   },
   otpInput: {
     width: "100%",
-    fontSize: 28,
+    fontSize: fontSizes.FONT28,
     fontFamily: 'TT-Octosquares-Medium',
     textAlign: "center",
     letterSpacing: 8,

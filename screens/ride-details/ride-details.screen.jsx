@@ -405,7 +405,7 @@ export default function RideDetailsScreen() {
       case "Booked": return "#4285F4";
       case "Processing": return "#FBBC05";
       case "Arrived": return "#FF9800";
-      case "Ongoing": return color.buttonBg;
+      case "Ongoing": return "#e3af14ff";
       case "Reached": return "#9C27B0";
       case "Cancelled": return "#FBBC05";
       default: return "#34A853";
@@ -653,7 +653,7 @@ export default function RideDetailsScreen() {
               {/* Call Button - High Visibility */}
               {ride.status === "Arrived" || ride.status === "Booked" || ride.status === "Processing" ? (
                 <TouchableOpacity style={styles.callBtn} onPress={callPassenger}>
-                  <FontAwesome name="phone" size={20} color={color.primary} style={{marginTop:2.5}} />
+                  <FontAwesome name="phone" size={20} color={color.primary} style={{ marginTop: 2.5 }} />
                 </TouchableOpacity>
               ) : null}
             </View>
@@ -733,7 +733,7 @@ export default function RideDetailsScreen() {
                 </View>
 
                 {renderFareRow("Time", new Date(ride.cancelDetails.cancelledAt).toLocaleTimeString())}
-                {renderFareRow("Location", ride.cancelDetails.cancelledLocationName.slice(0,25) || "Unknown")}
+                {renderFareRow("Location", ride.cancelDetails.cancelledLocationName.slice(0, 25) || "Unknown")}
                 {renderFareRow("Travelled", `${ride.cancelDetails.travelledDistance} km`)}
                 <View style={styles.receiptDivider} />
                 {renderFareRow("Cancellation Payout", `₹${ride.cancelDetails.totalFare}`, true)}
@@ -776,13 +776,13 @@ export default function RideDetailsScreen() {
                     ))}
                   </View>
                   {/* {!submitted && ( */}
-                    <TouchableOpacity
-                      onPress={handleUserRating}
-                      disabled={isSubmitting}
-                      style={styles.submitRatingBtn}
-                    >
-                      {isSubmitting ? <ActivityIndicator color={color.primary} /> : <Text style={styles.submitRatingText}>Submit Feedback</Text>}
-                    </TouchableOpacity>
+                  <TouchableOpacity
+                    onPress={handleUserRating}
+                    disabled={isSubmitting}
+                    style={styles.submitRatingBtn}
+                  >
+                    {isSubmitting ? <ActivityIndicator color={color.primary} /> : <Text style={styles.submitRatingText}>Submit Feedback</Text>}
+                  </TouchableOpacity>
                   {/* )} */}
                 </View>
               )}

@@ -5,6 +5,7 @@ import { LinearGradient } from "expo-linear-gradient";
 import { Ionicons, MaterialCommunityIcons, FontAwesome5 } from "@expo/vector-icons";
 import color from "@/themes/app.colors";
 import { SafeAreaView } from "react-native-safe-area-context";
+import { fontSizes } from "@/themes/app.constant";
 
 export default function VehicleDetails() {
     const params = useLocalSearchParams();
@@ -204,12 +205,12 @@ const styles = StyleSheet.create({
         justifyContent: 'center',
     },
     pageTitle: {
-        fontSize: 24,
+        fontSize: fontSizes.FONT20,
         color: "#fff",
         fontFamily: "TT-Octosquares-Medium",
     },
     pageSubtitle: {
-        fontSize: 13,
+        fontSize: fontSizes.FONT13,
         color: "#888",
         fontFamily: "TT-Octosquares-Medium",
     },
@@ -252,7 +253,7 @@ const styles = StyleSheet.create({
     },
     plateText: {
         color: '#000',
-        fontSize: 14,
+        fontSize: fontSizes.FONT14,
         fontFamily: "TT-Octosquares-Medium",
     },
 
@@ -263,7 +264,7 @@ const styles = StyleSheet.create({
     },
     sectionTitle: {
         color: '#666',
-        fontSize: 12,
+        fontSize: fontSizes.FONT12,
         textTransform: 'uppercase',
         letterSpacing: 1,
         fontFamily: "TT-Octosquares-Medium",
@@ -311,14 +312,14 @@ const styles = StyleSheet.create({
         flex: 1,
     },
     label: {
-        fontSize: 11,
+        fontSize: fontSizes.FONT11,
         color: "#666",
         fontFamily: "TT-Octosquares-Medium",
         marginBottom: 4,
         textTransform: "uppercase",
     },
     value: {
-        fontSize: 15,
+        fontSize: fontSizes.FONT15,
         color: "#fff",
         fontFamily: "TT-Octosquares-Medium",
     },
@@ -340,7 +341,7 @@ const styles = StyleSheet.create({
         borderColor: "rgba(255, 82, 82, 0.3)",
     },
     statusText: {
-        fontSize: 10,
+        fontSize: fontSizes.FONT10,
         fontFamily: "TT-Octosquares-Medium",
     },
     textActive: { color: "#00E676" },
@@ -355,7 +356,7 @@ const styles = StyleSheet.create({
         marginTop: 10,
     },
     infoText: {
-        fontSize: 12,
+        fontSize: fontSizes.FONT12,
         color: "#666",
         lineHeight: 18,
         fontFamily: "TT-Octosquares-Medium",

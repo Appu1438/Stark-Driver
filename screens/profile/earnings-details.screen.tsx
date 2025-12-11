@@ -20,7 +20,7 @@ import { useDriverEarnings } from "@/hooks/useGetDriverData";
 import color from "@/themes/app.colors";
 import { router } from "expo-router";
 import { EarningsModal } from "@/components/earnings/earningsModal";
-import { fontSizes } from "@/themes/app.constant";
+import { fontSizes, windowWidth } from "@/themes/app.constant";
 
 const TABS = ["daily", "weekly", "monthly"];
 const screenWidth = Dimensions.get("window").width;
@@ -316,41 +316,41 @@ const styles = StyleSheet.create({
   // Header
   header: { flexDirection: 'row', alignItems: 'center', marginBottom: 25, gap: 15 },
   backButton: { width: 40, height: 40, borderRadius: 12, backgroundColor: 'rgba(255,255,255,0.1)', alignItems: 'center', justifyContent: 'center' },
-  pageTitle: { fontSize: 24, color: "#fff", fontFamily: "TT-Octosquares-Medium" },
+  pageTitle: { fontSize: fontSizes.FONT20, color: "#fff", fontFamily: "TT-Octosquares-Medium" },
 
   // Tabs
   tabContainer: { flexDirection: 'row', backgroundColor: 'rgba(255,255,255,0.05)', borderRadius: 12, padding: 4, marginBottom: 25 },
   tabButton: { flex: 1, paddingVertical: 10, alignItems: 'center', borderRadius: 10 },
   activeTab: { backgroundColor: 'rgba(255,255,255,0.1)' },
-  tabText: { color: '#666', fontFamily: "TT-Octosquares-Medium", fontSize: 13, textTransform: 'capitalize' },
+  tabText: { color: '#666', fontFamily: "TT-Octosquares-Medium", fontSize: fontSizes.FONT13, textTransform: 'capitalize' },
   activeTabText: { color: '#fff' },
 
   // Hero Card
   heroCard: { borderRadius: 24, padding: 20, borderWidth: 1, borderColor: 'rgba(255,255,255,0.08)', marginBottom: 25 },
   heroTop: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 15 },
-  heroLabel: { color: '#888', fontSize: 12, textTransform: 'uppercase', marginBottom: 4, fontFamily: "TT-Octosquares-Medium" },
-  heroValue: { fontSize: 32, color: '#fff', fontFamily: "TT-Octosquares-Medium" },
+  heroLabel: { color: '#888', fontSize: fontSizes.FONT12, textTransform: 'uppercase', marginBottom: 4, fontFamily: "TT-Octosquares-Medium" },
+  heroValue: { fontSize: windowWidth(30), color: '#fff', fontFamily: "TT-Octosquares-Medium" },
   iconBox: { width: 44, height: 44, borderRadius: 12, backgroundColor: 'rgba(255,255,255,0.05)', alignItems: 'center', justifyContent: 'center' },
   divider: { height: 1, backgroundColor: 'rgba(255,255,255,0.08)', marginBottom: 15 },
   statsRow: { flexDirection: 'row', justifyContent: 'space-between' },
   statItem: { alignItems: 'center', flex: 1 },
-  statValue: { fontSize: 18, color: '#fff', fontFamily: "TT-Octosquares-Medium" },
-  statLabel: { fontSize: 11, color: '#666', marginTop: 2, fontFamily: "TT-Octosquares-Medium" },
+  statValue: { fontSize: fontSizes.FONT18, color: '#fff', fontFamily: "TT-Octosquares-Medium" },
+  statLabel: { fontSize: fontSizes.FONT11, color: '#666', marginTop: 2, fontFamily: "TT-Octosquares-Medium" },
   verticalDivider: { width: 1, backgroundColor: 'rgba(255,255,255,0.08)', height: '80%' },
 
   // Chart
   chartContainer: { backgroundColor: 'rgba(255,255,255,0.03)', borderRadius: 20, padding: 20, marginBottom: 25, borderWidth: 1, borderColor: 'rgba(255,255,255,0.05)' },
   chartHeader: { flexDirection: 'row', alignItems: 'center', gap: 8, marginBottom: 20 },
-  chartTitle: { color: '#fff', fontSize: 16, fontFamily: "TT-Octosquares-Medium" },
+  chartTitle: { color: '#fff', fontSize: fontSizes.FONT16, fontFamily: "TT-Octosquares-Medium" },
   noDataBox: { height: 150, alignItems: 'center', justifyContent: 'center' },
   noDataText: { color: '#555', fontFamily: "TT-Octosquares-Medium" },
 
   // List
   listSection: { marginTop: 10 },
-  sectionTitle: { fontSize: 18, color: '#fff', fontFamily: "TT-Octosquares-Medium", marginBottom: 15 },
+  sectionTitle: { fontSize: fontSizes.FONT18, color: '#fff', fontFamily: "TT-Octosquares-Medium", marginBottom: 15 },
   listItem: { flexDirection: 'row', alignItems: 'center', backgroundColor: 'rgba(255,255,255,0.03)', padding: 16, borderRadius: 16, marginBottom: 10, gap: 15, borderWidth: 1, borderColor: 'rgba(255,255,255,0.02)' },
   listIcon: { width: 36, height: 36, borderRadius: 10, backgroundColor: 'rgba(255,255,255,0.05)', alignItems: 'center', justifyContent: 'center' },
-  listDate: { color: '#fff', fontSize: 14, fontFamily: "TT-Octosquares-Medium", marginBottom: 2 },
-  listSub: { color: '#666', fontSize: 11, fontFamily: "TT-Octosquares-Medium" },
-  listAmount: { color: color.primaryGray, fontSize: 15, fontFamily: "TT-Octosquares-Medium", marginBottom: 2 },
+  listDate: { color: '#fff', fontSize: fontSizes.FONT14, fontFamily: "TT-Octosquares-Medium", marginBottom: 2 },
+  listSub: { color: '#666', fontSize: fontSizes.FONT11, fontFamily: "TT-Octosquares-Medium" },
+  listAmount: { color: color.primaryGray, fontSize: fontSizes.FONT15, fontFamily: "TT-Octosquares-Medium", marginBottom: 2 },
 });

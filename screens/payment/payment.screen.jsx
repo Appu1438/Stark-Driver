@@ -24,6 +24,7 @@ import {
   widthPercentageToDP as wp,
   heightPercentageToDP as hp,
 } from "react-native-responsive-screen";
+import { fontSizes } from "@/themes/app.constant";
 
 export default function PaymentPage() {
   const { driver } = useGetDriverData();
@@ -312,7 +313,7 @@ export default function PaymentPage() {
             </TouchableOpacity>
 
             <Text style={styles.footerNote}>
-              <Text style={{ fontSize: 10 }}>🔒</Text> Secured by Razorpay
+              <Text style={{ fontSize: fontSizes.FONT12 }}>🔒</Text> Secured by Razorpay
             </Text>
           </View>
         </ScrollView>

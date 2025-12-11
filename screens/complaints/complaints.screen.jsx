@@ -269,39 +269,39 @@ const styles = StyleSheet.create({
   // Header
   header: { flexDirection: 'row', alignItems: 'center', marginBottom: 25, gap: 15 },
   backButton: { width: 40, height: 40, borderRadius: 12, backgroundColor: 'rgba(255,255,255,0.1)', alignItems: 'center', justifyContent: 'center' },
-  pageTitle: { fontSize: 24, color: "#fff", fontFamily: "TT-Octosquares-Medium" },
+  pageTitle: { fontSize: fontSizes.FONT20, color: "#fff", fontFamily: "TT-Octosquares-Medium" },
 
   // Form Card
   formCard: { backgroundColor: 'rgba(255,255,255,0.03)', borderRadius: 20, padding: 20, borderWidth: 1, borderColor: 'rgba(255,255,255,0.05)', marginBottom: 30 },
-  cardTitle: { fontSize: 18, color: '#fff', fontFamily: "TT-Octosquares-Medium", marginBottom: 20 },
+  cardTitle: { fontSize: fontSizes.FONT18, color: '#fff', fontFamily: "TT-Octosquares-Medium", marginBottom: 20 },
 
-  label: { fontSize: 12, color: '#888', marginBottom: 10, marginTop: 15, fontFamily: "TT-Octosquares-Medium" },
+  label: { fontSize: fontSizes.FONT12, color: '#888', marginBottom: 10, marginTop: 15, fontFamily: "TT-Octosquares-Medium" },
 
   inputField: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', backgroundColor: 'rgba(255,255,255,0.05)', padding: 15, borderRadius: 12, borderWidth: 1, borderColor: 'rgba(255,255,255,0.05)' },
-  inputText: { color: '#fff', fontSize: 14, fontFamily: "TT-Octosquares-Medium", flex: 1 },
+  inputText: { color: '#fff', fontSize: fontSizes.FONT14, fontFamily: "TT-Octosquares-Medium", flex: 1 },
 
   chipContainer: { flexDirection: 'row', flexWrap: 'wrap', gap: 10 },
   chip: { paddingVertical: 8, paddingHorizontal: 16, borderRadius: 20, backgroundColor: 'rgba(255,255,255,0.05)', borderWidth: 1, borderColor: 'transparent' },
   activeChip: { backgroundColor: color.buttonBg, borderColor: color.primary },
-  chipText: { color: '#888', fontSize: 12, fontFamily: "TT-Octosquares-Medium" },
+  chipText: { color: '#888', fontSize: fontSizes.FONT12, fontFamily: "TT-Octosquares-Medium" },
   activeChipText: { color: color.primary },
 
   textArea: { backgroundColor: 'rgba(255,255,255,0.05)', borderRadius: 12, padding: 15, minHeight: 120, color: '#fff', textAlignVertical: 'top', fontFamily: "TT-Octosquares-Medium" },
 
   submitButton: { backgroundColor: color.buttonBg, paddingVertical: 16, borderRadius: 14, alignItems: 'center', marginTop: 25 },
-  submitText: { color: '#000', fontSize: 16, fontFamily: "TT-Octosquares-Medium" },
+  submitText: { color: '#000', fontSize: fontSizes.FONT16, fontFamily: "TT-Octosquares-Medium" },
 
   // History List
-  sectionTitle: { fontSize: 18, color: '#fff', fontFamily: "TT-Octosquares-Medium", marginBottom: 15 },
+  sectionTitle: { fontSize: fontSizes.FONT18, color: '#fff', fontFamily: "TT-Octosquares-Medium", marginBottom: 15 },
   complaintItem: { backgroundColor: 'rgba(255,255,255,0.03)', padding: 16, borderRadius: 16, marginBottom: 12, borderWidth: 1, borderColor: 'rgba(255,255,255,0.03)' },
   complaintHeader: { flexDirection: 'row', justifyContent: 'space-between', marginBottom: 8 },
-  complaintCategory: { color: '#fff', fontSize: 14, fontFamily: "TT-Octosquares-Medium" },
+  complaintCategory: { color: '#fff', fontSize: fontSizes.FONT14, fontFamily: "TT-Octosquares-Medium" },
   statusBadge: { paddingHorizontal: 8, paddingVertical: 4, borderRadius: 6 },
-  statusText: { fontSize: 10, fontFamily: "TT-Octosquares-Medium" },
-  complaintMessage: { color: color.primaryGray, fontSize: 13, lineHeight: 18, marginBottom: 10, fontFamily: "TT-Octosquares-Medium" },
+  statusText: { fontSize: fontSizes.FONT10, fontFamily: "TT-Octosquares-Medium" },
+  complaintMessage: { color: color.primaryGray, fontSize: fontSizes.FONT13, lineHeight: 18, marginBottom: 10, fontFamily: "TT-Octosquares-Medium" },
   complaintFooter: { flexDirection: 'row', alignItems: 'center', gap: 10, fontFamily: "TT-Octosquares-Medium" },
-  complaintDate: { color: color.primaryGray, fontSize: 11, fontFamily: "TT-Octosquares-Medium" },
-  rideTag: { color: color.primaryText, fontSize: 11, fontFamily: "TT-Octosquares-Medium" },
+  complaintDate: { color: color.primaryGray, fontSize: fontSizes.FONT11, fontFamily: "TT-Octosquares-Medium" },
+  rideTag: { color: color.primaryText, fontSize: fontSizes.FONT11, fontFamily: "TT-Octosquares-Medium" },
 
   emptyState: { alignItems: 'center', padding: 40 },
   emptyText: { color: '#444', marginTop: 10, fontFamily: "TT-Octosquares-Medium" },
@@ -310,9 +310,9 @@ const styles = StyleSheet.create({
   modalOverlay: { flex: 1, backgroundColor: 'rgba(0,0,0,0.8)', justifyContent: 'center', padding: 20 },
   modalContent: { backgroundColor: '#151515', borderRadius: 20, padding: 20, maxHeight: '60%' },
   modalHeader: { flexDirection: 'row', justifyContent: 'space-between', marginBottom: 15 },
-  modalTitle: { color: '#fff', fontSize: 18, fontFamily: "TT-Octosquares-Medium" },
+  modalTitle: { color: '#fff', fontSize: fontSizes.FONT18, fontFamily: "TT-Octosquares-Medium" },
   modalItem: { paddingVertical: 15, borderBottomWidth: 1, borderBottomColor: 'rgba(255,255,255,0.05)' },
   modalRow: { flexDirection: 'row', alignItems: 'center', gap: 8, marginBottom: 4 },
-  modalLoc: { color: '#fff', fontSize: 14, flex: 1, fontFamily: "TT-Octosquares-Medium" },
-  modalSub: { color: '#666', fontSize: 12, fontFamily: "TT-Octosquares-Medium" },
+  modalLoc: { color: '#fff', fontSize: fontSizes.FONT14, flex: 1, fontFamily: "TT-Octosquares-Medium" },
+  modalSub: { color: '#666', fontSize: fontSizes.FONT12, fontFamily: "TT-Octosquares-Medium" },
 });

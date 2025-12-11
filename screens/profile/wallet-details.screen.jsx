@@ -20,7 +20,7 @@ import color from "@/themes/app.colors";
 import { useGetDriverData, useGetDriverWallet } from "@/hooks/useGetDriverData";
 import { router } from "expo-router";
 import AppAlert from "@/components/modal/alert-modal/alert.modal";
-import { fontSizes } from "@/themes/app.constant";
+import { fontSizes, windowWidth } from "@/themes/app.constant";
 
 // ---------------------------------------------
 // ⭐ PREMIUM SKELETON LOADER
@@ -282,7 +282,7 @@ const styles = StyleSheet.create({
         justifyContent: 'center',
     },
     pageTitle: {
-        fontSize: 24,
+        fontSize: fontSizes.FONT20,
         color: "#fff",
         fontFamily: "TT-Octosquares-Medium",
     },
@@ -307,11 +307,11 @@ const styles = StyleSheet.create({
         color: 'rgba(255,255,255,0.4)',
         fontFamily: "TT-Octosquares-Medium",
         letterSpacing: 2,
-        fontSize: 12,
+        fontSize: fontSizes.FONT12,
     },
     balanceLabel: {
         color: '#888',
-        fontSize: 12,
+        fontSize: fontSizes.FONT12,
         textTransform: 'uppercase',
         letterSpacing: 1,
         marginBottom: 5,
@@ -319,7 +319,7 @@ const styles = StyleSheet.create({
 
     },
     balanceValue: {
-        fontSize: 36,
+        fontSize: windowWidth(35),
         color: '#fff',
         fontFamily: "TT-Octosquares-Medium",
         textShadowColor: 'rgba(0,0,0,0.5)',
@@ -335,21 +335,21 @@ const styles = StyleSheet.create({
         color: '#666',
         fontSize: fontSizes.FONT14,
         fontFamily: "TT-Octosquares-Medium",
-        letterSpacing: 1,
+        letterSpacing: 0.5,
     },
     addBtn: {
         backgroundColor: color.buttonBg,
         flexDirection: 'row',
         alignItems: 'center',
-        paddingVertical: 8,
-        paddingHorizontal: 10,
+        paddingVertical: 7.5,
+        paddingHorizontal: 7.5,
         borderRadius: 20,
         gap: 4,
     },
     addBtnText: {
         color: '#000',
         fontFamily: "TT-Octosquares-Medium",
-        fontSize: 12,
+        fontSize: fontSizes.FONT12,
     },
 
     // Warning
@@ -366,7 +366,7 @@ const styles = StyleSheet.create({
     },
     warningText: {
         color: '#FFAB00',
-        fontSize: 13,
+        fontSize: fontSizes.FONT12,
         flex: 1,
         fontFamily: "TT-Octosquares-Medium",
     },
@@ -376,7 +376,7 @@ const styles = StyleSheet.create({
         marginBottom: 15,
     },
     sectionTitle: {
-        fontSize: 18,
+        fontSize: fontSizes.FONT18,
         color: '#fff',
         fontFamily: "TT-Octosquares-Medium",
     },
@@ -408,25 +408,25 @@ const styles = StyleSheet.create({
     },
     transAction: {
         color: '#eee',
-        fontSize: 14,
+        fontSize: fontSizes.FONT14,
         fontFamily: "TT-Octosquares-Medium",
         marginBottom: 4,
         textTransform: 'capitalize',
     },
     transDate: {
         color: '#666',
-        fontSize: 11,
+        fontSize: fontSizes.FONT11,
         fontFamily: "TT-Octosquares-Medium",
 
     },
     transAmount: {
-        fontSize: 16,
+        fontSize: fontSizes.FONT16,
         fontFamily: "TT-Octosquares-Medium",
         marginBottom: 2,
     },
     transBalance: {
         color: '#666',
-        fontSize: 10,
+        fontSize: fontSizes.FONT10,
         fontFamily: "TT-Octosquares-Medium",
 
     },
@@ -440,7 +440,7 @@ const styles = StyleSheet.create({
     emptyText: {
         color: '#444',
         marginTop: 10,
-        fontSize: 14,
+        fontSize: fontSizes.FONT14,
         fontFamily: "TT-Octosquares-Medium",
     },
 });

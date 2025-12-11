@@ -141,8 +141,8 @@ export default function TripRadarScreen() {
             <Image
               source={getVehicleIcon(driver ? driver.vehicle_type : "Sedan")}
               style={{
-                width: windowWidth(35),
-                height: windowHeight(35),
+                width: windowWidth(30),
+                height: windowHeight(30),
                 resizeMode: "contain",
                 transform: [{ rotate: `${driver?.vehicle_type === "Auto" ? heading + 180 : heading}deg` }],
               }}
@@ -334,7 +334,7 @@ const styles = StyleSheet.create({
     fontFamily: "TT-Octosquares-Medium",
     color: "#666",
     marginTop: 10,
-    fontSize: 12
+    fontSize: fontSizes.FONT12
   },
 
   // --- HUD (Heads Up Display) ---
@@ -371,7 +371,7 @@ const styles = StyleSheet.create({
   statusText: {
     color: '#fff',
     fontFamily: "TT-Octosquares-Medium",
-    fontSize: 12,
+    fontSize: fontSizes.FONT12,
   },
   hudDivider: {
     width: 1,
@@ -383,14 +383,14 @@ const styles = StyleSheet.create({
   },
   hudLabel: {
     color: '#666',
-    fontSize: 9,
+    fontSize: fontSizes.FONT10,
     fontFamily: "TT-Octosquares-Medium",
     marginBottom: 2,
     letterSpacing: 0.5,
   },
   hudValue: {
     color: '#fff',
-    fontSize: 14,
+    fontSize: fontSizes.FONT14,
     fontFamily: "TT-Octosquares-Medium",
   },
 
@@ -412,7 +412,7 @@ const styles = StyleSheet.create({
   },
   sheetTitle: {
     color: "#fff",
-    fontSize: 20,
+    fontSize: fontSizes.FONT20,
     fontFamily: "TT-Octosquares-Medium",
   },
   radarBadge: {
@@ -432,7 +432,7 @@ const styles = StyleSheet.create({
   },
   radarText: {
     color: color.buttonBg,
-    fontSize: 12,
+    fontSize: fontSizes.FONT12,
     fontFamily: "TT-Octosquares-Medium",
   },
 
@@ -468,7 +468,7 @@ const styles = StyleSheet.create({
   userName: {
     color: '#fff',
     fontFamily: "TT-Octosquares-Medium",
-    fontSize: 14,
+    fontSize: fontSizes.FONT14,
     marginBottom: 2,
   },
   ratingRow: {
@@ -495,7 +495,7 @@ const styles = StyleSheet.create({
   timerText: {
     color: color.lightGreen,
     fontFamily: "TT-Octosquares-Medium",
-    fontSize: 12,
+    fontSize: fontSizes.FONT12,
   },
 
   cardDivider: {
@@ -553,13 +553,13 @@ const styles = StyleSheet.create({
   },
   label: {
     color: '#666',
-    fontSize: 9,
+    fontSize: fontSizes.FONT10,
     fontFamily: "TT-Octosquares-Medium",
     marginBottom: 1,
   },
   address: {
     color: '#E0E0E0',
-    fontSize: 13,
+    fontSize: fontSizes.FONT13,
     fontFamily: "TT-Octosquares-Medium",
   },
 
@@ -581,13 +581,13 @@ const styles = StyleSheet.create({
   },
   priceValue: {
     color: color.buttonBg,
-    fontSize: 25,
+    fontSize: fontSizes.FONT20,
     fontFamily: "TT-Octosquares-Medium",
     lineHeight: 30,
   },
   estLabel: {
     color: '#666',
-    fontSize: 10,
+    fontSize: fontSizes.FONT10,
     fontFamily: "TT-Octosquares-Medium",
   },
 
@@ -611,7 +611,7 @@ const styles = StyleSheet.create({
   },
   emptySubtitle: {
     color: '#888',
-    fontSize: 14,
+    fontSize: fontSizes.FONT14,
     fontFamily: "TT-Octosquares-Medium",
     textAlign: 'center',
   },

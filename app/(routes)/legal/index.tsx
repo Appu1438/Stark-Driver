@@ -116,8 +116,8 @@ const styles = StyleSheet.create({
     // Header
     header: { flexDirection: 'row', alignItems: 'center', marginBottom: 30, gap: 15 },
     backButton: { width: 40, height: 40, borderRadius: 12, backgroundColor: 'rgba(255,255,255,0.1)', alignItems: 'center', justifyContent: 'center' },
-    pageTitle: { fontSize: 24, color: "#fff", fontFamily: "TT-Octosquares-Medium" },
-    pageSubtitle: { fontSize: 13, color: "#888", fontFamily: "TT-Octosquares-Medium" },
+    pageTitle: { fontSize: fontSizes.FONT20, color: "#fff", fontFamily: "TT-Octosquares-Medium" },
+    pageSubtitle: { fontSize: fontSizes.FONT13, color: "#888", fontFamily: "TT-Octosquares-Medium" },
 
     // List Card
     listCard: {
@@ -146,7 +146,7 @@ const styles = StyleSheet.create({
         alignItems: 'center', justifyContent: 'center'
     },
     itemText: {
-        fontSize: 15,
+        fontSize: fontSizes.FONT15,
         color: '#eee',
         fontFamily: "TT-Octosquares-Medium",
     },
@@ -162,7 +162,7 @@ const styles = StyleSheet.create({
     },
     footerText: {
         color: '#666',
-        fontSize: 12,
+        fontSize: fontSizes.FONT12,
         fontFamily: "TT-Octosquares-Medium",
         textAlign: 'center',
         flex: 1,
@@ -171,6 +171,6 @@ const styles = StyleSheet.create({
 
     // Support Link
     supportLink: { alignItems: 'center', marginTop: 10 },
-    supportText: { color: '#888', fontSize: 13, fontFamily: "TT-Octosquares-Medium", marginBottom: 4 },
-    supportAction: { color: color.primaryGray, fontSize: 14, fontFamily: "TT-Octosquares-Medium", textDecorationLine: 'underline' },
+    supportText: { color: '#888', fontSize: fontSizes.FONT13, fontFamily: "TT-Octosquares-Medium", marginBottom: 4 },
+    supportAction: { color: color.primaryGray, fontSize: fontSizes.FONT14, fontFamily: "TT-Octosquares-Medium", textDecorationLine: 'underline' },
 });

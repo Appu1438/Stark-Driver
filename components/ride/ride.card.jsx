@@ -236,7 +236,7 @@ const styles = StyleSheet.create({
     justifyContent: "center",
   },
   addressLabel: {
-    fontSize: 10,
+    fontSize: fontSizes.FONT10,
     textTransform: 'uppercase',
     letterSpacing: 1,
     marginBottom: 2,
@@ -271,7 +271,7 @@ const styles = StyleSheet.create({
   },
   statusText: {
     fontFamily: "TT-Octosquares-Medium",
-    fontSize: 11,
+    fontSize: fontSizes.FONT11,
     textTransform: "uppercase",
     letterSpacing: 0.5,
   },

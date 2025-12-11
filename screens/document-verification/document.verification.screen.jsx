@@ -19,7 +19,7 @@ import { Toast } from "react-native-toast-notifications";
 import axiosInstance from "@/api/axiosInstance";
 import AppAlert from "@/components/modal/alert-modal/alert.modal";
 import color from "@/themes/app.colors";
-import { windowHeight } from "@/themes/app.constant";
+import { fontSizes, windowHeight } from "@/themes/app.constant";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { Picker } from "@react-native-picker/picker";
 import SelectInput from "@/components/common/select-input";
@@ -381,14 +381,14 @@ const styles = StyleSheet.create({
     },
     stepIndicator: {
         fontFamily: "TT-Octosquares-Medium",
-        fontSize: 14,
+        fontSize: fontSizes.FONT14,
         color: color.primaryText,
         opacity: 0.7,
     },
 
     scrollContent: { paddingHorizontal: 24, paddingBottom: 100 },
-    pageTitle: { fontFamily: "TT-Octosquares-Medium", fontSize: 24, color: color.primaryText, marginTop: 10, marginBottom: 5 },
-    pageSubtitle: { fontSize: 14, color: color.primaryText, opacity: 0.6, marginBottom: 30, fontFamily: "TT-Octosquares-Medium" },
+    pageTitle: { fontFamily: "TT-Octosquares-Medium", fontSize: fontSizes.FONT20, color: color.primaryText, marginTop: 10, marginBottom: 5 },
+    pageSubtitle: { fontSize: fontSizes.FONT14, color: color.primaryText, opacity: 0.6, marginBottom: 30, fontFamily: "TT-Octosquares-Medium" },
     stepContainer: { gap: 0 },
 
     // Vehicle Type Grid
@@ -419,7 +419,7 @@ const styles = StyleSheet.create({
     typeText: {
         color: color.primaryText,
         fontFamily: "TT-Octosquares-Medium",
-        fontSize: 14,
+        fontSize: fontSizes.FONT14,
         opacity: 0.6,
         marginTop: 5
     },
@@ -449,18 +449,18 @@ const styles = StyleSheet.create({
 
     // Input
     inputGroup: { marginBottom: 20 },
-    label: { fontSize: 13, color: color.primaryText, marginBottom: 8, marginLeft: 4, fontFamily: "TT-Octosquares-Medium", opacity: 0.8 },
+    label: { fontSize: fontSizes.FONT13, color: color.primaryText, marginBottom: 8, marginLeft: 4, fontFamily: "TT-Octosquares-Medium", opacity: 0.8 },
     inputWrapper: { flexDirection: "row", alignItems: "center", borderWidth: 1, borderColor: "rgba(255,255,255,0.2)", borderRadius: 12, paddingHorizontal: 15, height: 52 },
-    input: { flex: 1, fontSize: 16, color: color.primaryText, fontFamily: "TT-Octosquares-Medium", paddingVertical: 10 },
+    input: { flex: 1, fontSize: fontSizes.FONT16, color: color.primaryText, fontFamily: "TT-Octosquares-Medium", paddingVertical: 10 },
 
     // Info Box
     infoBox: { backgroundColor: "rgba(255,255,255,0.05)", padding: 12, borderRadius: 8, flexDirection: "row", gap: 10, alignItems: "center", marginBottom: 25, borderWidth: 1, borderColor: "rgba(255,255,255,0.1)" },
-    infoText: { fontSize: 12, color: color.primaryText, flex: 1, lineHeight: 18, fontFamily: "TT-Octosquares-Medium", opacity: 0.8 },
+    infoText: { fontSize: fontSizes.FONT12, color: color.primaryText, flex: 1, lineHeight: 18, fontFamily: "TT-Octosquares-Medium", opacity: 0.8 },
 
     divider: { height: 1, backgroundColor: "rgba(255,255,255,0.1)", marginVertical: 10, marginBottom: 25 },
 
     // Footer
     footer: { position: "absolute", bottom: 0, left: 0, right: 0, padding: 20, },
     nextButton: { backgroundColor: color.buttonBg, flexDirection: "row", justifyContent: "center", alignItems: "center", paddingVertical: 16, borderRadius: 14, gap: 10 },
-    nextButtonText: { color: color.primary, fontSize: 16, fontFamily: "TT-Octosquares-Medium" },
+    nextButtonText: { color: color.primary, fontSize: fontSizes.FONT16, fontFamily: "TT-Octosquares-Medium" },
 })
