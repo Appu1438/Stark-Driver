@@ -107,10 +107,7 @@ export default function SignupScreen() {
     if (!result.canceled) {
       setUploadingImage(true);
       handleChange('profilePic', result.assets[0])
-      // const cloudUrl = await uploadToCloudinary(result.assets[0]);
       setUploadingImage(false);
-      // if (cloudUrl) handleChange("profilePicture", cloudUrl);
-      // else openAlert("Error", "Image upload failed.");
     }
   };
 
@@ -137,17 +134,20 @@ export default function SignupScreen() {
     else router.back();
   };
 
-  const handleSubmit = () => {
+  const handleSubmit = async () => {
     if (!formData.address) return openAlert("Address", "Enter your address.");
     if (!formData.city) return openAlert("City", "Enter your city.");
     if (!formData.aadhar) return openAlert("Aadhar", "Enter Aadhar number.");
 
     setMovingToNext(true)
 
+    const cloudUrl = await uploadToCloudinary(formData.profilePic.base64);
+
+
     const finalData = {
       ...formData,
       phone_number: `${COUNTRY_CODE}${formData.phoneNumber}`,
-      profilePic: formData.profilePic.base64,
+      profilePic: cloudUrl,
     };
 
     router.push({

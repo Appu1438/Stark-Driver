@@ -43,12 +43,45 @@ export default function DocumentVerificationScreen() {
     const [showLicPicker, setShowLicPicker] = useState(false);
     const [showInsPicker, setShowInsPicker] = useState(false);
 
+    const [showRegInfo, setShowRegInfo] = useState(false);
+
     const formatDate = (d) => {
         const day = String(d.getDate()).padStart(2, "0");
         const month = String(d.getMonth() + 1).padStart(2, "0");
         const year = d.getFullYear();
         return `${day}-${month}-${year}`;
     };
+
+    const formatRegistrationNumber = (text) => {
+
+        // If user types "-" manually → show info (only once)
+        if (text.includes("-") && !showRegInfo) {
+            setShowRegInfo(true);
+            openAlert("Hyphens will be added automatically","Just type the number")
+        }
+
+        // Remove all non-alphanumeric characters
+        let value = text.toUpperCase().replace(/[^A-Z0-9]/g, "");
+
+        let state = value.slice(0, 2);         // KL
+        let rto = value.slice(2, 4);           // 32
+
+        // Series = next letters until first number appears OR max 3 letters
+        let series = value.slice(4).match(/^[A-Z]{1,3}/)?.[0] || "";
+
+        // Unique number = remaining digits after letters
+        let unique = value.slice(4 + series.length).replace(/[^0-9]/g, "").slice(0, 4);
+
+        let formatted = state;
+
+        if (rto) formatted += "-" + rto;
+        if (series) formatted += "-" + series;
+        if (unique) formatted += "-" + unique;
+
+        return formatted;
+    };
+
+
 
     const twentyFiveYearsFromNow = new Date();
     twentyFiveYearsFromNow.setFullYear(twentyFiveYearsFromNow.getFullYear() + 50);
@@ -133,12 +166,8 @@ export default function DocumentVerificationScreen() {
 
         setLoading(true);
 
-
-        const cloudUrl = await uploadToCloudinary(driverData.profilePic);
-
         const payload = {
             ...driverData,
-            profilePic: cloudUrl,
             vehicle_type: formData.vehicleType,
             registration_number: formData.registration_number,
             registration_date: formData.registration_date,
@@ -201,7 +230,13 @@ export default function DocumentVerificationScreen() {
                 <Text style={styles.infoText}>Enter details exactly as they appear on your RC Book.</Text>
             </View>
 
-            <CustomInput label="Registration Number" placeholder="KL-01-AB-1234" value={formData.registration_number} onChangeText={t => handleChange("registration_number", t)} icon="credit-card" />
+            <CustomInput
+                label="Registration Number"
+                placeholder="KL-01-AB-1234"
+                value={formData.registration_number}
+                onChangeText={(t) => handleChange("registration_number", formatRegistrationNumber(t))}
+                icon="credit-card"
+            />
 
             <DateInput
                 label="Registration Date"
