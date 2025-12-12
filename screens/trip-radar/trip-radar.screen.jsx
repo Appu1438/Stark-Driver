@@ -141,8 +141,8 @@ export default function TripRadarScreen() {
             <Image
               source={getVehicleIcon(driver ? driver.vehicle_type : "Sedan")}
               style={{
-                width: windowWidth(30),
-                height: windowHeight(30),
+                width: 35,
+                height: 35,
                 resizeMode: "contain",
                 transform: [{ rotate: `${driver?.vehicle_type === "Auto" ? heading + 180 : heading}deg` }],
               }}

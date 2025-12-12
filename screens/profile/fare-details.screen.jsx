@@ -7,10 +7,11 @@ import {
   Animated,
   StatusBar,
   TouchableOpacity,
+  RefreshControl,
 } from "react-native";
 import { useLocalSearchParams, router } from "expo-router";
 import { LinearGradient } from "expo-linear-gradient";
-import { Ionicons, MaterialCommunityIcons, MaterialIcons } from "@expo/vector-icons";
+import { Ionicons, MaterialCommunityIcons, MaterialIcons, Feather } from "@expo/vector-icons";
 import color from "@/themes/app.colors";
 import axiosInstance from "@/api/axiosInstance";
 import { useDriverLocationStore } from "@/store/driverLocationStore";
@@ -73,25 +74,44 @@ export default function FareDetails() {
   const [loading, setLoading] = useState(true);
   const { district } = useDriverLocationStore();
 
-  useEffect(() => {
-    const fetchFare = async () => {
-      try {
-        setLoading(true);
-        const res = await axiosInstance.get(`/fare/${vehicleType}/${district}`);
-        if (res.data.success) {
-          setFare(res.data.fare);
-        }
-      } catch (error) {
-        console.error("Error fetching fare details:", error);
-      } finally {
-        setLoading(false);
+  const [refreshing, setRefreshing] = useState(false);
+
+
+  const fetchFare = async () => {
+    try {
+      setRefreshing(true);
+      const res = await axiosInstance.get(`/fare/${vehicleType}/${district}`);
+      if (res.data.success) {
+        setFare(res.data.fare);
       }
-    };
+    } catch (error) {
+      console.error("Error fetching fare details:", error);
+    } finally {
+      setLoading(false);
+      setRefreshing(false);
+    }
+  };
+
+  useEffect(() => {
     if (vehicleType) fetchFare();
   }, [vehicleType, district]);
 
+
   // ---------------------------------------------
-  // ⭐ LOADING STATE (Premium Skeleton)
+  // ⭐ DYNAMIC SURGE LOGIC
+  // ---------------------------------------------
+  const getSurgeDetails = (multiplier) => {
+    if (multiplier >= 1.75) {
+      return { color: "#FF5252", label: "Peak Demand", iconBg: "rgba(255, 82, 82, 0.15)" }; // Red
+    } else if (multiplier >= 1.25) {
+      return { color: "#FFAB00", label: "Busy Area", iconBg: "rgba(255, 171, 0, 0.15)" }; // Amber/Orange
+    } else {
+      return { color: "#00E676", label: "Standard Rate", iconBg: "rgba(0, 230, 118, 0.15)" }; // Green
+    }
+  };
+
+  // ---------------------------------------------
+  // ⭐ LOADING STATE
   // ---------------------------------------------
   if (loading) {
     return (
@@ -99,12 +119,11 @@ export default function FareDetails() {
         <LinearGradient colors={[color.bgDark, color.subPrimary]} style={StyleSheet.absoluteFill} />
         <SafeAreaView style={{ flex: 1, padding: 20 }}>
           <Skeleton width={150} height={24} style={{ marginBottom: 30 }} />
-          {/* Hero Card Skeleton */}
           <Skeleton width="100%" height={120} style={{ marginBottom: 20, borderRadius: 20 }} />
-          {/* Grid Skeleton */}
-          <View style={{ flexDirection: 'row', gap: 15 }}>
-            <Skeleton style={{ flex: 1 }} height={100} />
-            <Skeleton style={{ flex: 1 }} height={100} />
+          <View style={{ flexDirection: 'row', gap: 15, flexWrap: 'wrap' }}>
+            <Skeleton style={{ width: '47%' }} height={100} />
+            <Skeleton style={{ width: '47%' }} height={100} />
+            <Skeleton style={{ width: '100%', marginTop: 15 }} height={80} />
           </View>
         </SafeAreaView>
       </View>
@@ -125,6 +144,9 @@ export default function FareDetails() {
     );
   }
 
+  // Calculate Surge Styles
+  const surge = getSurgeDetails(fare.surgeMultiplier);
+
   // ---------------------------------------------
   // ⭐ RENDER UI
   // ---------------------------------------------
@@ -135,7 +157,18 @@ export default function FareDetails() {
       />
 
       <SafeAreaView style={{ flex: 1 }}>
-        <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
+        <ScrollView
+          contentContainerStyle={styles.scrollContent}
+          showsVerticalScrollIndicator={false}
+          refreshControl={
+            <RefreshControl
+              refreshing={refreshing}
+              onRefresh={fetchFare}
+              tintColor={color.primary}
+              progressViewOffset={40}
+            />
+          }
+        >
 
           {/* HEADER */}
           <View style={styles.header}>
@@ -155,13 +188,12 @@ export default function FareDetails() {
             style={styles.heroCard}
           >
             <View style={styles.heroHeader}>
-              <View style={styles.iconCircle}>
-                <MaterialIcons name="local-taxi" size={24} color={color.primaryText} />
-              </View>
               <Text style={styles.heroLabel}>BASE FARE</Text>
             </View>
             <Text style={styles.heroValue}>₹{fare.baseFare}</Text>
-            <Text style={styles.heroSubText}>Applied at the start of every trip</Text>
+            <View style={styles.pillContainer}>
+              <Text style={styles.pillText}>Includes first {fare.baseFareUptoKm} km</Text>
+            </View>
           </LinearGradient>
 
           {/* 2. GRID METRICS */}
@@ -174,6 +206,7 @@ export default function FareDetails() {
               </View>
               <Text style={styles.gridValue}>₹{fare.perKmRate}</Text>
               <Text style={styles.gridLabel}>Per Km</Text>
+              <Text style={styles.gridSubLabel}>After {fare.baseFareUptoKm} km</Text>
             </View>
 
             {/* Time Rate */}
@@ -183,20 +216,27 @@ export default function FareDetails() {
               </View>
               <Text style={styles.gridValue}>₹{fare.perMinRate}</Text>
               <Text style={styles.gridLabel}>Per Min</Text>
+              <Text style={styles.gridSubLabel}>Wait time / Traffic</Text>
             </View>
 
-            {/* Minimum Fare */}
-            <View style={[styles.gridCard, { flexBasis: '100%', flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: 20 }]}>
-              <View style={{ flexDirection: 'row', alignItems: 'center', gap: 12 }}>
-                <View style={[styles.miniIconBox, { backgroundColor: 'rgba(255, 82, 82, 0.1)' }]}>
-                  <Ionicons name="wallet-outline" size={20} color="#FF5252" />
-                </View>
-                <View>
-                  <Text style={styles.gridLabel}>Minimum Fare</Text>
-                  <Text style={[styles.gridLabel, { fontSize: fontSizes.FONT10, color: '#666' }]}>Short trips protection</Text>
-                </View>
+            {/* Surge Multiplier (UPDATED) */}
+            <View style={styles.gridCard}>
+              <View style={[styles.miniIconBox, { backgroundColor: surge.iconBg }]}>
+                <Feather name="trending-up" size={20} color={surge.color} />
               </View>
-              <Text style={[styles.gridValue, { fontSize: fontSizes.FONT20 }]}>₹{fare.minFare}</Text>
+              <Text style={[styles.gridValue, { color: surge.color }]}>{fare.surgeMultiplier}x</Text>
+              <Text style={styles.gridLabel}>Demand Factor</Text>
+              <Text style={styles.gridSubLabel}>{surge.label}</Text>
+            </View>
+
+            {/* Minimum Fare (Recap) */}
+            <View style={styles.gridCard}>
+              <View style={[styles.miniIconBox, { backgroundColor: 'rgba(64, 196, 255, 0.1)' }]}>
+                <Ionicons name="shield-checkmark-outline" size={20} color="#40C4FF" />
+              </View>
+              <Text style={styles.gridValue}>₹{fare.baseFare}</Text>
+              <Text style={styles.gridLabel}>Min Fare</Text>
+              <Text style={styles.gridSubLabel}>Trip minimum</Text>
             </View>
 
           </View>
@@ -205,8 +245,8 @@ export default function FareDetails() {
           <View style={styles.infoBox}>
             <Ionicons name="information-circle-outline" size={22} color="#888" />
             <Text style={styles.infoText}>
-              Rates may vary during high demand (Surge Pricing).
-              Tolls and parking fees are extra as applicable.
+              Base fare covers the first {fare.baseFareUptoKm}km. Afterwards, distance is charged at ₹{fare.perKmRate}/km.
+              {fare.surgeMultiplier > 1 && `\n⚠️ Higher rates apply due to ${surge.label.toLowerCase()}.`}
             </Text>
           </View>
 
@@ -267,20 +307,13 @@ const styles = StyleSheet.create({
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.2,
     shadowRadius: 10,
+    alignItems: 'flex-start',
   },
   heroHeader: {
     flexDirection: "row",
     alignItems: "center",
     marginBottom: 10,
     gap: 10,
-  },
-  iconCircle: {
-    width: 36,
-    height: 36,
-    borderRadius: 18,
-    backgroundColor: "rgba(0,0,0,0.3)",
-    alignItems: "center",
-    justifyContent: "center",
   },
   heroLabel: {
     color: color.primaryGray,
@@ -292,10 +325,16 @@ const styles = StyleSheet.create({
     fontSize: windowWidth(40),
     color: "#fff",
     fontFamily: "TT-Octosquares-Medium",
-    marginBottom: 5,
+    marginBottom: 10,
   },
-  heroSubText: {
-    color: "rgba(255,255,255,0.6)",
+  pillContainer: {
+    backgroundColor: "rgba(255,255,255,0.1)",
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: 20,
+  },
+  pillText: {
+    color: "rgba(255,255,255,0.9)",
     fontSize: fontSizes.FONT12,
     fontFamily: "TT-Octosquares-Medium",
   },
@@ -308,8 +347,7 @@ const styles = StyleSheet.create({
     marginBottom: 25,
   },
   gridCard: {
-    flex: 1,
-    minWidth: '45%',
+    width: '47%', // Roughly half minus gap
     backgroundColor: "rgba(255,255,255,0.03)",
     borderRadius: 18,
     padding: 18,
@@ -332,8 +370,14 @@ const styles = StyleSheet.create({
   },
   gridLabel: {
     fontSize: fontSizes.FONT12,
-    color: "#888",
+    color: "#ccc",
     fontFamily: "TT-Octosquares-Medium",
+  },
+  gridSubLabel: {
+    fontSize: 10,
+    color: "#666",
+    fontFamily: "TT-Octosquares-Medium",
+    marginTop: 2,
   },
 
   // Footer
