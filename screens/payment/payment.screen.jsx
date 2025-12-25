@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useRef, useEffect } from "react";
 import {
   View,
   Text,
@@ -10,6 +10,7 @@ import {
   KeyboardAvoidingView,
   ScrollView,
   StatusBar,
+  BackHandler,
 } from "react-native";
 import { WebView } from "react-native-webview";
 import { LinearGradient } from "expo-linear-gradient";
@@ -32,6 +33,10 @@ export default function PaymentPage() {
   const [loading, setLoading] = useState(false);
   const [checkoutHtml, setCheckoutHtml] = useState(null);
 
+  // 🔒 HARD LOCKS (NO UI IMPACT)
+  const orderInProgressRef = useRef(false);
+  const paymentInProgressRef = useRef(false);
+
   // Alert State
   const [alertVisible, setAlertVisible] = useState(false);
   const [alertTitle, setAlertTitle] = useState("");
@@ -42,6 +47,26 @@ export default function PaymentPage() {
     setAlertVisible(false);
     if (alertNextRoute) router.replace(alertNextRoute);
   };
+
+  // 🔒 BLOCK ANDROID BACK BUTTON DURING PAYMENT
+  useEffect(() => {
+    const backHandler = BackHandler.addEventListener(
+      "hardwareBackPress",
+      () => {
+        if (paymentInProgressRef.current) {
+          return true; // ⛔ BLOCK BACK
+        }
+        return false;
+      }
+    );
+
+    return () => backHandler.remove();
+  }, []);
+
+  // 🔒 DISABLE NAVIGATION WHILE PAYMENT SCREEN OPEN
+  useEffect(() => {
+    router.setParams({ gestureEnabled: !checkoutHtml });
+  }, [checkoutHtml]);
 
   if (!driver)
     return (
@@ -100,7 +125,6 @@ export default function PaymentPage() {
         <div class="loader"></div>
         <div class="text">Initializing Secure Payment...</div>
 
-        <!-- Razorpay Script -->
         <script src="https://checkout.razorpay.com/v1/checkout.js"></script>
 
         <script>
@@ -136,7 +160,6 @@ export default function PaymentPage() {
             }
           };
 
-          // Delay Razorpay opening for smooth initialization
           setTimeout(() => {
             var rzp = new Razorpay(options);
             rzp.open();
@@ -148,6 +171,8 @@ export default function PaymentPage() {
   };
 
   const handlePayment = async () => {
+    if (orderInProgressRef.current) return; // 🔒 DUPLICATE STOP
+
     const amt = Number(amount);
     if (!amt || amt < 250 || amt % 50 !== 0) {
       setAlertTitle("Invalid Amount");
@@ -156,7 +181,9 @@ export default function PaymentPage() {
       return;
     }
 
+    orderInProgressRef.current = true;
     setLoading(true);
+
     try {
       const fee = amt * 0.02;
       const gst = fee * 0.18;
@@ -167,20 +194,29 @@ export default function PaymentPage() {
         driverId: driver?.id,
       });
 
-      const { orderId } = orderRes.data;
-      const html = generateCheckoutHtml(grossAmount, orderId);
+      paymentInProgressRef.current = true;
+
+      const html = generateCheckoutHtml(grossAmount, orderRes.data.orderId);
       setCheckoutHtml(html);
     } catch (err) {
+      orderInProgressRef.current = false;
       setAlertTitle("Information");
-      setAlertMessage(err?.response?.data?.message || "Could not initialize payment.");
+      setAlertMessage(
+        err?.response?.data?.message || "Could not initialize payment."
+      );
       setAlertVisible(true);
     }
+
     setLoading(false);
   };
 
   const handleWebViewMessage = async (event) => {
     const data = JSON.parse(event.nativeEvent.data);
+
+    // 🔓 CLEANUP
     setCheckoutHtml(null);
+    orderInProgressRef.current = false;
+    paymentInProgressRef.current = false;
 
     if (data.event === "success") {
       try {
@@ -199,6 +235,7 @@ export default function PaymentPage() {
       setAlertTitle("Failed");
       setAlertMessage("Payment failed.");
     }
+
     setAlertVisible(true);
   };
 
@@ -217,7 +254,6 @@ export default function PaymentPage() {
 
   return (
     <SafeAreaView style={styles.mainContainer}>
-
       <LinearGradient
         colors={[color.bgDark, color.subPrimary]}
         style={styles.backgroundGradient}
@@ -291,7 +327,7 @@ export default function PaymentPage() {
           <View style={styles.footerContainer}>
             <TouchableOpacity
               onPress={handlePayment}
-              disabled={loading}
+              disabled={loading || orderInProgressRef.current}
               style={styles.buttonShadow}
             >
               <LinearGradient
@@ -329,6 +365,7 @@ export default function PaymentPage() {
     </SafeAreaView>
   );
 }
+
 
 const styles = StyleSheet.create({
   mainContainer: {

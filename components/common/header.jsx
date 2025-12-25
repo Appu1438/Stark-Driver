@@ -158,7 +158,7 @@ const styles = StyleSheet.create({
   statusLabel: {
     color: "#fff",
     fontFamily: "TT-Octosquares-Medium",
-    fontSize: fontSizes.FONT14,
+    fontSize: fontSizes.FONT12,
   },
   
   // Container for switch or loader (Fixed size to prevent jumping)
