@@ -87,9 +87,9 @@ android {
     buildToolsVersion rootProject.ext.buildToolsVersion
     compileSdk rootProject.ext.compileSdkVersion
 
-    namespace 'com.adithyanskumar.starkdriver'
+    namespace 'com.starkcabs.starkdriver'
     defaultConfig {
-        applicationId 'com.adithyanskumar.starkdriver'
+        applicationId 'com.starkcabs.starkdriver'
         minSdkVersion rootProject.ext.minSdkVersion
         targetSdkVersion rootProject.ext.targetSdkVersion
         versionCode 1

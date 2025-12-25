@@ -1,4 +1,4 @@
-package com.adithyanskumar.starkdriver
+package com.starkcabs.starkdriver
 import com.facebook.react.common.assets.ReactFontManager
 
 import android.app.Application
