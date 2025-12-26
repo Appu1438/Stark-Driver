@@ -38,7 +38,8 @@
       "permissions": [
         "ACCESS_FINE_LOCATION",
         "ACCESS_COARSE_LOCATION",
-        "NOTIFICATIONS"
+        "NOTIFICATIONS",
+        "INTERNET"
       ],
       "config": {
         "googleMaps": {

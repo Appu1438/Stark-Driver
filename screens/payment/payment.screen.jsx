@@ -243,9 +243,12 @@ export default function PaymentPage() {
     return (
       <SafeAreaView style={{ flex: 1 }}>
         <WebView
-          source={{ html: checkoutHtml }}
           style={{ flex: 1, backgroundColor: "#fff" }}
+          source={{ html: checkoutHtml }}
           javaScriptEnabled
+          domStorageEnabled
+          originWhitelist={["*"]}
+          mixedContentMode="always"
           onMessage={handleWebViewMessage}
         />
       </SafeAreaView>
