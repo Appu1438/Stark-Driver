@@ -12,7 +12,7 @@ import {
   StatusBar,
   BackHandler,
 } from "react-native";
-import { WebView } from "react-native-webview";
+import RazorpayCheckout from "react-native-razorpay";
 import { LinearGradient } from "expo-linear-gradient";
 import { router } from "expo-router";
 import { useGetDriverData } from "@/hooks/useGetDriverData";
@@ -171,7 +171,7 @@ export default function PaymentPage() {
   };
 
   const handlePayment = async () => {
-    if (orderInProgressRef.current) return; // 🔒 DUPLICATE STOP
+    if (orderInProgressRef.current) return;
 
     const amt = Number(amount);
     if (!amt || amt < 250 || amt % 50 !== 0) {
@@ -194,12 +194,41 @@ export default function PaymentPage() {
         driverId: driver?.id,
       });
 
-      paymentInProgressRef.current = true;
+      const options = {
+        description: "Wallet Recharge",
+        image:
+          "https://res.cloudinary.com/starkcab/image/upload/w_256,h_256,c_pad,b_rgb:000,q_auto/v1765043362/App%20Logos/FullLogo_p0evhu.png",
+        currency: "INR",
+        key: process.env.EXPO_PUBLIC_RAZORPAY_KEY_ID,
+        amount: Math.round(grossAmount * 100),
+        order_id: orderRes.data.orderId,
+        name: "STARK PAYMENTS",
 
-      const html = generateCheckoutHtml(grossAmount, orderRes.data.orderId);
-      setCheckoutHtml(html);
+        prefill: {
+          name: driver?.name,
+          email: driver?.email,
+          contact: driver?.phone_number,
+        },
+
+        theme: { color: color.primary },
+      };
+
+      RazorpayCheckout.open(options)
+        .then(async (data) => {
+          await axiosInstance.post(`/payments/verify-payment`, data);
+
+          setAlertTitle("Success 🚀");
+          setAlertMessage("Wallet recharged successfully.");
+          setAlertNextRoute("/(routes)/profile/wallet-details");
+          setAlertVisible(true);
+        })
+        .catch((err) => {
+          console.log(err)
+          setAlertTitle("Cancelled");
+          setAlertMessage("Transaction was cancelled.");
+          setAlertVisible(true);
+        });
     } catch (err) {
-      orderInProgressRef.current = false;
       setAlertTitle("Information");
       setAlertMessage(
         err?.response?.data?.message || "Could not initialize payment."
@@ -207,8 +236,10 @@ export default function PaymentPage() {
       setAlertVisible(true);
     }
 
+    orderInProgressRef.current = false;
     setLoading(false);
   };
+
 
   const handleWebViewMessage = async (event) => {
     const data = JSON.parse(event.nativeEvent.data);
