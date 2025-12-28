@@ -52,14 +52,6 @@ export default function PaymentPage() {
   const handlePayment = async () => {
     const amt = Number(amount);
 
-    if (!amt || amt < 250 || amt % 50 !== 0) {
-      showAlert(
-        "Invalid Amount",
-        "Minimum ₹250. Amount must be in multiples of ₹50."
-      );
-      return;
-    }
-
     setLoading(true);
 
     try {
@@ -72,12 +64,12 @@ export default function PaymentPage() {
       await WebBrowser.openBrowserAsync(res.data.url);
 
       showAlert(
-        "Payment Started",
+        "Payment Initialized",
         "Complete the payment in the browser. Your wallet will be updated automatically once payment is successful."
       );
     } catch (err) {
       showAlert(
-        "Payment Failed",
+        "Payment Initialization Failed",
         err?.response?.data?.message || "Unable to start payment"
       );
     }
