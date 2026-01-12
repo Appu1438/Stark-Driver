@@ -41,7 +41,7 @@ export default function EmailVerificationScreen() {
 
       router.replace("/(routes)/login"); // Use replace to prevent going back
 
-    } catch (erro) {
+    } catch (error) {
       const message =
         error?.response?.data?.message ||
         error?.data?.message ||

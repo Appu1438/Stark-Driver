@@ -43,6 +43,10 @@ export default function DocumentVerificationScreen() {
     const [showLicPicker, setShowLicPicker] = useState(false);
     const [showInsPicker, setShowInsPicker] = useState(false);
 
+    const [regDateObj, setRegDateObj] = useState(new Date());
+    const [licDateObj, setLicDateObj] = useState(new Date());
+    const [insDateObj, setInsDateObj] = useState(new Date());
+
     const [showRegInfo, setShowRegInfo] = useState(false);
 
     const formatDate = (d) => {
@@ -57,7 +61,7 @@ export default function DocumentVerificationScreen() {
         // If user types "-" manually → show info (only once)
         if (text.includes("-") && !showRegInfo) {
             setShowRegInfo(true);
-            openAlert("Hyphens will be added automatically","Just type the number")
+            openAlert("Hyphens will be added automatically", "Just type the number")
         }
 
         // Remove all non-alphanumeric characters
@@ -116,22 +120,28 @@ export default function DocumentVerificationScreen() {
 
     const onRegDateChange = (event, selectedDate) => {
         if (selectedDate) {
+            setRegDateObj(selectedDate); // ✅ store Date object
             handleChange("registration_date", formatDate(selectedDate));
         }
+        // if (Platform.OS === "android") 
         setShowRegPicker(false);
     };
 
     const onLicDateChange = (event, selectedDate) => {
         if (selectedDate) {
+            setLicDateObj(selectedDate);
             handleChange("license_expiry", formatDate(selectedDate));
         }
+        // if (Platform.OS === "android") 
         setShowLicPicker(false);
     };
 
     const onInsDateChange = (event, selectedDate) => {
         if (selectedDate) {
+            setInsDateObj(selectedDate);
             handleChange("insurance_expiry", formatDate(selectedDate));
         }
+        // if (Platform.OS === "android") 
         setShowInsPicker(false);
     };
 
@@ -245,15 +255,15 @@ export default function DocumentVerificationScreen() {
             />
             {showRegPicker && (
                 <DateTimePicker
-                    testID="dateTimePicker"
-                    value={new Date()}
+                    value={regDateObj || new Date()}   // ✅ FIX
                     mode="date"
                     display={Platform.OS === "ios" ? "spinner" : "default"}
                     onChange={onRegDateChange}
                     maximumDate={new Date()}
-                    themeVariant="dark" // Forces dark theme on iOS
+                    themeVariant="dark"
                 />
             )}
+
 
         </View>
     );
@@ -276,19 +286,17 @@ export default function DocumentVerificationScreen() {
                 value={formData.license_expiry}
                 onPress={() => setShowLicPicker(true)}
             />
-
             {showLicPicker && (
                 <DateTimePicker
-                    testID="dateTimePicker"
-                    value={new Date()}
+                    value={licDateObj || new Date()}   // ✅ FIX
                     mode="date"
                     display={Platform.OS === "ios" ? "spinner" : "default"}
                     onChange={onLicDateChange}
                     maximumDate={twentyFiveYearsFromNow}
-                    themeVariant="dark" // Forces dark theme on iOS
-
+                    themeVariant="dark"
                 />
             )}
+
 
 
             <View style={styles.divider} />
@@ -302,15 +310,15 @@ export default function DocumentVerificationScreen() {
 
             {showInsPicker && (
                 <DateTimePicker
-                    value={new Date()}
+                    value={insDateObj || new Date()}   // ✅ FIX
                     mode="date"
                     display={Platform.OS === "ios" ? "spinner" : "default"}
                     onChange={onInsDateChange}
                     maximumDate={twentyFiveYearsFromNow}
-                    themeVariant="dark" // Forces dark theme on iOS
-
+                    themeVariant="dark"
                 />
             )}
+
 
         </View>
     );

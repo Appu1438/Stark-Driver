@@ -85,9 +85,9 @@ export default function SignupScreen() {
       setFormattedDob(dobString);
       handleChange("dob", dobString);
 
-      if (Platform.OS === 'android') {
+      // if (Platform.OS === 'android') {
         setShowDatePicker(false);
-      }
+      // }
     }
   };
 

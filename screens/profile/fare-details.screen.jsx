@@ -133,6 +133,19 @@ export default function FareDetails() {
   // ---------------------------------------------
   // ⭐ NO DATA STATE
   // ---------------------------------------------
+  if (!district) {
+    return (
+      <View style={[styles.mainContainer, { justifyContent: 'center', alignItems: 'center' }]}>
+        <Ionicons name="alert-circle-outline" size={50} color="#666" />
+        <Text style={{ color: '#888', marginTop: 10, fontFamily: 'TT-Octosquares-Medium' }}>
+          Go Online to see fare rates
+        </Text>
+      </View>
+    );
+  }
+  // ---------------------------------------------
+  // ⭐ NO DATA STATE
+  // ---------------------------------------------
   if (!fare) {
     return (
       <View style={[styles.mainContainer, { justifyContent: 'center', alignItems: 'center' }]}>

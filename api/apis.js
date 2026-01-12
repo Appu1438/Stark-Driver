@@ -10,20 +10,27 @@ import { Alert, Linking } from "react-native";
 /**
  * Logout Function
  */
-export const logout = async (driverId, message, setLoading) => {
+export const logout = async (
+    driverId,
+    message,
+    setLoading
+) => {
     try {
-        // Start loading if applicable
+        // ------------------- Start Loading -------------------
         if (typeof setLoading === "function") {
             setLoading(true);
         }
 
+        // ------------------- Call Backend -------------------
         const res = await axiosInstance.post(
             "/driver/logout",
             { driverId },
             { withCredentials: true }
         );
 
-        // 🚫 BACKEND RESTRICTED LOGOUT
+        /**
+         * 🚫 CASE 1: Backend blocks logout (ACTIVE DEVICE + ACTIVE RIDE)
+         */
         if (res.data?.blockLogout) {
             Toast.show(res.data.message, {
                 type: "danger",
@@ -35,11 +42,31 @@ export const logout = async (driverId, message, setLoading) => {
             return;
         }
 
-        // -----------------------------------------
-        // NORMAL LOGOUT FLOW
-        // -----------------------------------------
+        /**
+         * ⚠️ CASE 2: Old device logout
+         * - Logged in from another device
+         * - DO NOT update status
+         * - DO NOT send socket update
+         */
+        if (res.data?.skipSocketCleanup) {
+            await AsyncStorage.removeItem("accessToken");
+            await AsyncStorage.removeItem("driverData");
 
-        // Stop sending location updates
+            if (typeof setLoading === "function") setLoading(false);
+
+            router.replace("/(routes)/login");
+            Toast.show("Session logged out from this device.", {
+                type: "warning",
+                placement: "bottom",
+            });
+            return;
+        }
+
+        /**
+         * ✅ CASE 3: Normal logout (ACTIVE DEVICE + NO ACTIVE RIDE)
+         * - Update socket
+         * - Status becomes inactive (handled backend)
+         */
         driverSocketService.sendLocationUpdate(driverId, {
             latitude: null,
             longitude: null,
@@ -58,8 +85,10 @@ export const logout = async (driverId, message, setLoading) => {
         router.replace("/(routes)/login");
 
     } catch (error) {
-        // 🚫 BACKEND BLOCKS LOGOUT FROM ERROR RESPONSE
-        if (error.response?.data?.blockLogout) {
+        /**
+         * 🚫 CASE 4: Backend explicitly blocks logout in error response
+         */
+        if (error?.response?.data?.blockLogout) {
             Toast.show(error.response.data.message, {
                 type: "danger",
                 placement: "bottom",
@@ -69,10 +98,10 @@ export const logout = async (driverId, message, setLoading) => {
             return;
         }
 
-        // -----------------------------------------
-        // FALLBACK — FORCE LOGOUT
-        // -----------------------------------------
-
+        /**
+         * 🧯 CASE 5: Fallback force logout
+         * (network error / token expired / server down)
+         */
         await AsyncStorage.removeItem("accessToken");
         await AsyncStorage.removeItem("driverData");
 
@@ -86,6 +115,7 @@ export const logout = async (driverId, message, setLoading) => {
         router.replace("/(routes)/login");
     }
 };
+
 
 /**
  * Refresh Token Function

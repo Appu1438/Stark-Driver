@@ -213,90 +213,154 @@ export default function HomeScreen() {
     }, []);
 
 
+    useEffect(() => {
+        if (!isOn) {
+            // 🔴 Reset so next online is treated as fresh session
+            currentLocRef.current = null;
+        }
+    }, [isOn]);
+
+
+    // =====================================================
+    // 🔹 LOCATION TRACKING (ONLY WHEN ONLINE)
+    // =====================================================
+    const lastUpdateTimeRef = useRef(null);
 
     useEffect(() => {
         let watchSub = null;
 
+        if (!isOn) {
+            console.log("[GPS] Driver is OFFLINE. GPS not started.");
+            return;
+        }
+
         (async () => {
-            // -------------------------
-            // 1. Ask permission
-            // -------------------------
-            const { status } = await GeoLocation.requestForegroundPermissionsAsync();
+            console.log("[GPS] Requesting foreground location permission...");
+
+            const { status } =
+                await GeoLocation.requestForegroundPermissionsAsync();
+
             if (status !== "granted") {
-                Toast.show("Please allow location access!");
+                console.warn("[GPS] Location permission denied");
+                Toast.show("Location permission is required");
                 return;
             }
 
-            // -------------------------
-            // 2. Start watching position
-            // -------------------------
+            console.log("[GPS] Permission granted. Starting GPS watcher...");
+
             watchSub = await GeoLocation.watchPositionAsync(
                 {
                     accuracy: GeoLocation.Accuracy.High,
-                    timeInterval: 2000,     // every 2 sec
-                    distanceInterval: 2,    // or every 2 meters
+                    timeInterval: 3000,      // every 3s
+                    distanceInterval: 5,     // or every 5 meters
                 },
                 async (position) => {
-                    const { latitude, longitude } = position.coords;
-                    const newLoc = { latitude, longitude };
-                    const lastLoc = currentLocRef.current;
+                    const { latitude, longitude, accuracy } = position.coords;
+                    const now = Date.now();
 
+                    console.log(
+                        `[GPS] Raw update → lat:${latitude}, lon:${longitude}, accuracy:${accuracy}m`
+                    );
 
-                    // First-time location
-                    console.log('Last Location', lastLoc)
-
-                    if (!lastLoc) {
-                        console.log('No Last Location Found , Updating...', newLoc)
-                        updateLocation(newLoc);
-                        setDriverLocation(newLoc);
-                        await sendLocationUpdate(newLoc);
-                        getDistrict(latitude, longitude, setDistrict);
+                    // 🔴 Poor accuracy → wait
+                    if (!accuracy || accuracy > 50) {
+                        console.warn("[GPS] Poor accuracy. Waiting...");
+                        Toast.show("Waiting for better GPS signal...");
                         return;
                     }
-                    else {
-                        // -------------------------
-                        // 3. Compare movement
-                        // -------------------------
-                        const moved = haversineDistance(lastLoc, newLoc);
-                        console.log(`Moved ${moved} meters `)
 
-                        if (moved >= 5) {    // 🔥 moved >= 200 meters
-                            console.log('Updating Store and Socket', newLoc)
-                            updateLocation(newLoc);         // update Zustand
-                            setDriverLocation(newLoc);      // local state if needed
-                            getDistrict(latitude, longitude, setDistrict);
-                            await sendLocationUpdate(newLoc);
-                        } else {
-                            console.log('Skiping Store and Socket', newLoc)
+                    const newLoc = { latitude, longitude };
+                    const lastLoc = currentLocRef.current;
+                    const lastTime = lastUpdateTimeRef.current;
 
-                        }
+                    // 🟢 INITIAL LOCATION (always accept)
+                    if (!lastLoc) {
+                        console.log("[GPS] Initial location received. Sending...");
+
+                        currentLocRef.current = newLoc;
+                        lastUpdateTimeRef.current = now;
+
+                        updateLocation(newLoc);
+                        setDriverLocation(newLoc);
+                        getDistrict(latitude, longitude, setDistrict);
+
+                        await sendLocationUpdate(newLoc);
+
+                        Toast.show("You are LIVE. Initial location updated.");
+                        return;
                     }
 
+                    // 📏 Distance & time
+                    const moved = haversineDistance(lastLoc, newLoc);
+                    const timeDiffSec = (now - lastTime) / 1000;
+
+                    console.log(
+                        `[GPS] Movement check → ${Math.round(moved)}m in ${Math.round(timeDiffSec)}s`
+                    );
+
+                    // ❌ Ignore tiny GPS jitter
+                    if (moved < 10) {
+                        console.log("[GPS] Ignored jitter (<10m)");
+                        return;
+                    }
+
+                    // 🚨 Large jump validation (speed-aware)
+                    const MAX_SPEED_KMH = 80;
+                    const MAX_SPEED_MPS = MAX_SPEED_KMH / 3.6; // 16.67 m/s
+                    const maxAllowedDistance = MAX_SPEED_MPS * timeDiffSec;
+
+                    console.log(`Moved ${moved} m in ${timeDiffSec} s , maxAllowdedDistance ${maxAllowedDistance}`)
+                    if (moved > maxAllowedDistance) {
+                        console.warn(
+                            `[GPS] Jump rejected → moved:${Math.round(
+                                moved
+                            )}m, allowed:${Math.round(maxAllowedDistance)}m`
+                        );
+                        Toast.show("GPS jump detected. Ignoring update.");
+                        return;
+                    }
+
+                    // ✅ ACCEPT UPDATE
+                    console.log("[GPS] Valid movement. Updating location.");
+
+                    currentLocRef.current = newLoc;
+                    lastUpdateTimeRef.current = now;
+
+                    updateLocation(newLoc);
+                    setDriverLocation(newLoc);
+                    getDistrict(latitude, longitude, setDistrict);
+
+                    await sendLocationUpdate(newLoc);
+
+                    Toast.show(
+                        `Location updated. Moved ${Math.round(moved)} meters.`
+                    );
                 }
             );
         })();
 
-        // -------------------------
-        // Cleanup watcher on unmount
-        // -------------------------
         return () => {
-            if (watchSub && typeof watchSub.remove === "function") {
+            if (watchSub?.remove) {
+                console.log("[GPS] Cleaning up GPS watcher");
                 watchSub.remove();
             }
         };
     }, [isOn]);
 
+
+
+
     // -------------------------
     // 🔹 Haversine Utility (Keep Outside Component)
     // -------------------------
-    const haversineDistance = (coords1, coords2) => {
-        const toRad = (x) => (x * Math.PI) / 180;
+    const haversineDistance = (c1, c2) => {
+        const R = 6371000; // Earth radius in meters
 
-        const R = 6371e3; // Earth radius (m)
-        const lat1 = toRad(coords1.latitude);
-        const lat2 = toRad(coords2.latitude);
-        const dLat = toRad(coords2.latitude - coords1.latitude);
-        const dLon = toRad(coords2.longitude - coords1.longitude);
+        const lat1 = (c1.latitude * Math.PI) / 180;
+        const lat2 = (c2.latitude * Math.PI) / 180;
+
+        const dLat = ((c2.latitude - c1.latitude) * Math.PI) / 180;
+        const dLon = ((c2.longitude - c1.longitude) * Math.PI) / 180;
 
         const a =
             Math.sin(dLat / 2) ** 2 +
@@ -305,11 +369,10 @@ export default function HomeScreen() {
             Math.sin(dLon / 2) ** 2;
 
         const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
-        const distance = R * c;
 
-        console.log("Moved distance:", distance, "m");
-        return distance;
+        return R * c; // ✅ meters (accurate)
     };
+
 
     const sendLocationUpdate = async (location) => {
         try {

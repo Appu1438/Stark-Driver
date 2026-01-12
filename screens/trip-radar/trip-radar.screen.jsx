@@ -88,7 +88,7 @@ export default function TripRadarScreen() {
   if (!currentLocation) {
     return (
       <View style={styles.loadingContainer}>
-        <ActivityIndicator size="large" color={color.primary} />
+        <ActivityIndicator size="large" color={color.primaryText} />
         <Text style={styles.loadingText}>Acquiring GPS Signal...</Text>
       </View>
     );
