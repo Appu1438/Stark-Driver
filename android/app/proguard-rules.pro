@@ -13,8 +13,4 @@
 -keep class com.google.android.libraries.** { *; }
 -keep class com.google.maps.** { *; }
 -keep class com.google.android.gms.maps.** { *; }
--keep class com.razorpay.** { *; }
--keep class android.webkit.** { *; }
--dontwarn com.razorpay.**
-
 # Add any project specific keep options here:
