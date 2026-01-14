@@ -198,19 +198,6 @@ export default function HomeScreen() {
         fetchStatus();
     }, [driver]);
 
-    // // socket updates
-    useEffect(() => {
-        driverSocketService.connect();
-
-        driverSocketService.clearListeners();
-
-        return () => {
-            console.log('unmount works')
-            driverSocketService.clearListeners();
-
-            driverSocketService.disconnect();
-        }
-    }, []);
 
 
     useEffect(() => {
@@ -412,7 +399,6 @@ export default function HomeScreen() {
     };
 
 
-
     const handleStatusChange = async () => {
         if (!loading) {
             setloading(true);
@@ -440,20 +426,6 @@ export default function HomeScreen() {
             }
         }
     };
-
-    const { requests, addRequest, rejectRequest, acceptRequest } = useTripRadar();
-
-    // ——————————————— SOCKET LISTENER ———————————————
-    useEffect(() => {
-        const unsubscribe = driverSocketService.onMessage((msg) => {
-            if (msg.type === "rideRequest") {
-                addRequest(msg.rideRequest, driverLocationRef.current);
-            }
-        });
-        return () => unsubscribe();
-    }, []);
-
-
 
     const [refreshing, setRefreshing] = useState(false);
 

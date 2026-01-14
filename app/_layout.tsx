@@ -1,10 +1,10 @@
 import * as SplashScreen from "expo-splash-screen";
-import { useEffect, useState } from "react";
+import { useEffect } from "react";
 import 'react-native-gesture-handler';
 import 'react-native-reanimated';
 import { router, Stack } from "expo-router";
 import { ToastProvider } from "react-native-toast-notifications";
-import { LogBox, StyleSheet, View } from "react-native";
+import { AppState, AppStateStatus, LogBox, StyleSheet, View } from "react-native";
 import { useFonts } from "expo-font";
 import React from "react";
 import * as Linking from "expo-linking";
@@ -13,27 +13,27 @@ import { ThemeProvider, DefaultTheme } from '@react-navigation/native';
 import color from "@/themes/app.colors";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
 import Animated from "react-native-reanimated";
-export { ErrorBoundary } from "expo-router";
+import driverSocketService from "@/utils/socket/socketService";
+import AsyncStorage from "@react-native-async-storage/async-storage";
 
+export { ErrorBoundary } from "expo-router";
 
 const MyDarkTheme = {
   ...DefaultTheme,
   colors: {
     ...DefaultTheme.colors,
-    background: color.subPrimary, // Global background
+    background: color.subPrimary,
     card: color.subPrimary,
     text: color.primaryText,
     border: color.border,
   },
 };
 
-// Prevent the splash screen from auto-hiding before asset loading is complete.
 SplashScreen.setOptions({
   duration: 2000,
   fade: true,
 });
 SplashScreen.preventAutoHideAsync();
-
 
 export default function RootLayout() {
   const [loaded, error] = useFonts({
@@ -42,8 +42,8 @@ export default function RootLayout() {
 
   Notifications.setNotificationHandler({
     handleNotification: async () => ({
-      shouldShowBanner: true,   // 👈 replaces shouldShowAlert
-      shouldShowList: true,     // 👈 optional: show in notification center
+      shouldShowBanner: true,
+      shouldShowList: true,
       shouldPlaySound: true,
       shouldSetBadge: false,
     }),
@@ -56,6 +56,65 @@ export default function RootLayout() {
     }
   }, [loaded, error]);
 
+  /**
+   * ✅ CONNECT SOCKET ONCE (APP LIFETIME)
+   */
+  /**
+   * ✅ CONNECT SOCKET ONCE (APP LIFETIME)
+   */
+  useEffect(() => {
+    driverSocketService.connect();
+  }, []);
+
+  /**
+   * ✅ RECONNECT WHEN APP COMES TO FOREGROUND
+   */
+  useEffect(() => {
+    const subscription = AppState.addEventListener(
+      "change",
+      (state: AppStateStatus) => {
+        console.log("📱 AppState:", state);
+        if (state === "active") {
+          console.log("🔁 App active → reconnect socket");
+          driverSocketService.connect();
+        }
+      }
+    );
+
+    return () => subscription.remove();
+  }, []);
+
+  /**
+   * ✅ IDENTIFY DRIVER AFTER SOCKET IS CONNECTED
+   */
+  useEffect(() => {
+    const identifyDriver = async () => {
+      const stored = await AsyncStorage.getItem("driverData");
+      if (!stored) return;
+
+      const driverData = JSON.parse(stored);
+      if (!driverData?.id) return;
+
+      console.log("🆔 [APP] identifying driver:", driverData.id);
+
+      driverSocketService.send({
+        type: "identify",
+        role: "driver",
+        driver: driverData.id,
+      });
+    };
+
+    // 🔥 ONLY identify AFTER socket opens
+    const unsubscribe = driverSocketService.onConnected(() => {
+      identifyDriver();
+    });
+
+    return () => {
+      unsubscribe?.();
+    };
+  }, []);
+
+
   if (!loaded && !error) {
     return null;
   }
@@ -65,54 +124,26 @@ export default function RootLayout() {
 
 function RootLayoutNav() {
 
-  useEffect(() => {
-    const sub = Linking.addEventListener("url", ({ url }) => {
-      console.log("Deep link received:", url);
-
-      const parsed = Linking.parse(url);
-      console.log(parsed);
-
-      // parsed.path will be: "wallet-success" or "wallet-failed" or "wallet-cancelled"
-
-      if (
-        parsed?.path === "wallet-success" ||
-        parsed?.path === "wallet-failed" ||
-        parsed?.path === "wallet-cancelled"
-      ) {
-        router.replace("/(tabs)/profile");
-      }
-    });
-
-    return () => sub.remove();
-  }, []);
-
-
   return (
     <ThemeProvider value={MyDarkTheme}>
       <View style={styles.container}>
         <GestureHandlerRootView style={{ flex: 1 }}>
           <Animated.View style={{ flex: 1 }}>
-
             <ToastProvider>
               <Stack screenOptions={{ headerShown: false }}>
                 <Stack.Screen name="index" />
               </Stack>
             </ToastProvider>
           </Animated.View>
-
         </GestureHandlerRootView>
-
       </View>
     </ThemeProvider>
-
-
   );
-
-
 }
+
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#000000', // Makes entire app black
+    backgroundColor: "#000000",
   },
 });

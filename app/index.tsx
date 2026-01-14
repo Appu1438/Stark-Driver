@@ -12,7 +12,6 @@ export default function Index() {
   useEffect(() => {
     let isMounted = true; // flag to check if the component is mounted
     console.log(process.env.EXPO_PUBLIC_API_URI)
-    console.log(process.env.EXPO_PUBLIC_PAYMENT_API_URI)
     console.log(process.env.EXPO_PUBLIC_GOOGLE_CLOUD_API_KEY)
     console.log(process.env.EXPO_PUBLIC_SOCKET_URL)
 

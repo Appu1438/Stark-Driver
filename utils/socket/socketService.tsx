@@ -1,5 +1,3 @@
-// utils/socket/driverSocketService.ts
-
 type DriverLocationPayload = {
   latitude: number;
   longitude: number;
@@ -9,73 +7,144 @@ type DriverLocationPayload = {
 class DriverSocketService {
   private socket: WebSocket | null = null;
   private isConnected = false;
-  private queue: any[] = [];
 
-  // allow multiple listeners
+  private pingInterval: any = null;
+  private reconnectTimeout: any = null;
+
+  // ✅ Keep only latest queued payload (important for location updates)
+  private queuedPayload: string | null = null;
+
+  private hasShownDisconnectToast = false;
+
+  /* ---------- LISTENERS ---------- */
   private connectListeners = new Set<() => void>();
   private messageListeners = new Set<(data: any) => void>();
   private errorListeners = new Set<(e: any) => void>();
 
-  connect() {
-    if (this.socket && this.isConnected) return;
+  /* ===============================
+     💓 HEARTBEAT
+  =============================== */
 
-    const url = process.env.EXPO_PUBLIC_SOCKET_URL!;
-    this.socket = new WebSocket(url);
+  private startPing() {
+    this.stopPing();
+    this.pingInterval = setInterval(() => {
+      if (this.socket?.readyState === WebSocket.OPEN) {
+        console.log("💓 [DRIVER_SOCKET] ping");
+        this.socket.send(JSON.stringify({ type: "ping" }));
+      }
+    }, 25000);
+  }
+
+  private stopPing() {
+    if (this.pingInterval) clearInterval(this.pingInterval);
+    this.pingInterval = null;
+  }
+
+  /* ===============================
+     🔌 CONNECTION
+  =============================== */
+
+  connect() {
+    if (this.socket) return;
+
+    console.log("🔌 [DRIVER_SOCKET] connecting…");
+    this.socket = new WebSocket(process.env.EXPO_PUBLIC_SOCKET_URL!);
 
     this.socket.onopen = () => {
-      console.log("✅ Driver Socket connected");
+      console.log("✅ [DRIVER_SOCKET] connected");
       this.isConnected = true;
+      this.hasShownDisconnectToast = false;
 
-      // Send queued messages
-      this.queue.forEach((msg) => this.socket?.send(msg));
-      this.queue = [];
+      // Clear reconnect timer if exists
+      if (this.reconnectTimeout) {
+        clearTimeout(this.reconnectTimeout);
+        this.reconnectTimeout = null;
+      }
 
-      // notify all listeners
-      this.connectListeners.forEach((cb) => cb());
+      this.startPing();
+
+      // Flush latest queued payload only
+      if (this.queuedPayload) {
+        this.socket.send(this.queuedPayload);
+        console.log("📤 [DRIVER_SOCKET] flushed queued payload");
+        this.queuedPayload = null;
+      }
+
+      this.connectListeners.forEach(cb => cb());
     };
 
     this.socket.onmessage = (e) => {
       try {
         const message = JSON.parse(e.data);
-        this.messageListeners.forEach((cb) => cb(message));
+        this.messageListeners.forEach(cb => cb(message));
       } catch (err) {
-        console.error("❌ Invalid message format", err);
+        console.error("❌ [DRIVER_SOCKET] invalid message", err);
       }
     };
 
     this.socket.onerror = (e) => {
-      console.error("❌ Socket error:", e);
-      this.errorListeners.forEach((cb) => cb(e));
+      console.error("❌ [DRIVER_SOCKET] error", e);
+      this.errorListeners.forEach(cb => cb(e));
     };
 
-    this.socket.onclose = (e) => {
-      console.warn("🔌 Socket closed:", e.code, e.reason);
-      this.isConnected = false;
-      this.socket = null;
-      setTimeout(() => this.connect(), 3000); // Auto reconnect
+    this.socket.onclose = () => {
+      console.warn("⚠️ [DRIVER_SOCKET] disconnected");
+
+      this.cleanup();
+
+      if (!this.hasShownDisconnectToast) {
+        this.hasShownDisconnectToast = true;
+      }
+
+      // Prevent duplicate reconnect timers
+      if (this.reconnectTimeout) return;
+
+      this.reconnectTimeout = setTimeout(() => {
+        this.reconnectTimeout = null;
+        this.connect();
+      }, 3000);
     };
   }
 
+  private cleanup() {
+    this.stopPing();
+    this.isConnected = false;
+    this.socket = null;
+  }
+
+  /* ===============================
+     📦 SEND
+  =============================== */
+
   send(data: any) {
+    const payload = JSON.stringify(data);
+
     if (this.isConnected && this.socket?.readyState === WebSocket.OPEN) {
-      this.socket.send(JSON.stringify(data));
+      this.socket.send(payload);
     } else {
-      console.warn("Socket not connected. Queuing message:", data);
-      this.queue.push(JSON.stringify(data));
+      // ✅ overwrite old payload (do not grow queue)
+      this.queuedPayload = payload;
+      console.warn("📦 [DRIVER_SOCKET] queued latest payload");
     }
   }
 
+  /* ===============================
+     🚕 DRIVER ACTIONS
+  =============================== */
+
   sendLocationUpdate(driverId: string, location: DriverLocationPayload) {
-    const message = {
+    this.send({
       type: "locationUpdate",
       role: "driver",
       driver: driverId,
       data: location,
-    };
-    this.send(message);
+    });
   }
 
-  // multi-listener safe subscription
+  /* ===============================
+     🔔 LISTENERS
+  =============================== */
+
   onConnected(cb: () => void) {
     this.connectListeners.add(cb);
     return () => this.connectListeners.delete(cb);
@@ -89,22 +158,6 @@ class DriverSocketService {
   onError(cb: (e: any) => void) {
     this.errorListeners.add(cb);
     return () => this.errorListeners.delete(cb);
-  }
-
-  disconnect() {
-    this.socket?.close();
-    this.socket = null;
-    this.isConnected = false;
-  }
-
-  clearListeners() {
-    this.connectListeners.clear();
-    this.messageListeners.clear();
-    this.errorListeners.clear();
-  }
-
-  isSocketConnected() {
-    return this.isConnected;
   }
 }
 

@@ -117,7 +117,7 @@ export const useTripRadar = create((set, get) => ({
       driverSocketService.send({
         type: "rideRejected",
         role: "driver",
-        driverId: get().driver?.id,
+        driver: get().driver?.id,
         userId: req.data.user.id,
       });
 
@@ -183,6 +183,7 @@ export const useTripRadar = create((set, get) => ({
       driverSocketService.send({
         type: "rideAccepted",
         role: "driver",
+        driver: get().driver?.id,
         rideData: {
           user: req.data.user,
           firstMarker: req.data.currentLocation,

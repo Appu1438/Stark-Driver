@@ -4,16 +4,38 @@ import { Person } from "@/assets/icons/person";
 import { History } from "@/assets/icons/history";
 import color from "@/themes/app.colors";
 import { Tabs } from "expo-router";
-import React from "react";
+import React, { useEffect, useRef } from "react";
 import { Map } from "@/assets/icons/map";
 import { MapLight } from "@/assets/icons/mapLight";
 import { useTripRadar } from "@/store/useTripRadar";
 import { View, Text } from "react-native";
 import { Navigation } from "@/assets/icons/navigation";
 import { NavigationLight } from "@/assets/icons/navigationLight";
+import { useDriverLocationStore } from "@/store/driverLocationStore";
+import driverSocketService from "@/utils/socket/socketService";
 
 export default function _layout() {
-  const { requests } = useTripRadar();   // <-- you already have this
+  const { requests, addRequest } = useTripRadar();   // <-- you already have this
+
+  const locationRef = useRef(null);
+
+  // 🔁 keep latest location from store
+  const { currentLocation } = useDriverLocationStore();
+  useEffect(() => {
+    locationRef.current = currentLocation;
+  }, [currentLocation]);
+
+  // 🔔 GLOBAL SOCKET LISTENER (ONCE)
+  useEffect(() => {
+    const unsubscribe = driverSocketService.onMessage((msg) => {
+      if (msg.type === "rideRequest") {
+        console.log("🚕 [GLOBAL] Ride request received");
+        addRequest(msg.rideRequest, locationRef.current);
+      }
+    });
+
+    return () => unsubscribe();
+  }, []);
 
   return (
     <Tabs

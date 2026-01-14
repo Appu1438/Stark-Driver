@@ -199,6 +199,7 @@ export default function RideDetailsScreen() {
       driverSocketService.send({
         type: "rideStatusUpdate",
         role: "driver",
+        driver: ride.driverId._id,
         rideData: { id: ride.id, user: { id: ride.userId._id } },
         status: updatedStatus,
       });
@@ -210,7 +211,6 @@ export default function RideDetailsScreen() {
         Toast.show("Let's have a safe journey!", { type: "success" });
       } else if (updatedStatus === "Completed") {
         Toast.show(`Well done ${ride.driverId.name}`);
-        router.push("/(tabs)/home");
       }
     } catch (error) {
       console.error("Ride status update failed:", error);
@@ -277,6 +277,7 @@ export default function RideDetailsScreen() {
       driverSocketService.send({
         type: "rideStatusUpdate",
         role: "driver",
+        driver: ride.driverId._id,
         rideData: { id: ride.id, user: { id: ride.userId._id } },
         status: updatedStatus,
       });
