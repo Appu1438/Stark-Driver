@@ -86,10 +86,25 @@ export default function LoginScreen() {
 
       setloading(false);
 
-      router.push({
-        pathname: "/(routes)/otp-verification",
-        params: { phone_number: phoneNumber },
-      });
+
+      // ✅ SUCCESS TOAST
+      Toast.show(
+        res.data.message || res.data.data.message || "Whatsapp OTP sent successfully",
+        {
+          type: "success",
+          placement: "bottom",
+          duration: 2000, // optional
+        }
+      );
+
+      // ⏳ Small delay so user sees the toast
+      setTimeout(() => {
+        router.push({
+          pathname: "/(routes)/otp-verification",
+          params: { phone_number: phoneNumber },
+        });
+      }, 600);
+
 
     } catch (error) {
       setloading(false);

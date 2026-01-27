@@ -190,16 +190,40 @@ export default function DocumentVerificationScreen() {
         };
 
         try {
-            await axiosInstance.post("driver/send-otp", {
+            const res = await axiosInstance.post("driver/send-otp", {
                 phone_number: `${driverData.phone_number}`,
             });
 
-            router.push({
-                pathname: "/(routes)/otp-verification",
-                params: payload,
-            });
+            // ✅ SUCCESS TOAST
+            Toast.show(
+                res.data.message || res.data.data.message || "Whatsapp OTP sent successfully",
+                {
+                    type: "success",
+                    placement: "bottom",
+                    duration: 2000, // optional
+                }
+            );
+
+            // ⏳ Small delay so user sees the toast
+            setTimeout(() => {
+                router.push({
+                    pathname: "/(routes)/otp-verification",
+                    params: payload,
+                });
+            }, 600);
         } catch (error) {
-            Toast.show("Failed to send OTP. Try again.", { type: "danger", placement: "bottom" });
+
+            console.log("Send OTP Error:", error?.response?.data);
+
+            // Extract backend message
+            const message =
+                error?.response?.data?.message ||
+                "Unable to send OTP. Please try again.";
+
+            Toast.show(message, {
+                type: "danger",
+                placement: "bottom",
+            });
         } finally {
             setLoading(false);
         }

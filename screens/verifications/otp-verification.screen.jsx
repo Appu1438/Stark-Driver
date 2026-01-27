@@ -104,7 +104,7 @@ export default function OtpVerificationScreen() {
                 <View>
                     <SignInText
                         title={"Phone Number Verification"}
-                        subtitle={"Check your phone number for the otp!"}
+                        subtitle={"Check your whatsapp for the otp!"}
                     />
                     <OTPTextInput
                         handleTextChange={(code) => setOtp(code)}
