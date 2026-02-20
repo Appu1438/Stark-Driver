@@ -179,7 +179,7 @@ export default function LoginScreen() {
                       style={{
                         fontSize: windowHeight(10),
                         fontFamily: "TT-Octosquares-Medium",
-                        color: color.primaryText,
+                        color: "#00C853",
                       }}
                     >
                       Sign Up

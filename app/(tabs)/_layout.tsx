@@ -43,6 +43,17 @@ export default function _layout() {
         return {
           headerShown: false,
           tabBarShowLabel: false,
+          tabBarStyle: {
+            height: 60,              // 👈 fixed tab height
+            paddingBottom: 8,        // 👈 control icon alignment
+            paddingTop: 8,
+            backgroundColor: color.subPrimary,
+            borderTopWidth: 0,
+          },
+
+          tabBarIconStyle: {
+            marginTop: 4,
+          },
           tabBarIcon: ({ focused }) => {
 
             // ⭐ JSX that will be returned

@@ -57,30 +57,46 @@ export default function DocumentVerificationScreen() {
     };
 
     const formatRegistrationNumber = (text) => {
-
-        // If user types "-" manually → show info (only once)
+        // Show info only once if user types "-"
         if (text.includes("-") && !showRegInfo) {
             setShowRegInfo(true);
-            openAlert("Hyphens will be added automatically", "Just type the number")
+            openAlert("Hyphens will be added automatically", "Just type without '-'");
         }
 
         // Remove all non-alphanumeric characters
-        let value = text.toUpperCase().replace(/[^A-Z0-9]/g, "");
+        const clean = text.toUpperCase().replace(/[^A-Z0-9]/g, "");
 
-        let state = value.slice(0, 2);         // KL
-        let rto = value.slice(2, 4);           // 32
+        let state = "";
+        let rto = "";
+        let series = "";
+        let unique = "";
 
-        // Series = next letters until first number appears OR max 3 letters
-        let series = value.slice(4).match(/^[A-Z]{1,3}/)?.[0] || "";
+        // 1️⃣ State (First 2 letters only)
+        state = clean.slice(0, 2).replace(/[^A-Z]/g, "");
 
-        // Unique number = remaining digits after letters
-        let unique = value.slice(4 + series.length).replace(/[^0-9]/g, "").slice(0, 4);
+        // 2️⃣ RTO (Next 2 digits only)
+        rto = clean.slice(2, 4).replace(/[^0-9]/g, "");
 
-        let formatted = state;
+        // 3️⃣ Remaining string
+        const remaining = clean.slice(4);
 
-        if (rto) formatted += "-" + rto;
-        if (series) formatted += "-" + series;
-        if (unique) formatted += "-" + unique;
+        // Extract letters for series (max 3 letters)
+        const seriesMatch = remaining.match(/^[A-Z]{1,3}/);
+        series = seriesMatch ? seriesMatch[0] : "";
+
+        // Extract digits for unique (max 4 digits)
+        unique = remaining
+            .slice(series.length)
+            .replace(/[^0-9]/g, "")
+            .slice(0, 4);
+
+        // Build formatted string step by step
+        let formatted = "";
+
+        if (state) formatted += state;
+        if (rto) formatted += `-${rto}`;
+        if (series) formatted += `-${series}`;
+        if (unique) formatted += `-${unique}`;
 
         return formatted;
     };
@@ -92,6 +108,8 @@ export default function DocumentVerificationScreen() {
 
     const [formData, setFormData] = useState({
         vehicleType: "Sedan",
+        vehicleBrand: "",
+        vehicleModel: "",
         capacity: "",
         color: "",
         registration_number: "",
@@ -149,6 +167,10 @@ export default function DocumentVerificationScreen() {
     // Navigation Logic
     const handleNext = () => {
         if (currentStep === 0) {
+            if (!formData.vehicleBrand)
+                return openAlert("Vehicle Brand", "Select vehicle brand.");
+            if (!formData.vehicleModel)
+                return openAlert("Vehicle Model", "Select vehicle model.");
             if (!formData.capacity) return openAlert("Capacity", "Enter max capacity.");
             if (!formData.color) return openAlert("Color", "Enter vehicle color.");
             setCurrentStep(1);
@@ -179,6 +201,8 @@ export default function DocumentVerificationScreen() {
         const payload = {
             ...driverData,
             vehicle_type: formData.vehicleType,
+            vehicle_brand: formData.vehicleBrand,
+            vehicle_model: formData.vehicleModel,
             registration_number: formData.registration_number,
             registration_date: formData.registration_date,
             driving_license: formData.driving_license,
@@ -251,8 +275,24 @@ export default function DocumentVerificationScreen() {
                     ]}
                 />
             </View>
+            <CustomInput
+                label="Vehicle Brand"
+                placeholder="e.g. Tata, Toyota, Hyundai"
+                value={formData.vehicleBrand}
+                onChangeText={(t) => handleChange("vehicleBrand", t)}
+                icon="car"
+            />
+
+            <CustomInput
+                label="Vehicle Model"
+                placeholder="e.g. Tiago, Innova Crysta"
+                value={formData.vehicleModel}
+                onChangeText={(t) => handleChange("vehicleModel", t)}
+                icon="car-side"
+            />
             <CustomInput label="Vehicle Color" placeholder="e.g. White" value={formData.color} onChangeText={t => handleChange("color", t)} icon="palette" />
             <CustomInput label="Seating Capacity" placeholder="e.g. 4" value={formData.capacity} onChangeText={t => handleChange("capacity", t)} keyboardType="numeric" icon="users" />
+
         </View>
     );
 

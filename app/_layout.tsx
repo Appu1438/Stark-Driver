@@ -15,6 +15,7 @@ import { GestureHandlerRootView } from "react-native-gesture-handler";
 import Animated from "react-native-reanimated";
 import driverSocketService from "@/utils/socket/socketService";
 import AsyncStorage from "@react-native-async-storage/async-storage";
+import { SafeAreaProvider, useSafeAreaInsets } from "react-native-safe-area-context";
 
 export { ErrorBoundary } from "expo-router";
 
@@ -123,12 +124,25 @@ export default function RootLayout() {
 }
 
 function RootLayoutNav() {
+  return (
+    <SafeAreaProvider>
+      <MainApp />
+    </SafeAreaProvider>
+  );
+}
+
+
+function MainApp() {
+  const insets = useSafeAreaInsets();
 
   return (
     <ThemeProvider value={MyDarkTheme}>
-      <View style={styles.container}>
         <GestureHandlerRootView style={{ flex: 1 }}>
-          <Animated.View style={{ flex: 1 }}>
+          <Animated.View
+            style={{
+              flex: 1,
+              paddingBottom: insets.bottom   // 🔥 GLOBAL FIX
+            }}>
             <ToastProvider>
               <Stack screenOptions={{ headerShown: false }}>
                 <Stack.Screen name="index" />
@@ -136,7 +150,6 @@ function RootLayoutNav() {
             </ToastProvider>
           </Animated.View>
         </GestureHandlerRootView>
-      </View>
     </ThemeProvider>
   );
 }
