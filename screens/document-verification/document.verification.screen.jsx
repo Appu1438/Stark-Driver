@@ -118,6 +118,7 @@ export default function DocumentVerificationScreen() {
         license_expiry: "",
         insurance_number: "",
         insurance_expiry: "",
+        referralCode: "",
     });
 
     // --- Handlers ---
@@ -211,6 +212,8 @@ export default function DocumentVerificationScreen() {
             insurance_expiry: formData.insurance_expiry,
             vehicle_color: formData.color,
             capacity: formData.capacity,
+            usedReferralCode: formData.referralCode || null,
+
         };
 
         try {
@@ -292,7 +295,15 @@ export default function DocumentVerificationScreen() {
             />
             <CustomInput label="Vehicle Color" placeholder="e.g. White" value={formData.color} onChangeText={t => handleChange("color", t)} icon="palette" />
             <CustomInput label="Seating Capacity" placeholder="e.g. 4" value={formData.capacity} onChangeText={t => handleChange("capacity", t)} keyboardType="numeric" icon="users" />
-
+            <CustomInput
+                label="Referral Code (Optional)"
+                placeholder="Enter referral code"
+                value={formData.referralCode}
+                onChangeText={(t) =>
+                    handleChange("referralCode", t.toUpperCase())
+                }
+                icon="gift"
+            />
         </View>
     );
 

@@ -243,6 +243,11 @@ export default function Profile() {
             icon={<Ionicons name="time" size={18} color="#FFAB00" />}
             isLast
           />
+          <SectionLink
+            title="Refer & Earn"
+            path="/(routes)/profile/refer-earn"
+            icon={<Ionicons name="gift" size={18} color="#FFD700" />}
+          />
         </View>
 
         {/* GROUP 3: SUPPORT & LEGAL */}
