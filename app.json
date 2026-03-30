@@ -31,7 +31,17 @@
         }
       ],
       "expo-router",
-      "expo-web-browser"
+      "expo-web-browser",
+      [
+        "expo-build-properties",
+        {
+          "android": {
+            "compileSdkVersion": 35,
+            "targetSdkVersion": 35,
+            "buildToolsVersion": "35.0.0"
+          }
+        }
+      ]
     ],
     "android": {
       "package": "com.starkcabs.starkdriver",
