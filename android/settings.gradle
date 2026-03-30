@@ -1,4 +1,15 @@
 pluginManagement {
+  repositories {
+    google()
+    mavenCentral()
+    gradlePluginPortal()
+  }
+
+  plugins {
+    id("com.android.application") version "8.7.3"
+    id("com.android.library") version "8.7.3"
+  }
+
   def reactNativeGradlePlugin = new File(
     providers.exec {
       workingDir(rootDir)
@@ -6,7 +17,7 @@ pluginManagement {
     }.standardOutput.asText.get().trim()
   ).getParentFile().absolutePath
   includeBuild(reactNativeGradlePlugin)
-  
+
   def expoPluginsPath = new File(
     providers.exec {
       workingDir(rootDir)
