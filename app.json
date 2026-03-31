@@ -15,11 +15,8 @@
         {
           "backgroundColor": "#000000",
           "image": "./assets/images/logo/FullLogo.png",
-          "dark": {
-            "image": "./assets/images/logo/FullLogo.png",
-            "backgroundColor": "#000000"
-          },
-          "imageWidth": 250
+          "resizeMode": "contain",
+          "imageWidth": 150
         }
       ],
       [
