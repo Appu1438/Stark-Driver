@@ -108,3 +108,33 @@ export const useDriverEarnings = (period = "daily") => {
 
   return { earnings, loading, refetchEarnings: fetchEarnings };
 };
+
+
+export const useGetPackageTrips = () => {
+  const [trips, setTrips] = useState([]);
+  const [loading, setLoading] = useState(true);
+
+  const fetchTrips = async () => {
+    try {
+      const res = await axiosInstance.get("/packages/driver/get-all-packages");
+      console.log('hook', res.data)
+      setTrips(res.data || []);
+    } catch (err) {
+      console.error("Failed to fetch package trips:", err);
+    } finally {
+      setTimeout(() => {
+        setLoading(false);
+      }, 0);
+    }
+  };
+
+  useEffect(() => {
+    fetchTrips();
+  }, []);
+
+  return {
+    trips,
+    loading,
+    refetchTrips: fetchTrips,
+  };
+};

@@ -11,7 +11,7 @@ import {
   StatusBar,
   Platform,
 } from "react-native";
-import { useGetDriverData, useGetDriverWallet } from "@/hooks/useGetDriverData";
+import { useGetDriverData, useGetDriverWallet, useGetPackageTrips } from "@/hooks/useGetDriverData";
 import { router } from "expo-router";
 import { Ionicons, MaterialIcons, Feather } from "@expo/vector-icons";
 import { LinearGradient } from "expo-linear-gradient";
@@ -26,7 +26,7 @@ import Constants from "expo-constants";
 export default function Profile() {
   const { driver, loading: dataLoading, refetchData } = useGetDriverData();
   const { wallet, loading: walletLoading, refetchWallet } = useGetDriverWallet();
-
+  const { trips, loading: tripsLoading, refetchTrips } = useGetPackageTrips();
   const [refreshing, setRefreshing] = useState(false);
   const [isLoggingOut, setIsLoggingOut] = useState(false);
   const [showAlert, setShowAlert] = useState(false);
@@ -43,6 +43,7 @@ export default function Profile() {
     setRefreshing(true);
     await refetchData();
     await refetchWallet();
+    await refetchTrips();
     setRefreshing(false);
   };
 
@@ -196,6 +197,37 @@ export default function Profile() {
             </Text>
           </View>
         )}
+
+        {/* ---------- LIVE TRIPS ---------- */}
+
+        <TouchableOpacity
+          activeOpacity={0.8}
+          onPress={() => router.push("/(routes)/profile/urgent-requirements")}
+          style={styles.urgentCard}
+        >
+          <View style={styles.urgentLeft}>
+            <View style={styles.urgentIcon}>
+              <Ionicons name="flash" size={20} color="#fff" />
+            </View>
+
+            <View>
+              <Text style={styles.urgentTitle}>Urgent Requirements</Text>
+              <Text style={styles.urgentSub}>
+                High priority trips & driver requests
+              </Text>
+            </View>
+          </View>
+
+          <View style={styles.rightSection}>
+            {trips?.count > 0 && (
+              <View style={styles.badge}>
+                <Text style={styles.badgeText}>{trips?.count}</Text>
+              </View>
+            )}
+            <Ionicons name="chevron-forward" size={18} color="#000" />
+          </View>
+        </TouchableOpacity>
+
 
         {/* ---------- MENU SECTIONS ---------- */}
 
@@ -584,5 +616,64 @@ const styles = StyleSheet.create({
     fontSize: fontSizes.FONT12,
     marginTop: 20,
     fontFamily: 'TT-Octosquares-Medium',
+  },
+  urgentCard: {
+    marginHorizontal: 20,
+    marginTop: 15,
+    backgroundColor: "#FFD700",
+    borderRadius: 16,
+    padding: 15,
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+  },
+
+  urgentLeft: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 12,
+  },
+
+  urgentIcon: {
+    width: 40,
+    height: 40,
+    borderRadius: 10,
+    backgroundColor: "#000",
+    alignItems: "center",
+    justifyContent: "center",
+  },
+
+  urgentTitle: {
+    fontSize: fontSizes.FONT16,
+    fontFamily: "TT-Octosquares-Medium",
+    color: "#000",
+  },
+
+  urgentSub: {
+    fontSize: fontSizes.FONT10,
+    fontFamily: "TT-Octosquares-Medium",
+    color: "#333",
+    marginTop: 2,
+  },
+  rightSection: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 8,
+  },
+
+  badge: {
+    minWidth: 22,
+    height: 22,
+    borderRadius: 11,
+    backgroundColor: "#fd0000",
+    alignItems: "center",
+    justifyContent: "center",
+    paddingHorizontal: 6,
+  },
+
+  badgeText: {
+    color: "#fff",
+    fontSize: fontSizes.FONT12,
+    fontFamily: "TT-Octosquares-Medium",
   },
 });
