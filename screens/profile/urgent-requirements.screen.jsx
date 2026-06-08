@@ -444,7 +444,7 @@ const styles = StyleSheet.create({
     },
     headerTitle: {
         fontSize: fontSizes.FONT28, color: "#F0F2FF",
-        fontWeight: "800", letterSpacing: -0.5, lineHeight: 34,
+        fontWeight: "0", letterSpacing: -0.5, lineHeight: 34,
         fontFamily: "TT-Octosquares-Medium",
 
     },
