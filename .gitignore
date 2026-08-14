@@ -76,4 +76,11 @@ yarn-error.*
 # typescript
 *.tsbuildinfo
 
+
+#credentials
+credentials/
+credentials.json
+*.jks
+*.keystore
+
 # @end expo-cli
