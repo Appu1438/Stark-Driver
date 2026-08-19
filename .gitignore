@@ -83,4 +83,7 @@ credentials.json
 *.jks
 *.keystore
 
+#FCM CONFIG
+google-services.json
+stark-cabs-d61fd4fb41c5.json
 # @end expo-cli

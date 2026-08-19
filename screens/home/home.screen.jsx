@@ -121,65 +121,97 @@ export default function HomeScreen() {
     }, [driver]);
 
 
-    // useEffect(() => {
-    //     registerForPushNotificationsAsync();
-    // }, []);
+    useEffect(() => {
+        registerForPushNotificationsAsync();
+    }, []);
 
-    // async function registerForPushNotificationsAsync() {
-    //     if (Device.isDevice) {
-    //         const { status: existingStatus } =
-    //             await Notifications.getPermissionsAsync();
-    //         let finalStatus = existingStatus;
-    //         if (existingStatus !== "granted") {
-    //             const { status } = await Notifications.requestPermissionsAsync();
-    //             finalStatus = status;
-    //         }
-    //         if (finalStatus !== "granted") {
-    //             Toast.show("Failed to get push token for push notification!", {
-    //                 type: "danger",
-    //             });
-    //             return;
-    //         }
-    //         const projectId =
-    //             Constants?.expoConfig?.extra?.eas?.projectId ??
-    //             Constants?.easConfig?.projectId;
-    //         if (!projectId) {
-    //             Toast.show("Failed to get project id for push notification!", {
-    //                 type: "danger",
-    //             });
-    //         }
-    //         try {
-    //             const pushTokenString = (
-    //                 await Notifications.getExpoPushTokenAsync({
-    //                     projectId,
-    //                 })
-    //             ).data;
-    //             await axiosInstance.put(
-    //                 `/driver/update-push-token`,
-    //                 { token: pushTokenString }
-    //             );
-    //             // console.log(pushTokenString);
-    //             // return pushTokenString;
-    //         } catch (e) {
-    //             Toast.show(`${e}`, {
-    //                 type: "danger",
-    //             });
-    //         }
-    //     } else {
-    //         Toast.show("Must use physical device for Push Notifications", {
-    //             type: "danger",
-    //         });
-    //     }
+    async function registerForPushNotificationsAsync() {
+        try {
+            // Physical device check
+            if (!Device.isDevice) {
+                console.log("Push notifications require a physical device");
+                return;
+            }
 
-    //     if (Platform.OS === "android") {
-    //         Notifications.setNotificationChannelAsync("default", {
-    //             name: "default",
-    //             importance: Notifications.AndroidImportance.MAX,
-    //             vibrationPattern: [0, 250, 250, 250],
-    //             lightColor: "#FF231F7C",
-    //         });
-    //     }
-    // }
+            // Android notification channel
+            if (Platform.OS === "android") {
+                await Notifications.setNotificationChannelAsync("default", {
+                    name: "default",
+                    importance: Notifications.AndroidImportance.MAX,
+                    vibrationPattern: [0, 250, 250, 250],
+                    lightColor: "#FF231F7C",
+                });
+            }
+
+            // Check notification permission
+            const { status: existingStatus } =
+                await Notifications.getPermissionsAsync();
+
+            let finalStatus = existingStatus;
+
+            if (existingStatus !== "granted") {
+                const { status } =
+                    await Notifications.requestPermissionsAsync();
+
+                finalStatus = status;
+            }
+
+            // Only permission result is shown to driver
+            if (finalStatus !== "granted") {
+                Toast.show("Notification permission was not granted", {
+                    type: "danger",
+                });
+
+                console.log("Driver notification permission:", finalStatus);
+                return;
+            }
+
+            Toast.show("Notification permission granted", {
+                type: "success",
+            });
+
+            console.log("Driver notification permission granted");
+
+            // Get Expo project ID
+            const projectId =
+                Constants?.expoConfig?.extra?.eas?.projectId ??
+                Constants?.easConfig?.projectId;
+
+            if (!projectId) {
+                console.log("Expo project ID not found");
+                return;
+            }
+
+            console.log("Driver Expo Project ID:", projectId);
+
+            // Get Expo Push Token
+            const pushTokenString = (
+                await Notifications.getExpoPushTokenAsync({
+                    projectId,
+                })
+            ).data;
+
+            if (!pushTokenString) {
+                console.log("Failed to generate driver Expo push token");
+                return;
+            }
+
+            console.log("DRIVER EXPO PUSH TOKEN:", pushTokenString);
+
+            // Save token to backend
+            await axiosInstance.put("/driver/update-push-token", {
+                token: pushTokenString,
+            });
+
+            console.log("Driver push token saved successfully");
+
+        } catch (error) {
+            console.log(
+                "Driver push notification registration error:",
+                error
+            );
+        }
+    }
 
     useEffect(() => {
         const fetchStatus = async () => {
